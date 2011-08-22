@@ -52,6 +52,9 @@ ifneq ($(PLATFORM),darwin)
   BUILD_CLIENT_SMP = 0
 endif
 
+# ioquake3 svn version that this is based on
+IOQ3_REVISION = 2148
+
 #############################################################################
 #
 # If you require a different configuration from the defaults below, create a
@@ -1050,6 +1053,7 @@ release:
 targets: makedirs
 	@echo ""
 	@echo "Building ioquake3 in $(B):"
+	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
 	@echo "  VERSION: $(VERSION)"
