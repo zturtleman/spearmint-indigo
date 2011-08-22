@@ -2090,7 +2090,6 @@ Q3UIOBJ_ = \
   $(B)/baseq3/ui/bg_lib.o \
   $(B)/baseq3/ui/ui_addbots.o \
   $(B)/baseq3/ui/ui_atoms.o \
-  $(B)/baseq3/ui/ui_cdkey.o \
   $(B)/baseq3/ui/ui_cinematics.o \
   $(B)/baseq3/ui/ui_confirm.o \
   $(B)/baseq3/ui/ui_connect.o \
