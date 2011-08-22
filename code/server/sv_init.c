@@ -568,6 +568,11 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	sv.time += 100;
 	svs.time += 100;
 
+	// Force sv_pure to off if invalid default pk3s
+	if (sv_pure->integer && !com_fs_pure->integer) {
+		Cvar_Set( "sv_pure", "0" );
+	}
+
 	if ( sv_pure->integer ) {
 		// the server sends these to the clients so they will only
 		// load pk3s also loaded at the server
@@ -651,7 +656,12 @@ void SV_Init (void)
 	// systeminfo
 	Cvar_Get ("sv_cheats", "1", CVAR_SYSTEMINFO | CVAR_ROM );
 	sv_serverid = Cvar_Get ("sv_serverid", "0", CVAR_SYSTEMINFO | CVAR_ROM );
-	sv_pure = Cvar_Get ("sv_pure", "1", CVAR_SYSTEMINFO );
+
+	if (!com_fs_pure->integer)
+		sv_pure = Cvar_Get ("sv_pure", "0", CVAR_SYSTEMINFO | CVAR_ROM );
+	else
+		sv_pure = Cvar_Get ("sv_pure", "1", CVAR_SYSTEMINFO );
+
 #ifdef USE_VOIP
 	sv_voip = Cvar_Get("sv_voip", "1", CVAR_SYSTEMINFO | CVAR_LATCH);
 	Cvar_CheckRange(sv_voip, 0, 1, qtrue);

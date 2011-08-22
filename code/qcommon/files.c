@@ -172,27 +172,47 @@ or configs will never get loaded from disk!
 
 */
 
-// every time a new demo pk3 file is built, this checksum must be updated.
+// every time a new pk3 file is built, this checksum must be updated.
 // the easiest way to get it is to just run the game and see what it spits out
-#define	DEMO_PAK0_CHECKSUM	2985612116u
-static const unsigned int pak_checksums[] = {
-	1566731103u,
-	298122907u,
-	412165236u,
-	2991495316u,
-	1197932710u,
-	4087071573u,
-	3709064859u,
-	908855077u,
-	977125798u
-};
 
-static const unsigned int missionpak_checksums[] =
+#define PAK_OPTIONAL 1	// Optional pak only used by client which isn't needed to play the game.
+
+typedef struct
 {
-	2430342401u,
-	511014160u,
-	2662638993u,
-	1438664554u
+	char *gamename;
+	char *pakname;
+	unsigned checksum;
+	int flags;
+} purePak_t;
+
+// Only requires paks for gamenames which are used (and aren't flagged as optional).
+const purePak_t com_purePaks[] =
+{
+#if 0
+	{BASEGAME, "assets0", 0u, 0},
+	//{BASEGAME, "assets-music", 0u, PAK_OPTIONAL},
+#else
+	// pak3 and pak7 only contain qvms, which are over-ridden by qvms in pak8
+	{BASEQ3, "pak0", 1566731103u, 0},
+	{BASEQ3, "pak1", 298122907u, 0},
+	{BASEQ3, "pak2", 412165236u, 0},
+	{BASEQ3, "pak3", 2991495316u, PAK_OPTIONAL},
+	{BASEQ3, "pak4", 1197932710u, 0},
+	{BASEQ3, "pak5", 4087071573u, 0},
+	{BASEQ3, "pak6", 3709064859u, 0},
+	{BASEQ3, "pak7", 908855077u, PAK_OPTIONAL},
+	{BASEQ3, "pak8", 977125798u, 0},
+
+	#define	DEMO_PAK0_CHECKSUM	2985612116u
+	{"demoq3", "pak0", DEMO_PAK0_CHECKSUM, 0},
+
+	{BASETA, "pak0", 2430342401u, 0},
+	{BASETA, "pak1", 511014160u, 0},
+	{BASETA, "pak2", 2662638993u, 0},
+	{BASETA, "pak3", 1438664554u, 0},
+#endif
+
+	{NULL, NULL, 0, 0}
 };
 
 // if this is defined, the executable positively won't work with any paks other
@@ -325,6 +345,27 @@ qboolean FS_Initialized( void ) {
 
 /*
 =================
+FS_PakIsOptional
+=================
+*/
+qboolean FS_PakIsOptional(pack_t *pack) {
+	int i;
+
+	for ( i = 0 ; com_purePaks[i].pakname != NULL ; i++ ) {
+		if ((com_purePaks[i].flags & PAK_OPTIONAL)
+			&& !Q_stricmp(com_purePaks[i].gamename, pack->pakGamename)
+			&& !Q_stricmp(com_purePaks[i].pakname, pack->pakBasename)
+			&& pack->checksum == com_purePaks[i].checksum
+			&& !(pack->referenced & (FS_CGAME_REF | FS_UI_REF))) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
+
+/*
+=================
 FS_PakIsPure
 =================
 */
@@ -339,6 +380,10 @@ qboolean FS_PakIsPure( pack_t *pack ) {
 			if ( pack->checksum == fs_serverPaks[i] ) {
 				return qtrue;		// on the aproved list
 			}
+		}
+
+		if (FS_PakIsOptional(pack)) {
+			return qtrue;
 		}
 		return qfalse;	// not on the pure server pak list
 	}
@@ -2903,6 +2948,22 @@ qboolean FS_idPak(char *pak, char *base, int numPaks)
 
 /*
 ================
+FS_DefaultPak
+================
+*/
+qboolean FS_DefaultPak( char *pak ) {
+	int i;
+
+	for (i = 0; com_purePaks[i].pakname != NULL; i++) {
+		if ( !FS_FilenameCompare(pak, va("%s/%s", com_purePaks[i].gamename, com_purePaks[i].pakname)) ) {
+			return qtrue;
+		}
+	}
+	return qfalse;
+}
+
+/*
+================
 FS_CheckDirTraversal
 
 Check whether the string contains stuff like "../" to prevent directory traversal bugs
@@ -2960,12 +3021,10 @@ qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring ) {
 		// Ok, see if we have this pak file
 		havepak = qfalse;
 
-		// never autodownload any of the id paks
-		if(FS_idPak(fs_serverReferencedPakNames[i], BASEGAME, NUM_ID_PAKS)
-#ifndef STANDALONE
-		   || FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS)
-#endif
-		  )
+		// never autodownload any of the id or default paks
+		if ( FS_idPak(fs_serverReferencedPakNames[i], BASEQ3, NUM_ID_PAKS)
+			|| FS_idPak(fs_serverReferencedPakNames[i], BASETA, NUM_TA_PAKS)
+			|| FS_DefaultPak(fs_serverReferencedPakNames[i]) )
 		{
 			continue;
 		}
@@ -3134,6 +3193,26 @@ static void FS_ReorderPurePaks( void )
 
 /*
 ================
+FS_BaseFileExists
+================
+*/
+qboolean FS_BaseFileExists( const char *file )
+{
+	FILE *f;
+	char *testpath;
+
+	testpath = FS_BuildOSPath( fs_basepath->string, com_basegame->string, file );
+
+	f = fopen( testpath, "rb" );
+	if (f) {
+		fclose( f );
+		return qtrue;
+	}
+	return qfalse;
+}
+
+/*
+================
 FS_Startup
 ================
 */
@@ -3220,204 +3299,101 @@ static void FS_Startup( const char *gameName )
 	Com_Printf( "%d files in pk3 files\n", fs_packFiles );
 }
 
-#ifndef STANDALONE
 /*
 ===================
-FS_CheckPak0
+FS_CheckPaks
 
-Check whether any of the original id pak files is present,
-and start up in standalone mode, if there are none and a
-different com_basegame was set.
-Note: If you're building a game that doesn't depend on the
-Q3 media pak0.pk3, you'll want to remove this by defining
-STANDALONE in q_shared.h
+Checks that default pk3s are present and their checksums are correct
 ===================
 */
-static void FS_CheckPak0( void )
+static void FS_CheckPaks( void )
 {
 	searchpath_t	*path;
-	pack_t		*curpack;
-	qboolean founddemo = qfalse;
-	unsigned int foundPak = 0, foundTA = 0;
+	unsigned foundPak = 0;
+	unsigned invalidPak = 0;
+#ifndef DEDICATED
+	qboolean hasPakFile = qfalse;
+#endif
+	int pak, total = 0;
+
+	// If we're not pure don't check
+	if (com_fs_pure && !com_fs_pure->integer)
+		return;
+
+	// Add up total value of foundPak
+	for (pak = 0; com_purePaks[pak].pakname != NULL; pak++) {
+		if (com_purePaks[pak].flags & PAK_OPTIONAL) {
+			continue;
+		}
+
+		// Only require paks that will be used
+		if (!!Q_stricmpn( com_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH )
+			&& !(fs_basegame->string[0] && !Q_stricmpn( fs_basegame->string, com_purePaks[pak].gamename, MAX_OSPATH ))
+			&& !(fs_gamedirvar->string[0] && !Q_stricmpn( fs_gamedirvar->string, com_purePaks[pak].gamename, MAX_OSPATH )))
+		{
+			continue;
+		}
+
+		total += 1<<pak;
+	}
 
 	for( path = fs_searchpaths; path; path = path->next )
 	{
-		const char* pakBasename = path->pack->pakBasename;
+		const char *pakBasename = path->pack->pakBasename;
 
-		if(!path->pack)
+		if (!path->pack)
 			continue;
-		
-		curpack = path->pack;
 
-		if(!Q_stricmpn( curpack->pakGamename, "demoq3", MAX_OSPATH )
-		   && !Q_stricmpn( pakBasename, "pak0", MAX_OSPATH ))
-		{
-			if(curpack->checksum == DEMO_PAK0_CHECKSUM)
-				founddemo = qtrue;
-		}
+#ifndef DEDICATED
+		hasPakFile = qtrue;
+#endif
 
-		else if(!Q_stricmpn( curpack->pakGamename, BASEGAME, MAX_OSPATH )
-			&& strlen(pakBasename) == 4 && !Q_stricmpn( pakBasename, "pak", 3 )
-			&& pakBasename[3] >= '0' && pakBasename[3] <= '0' + NUM_ID_PAKS - 1)
+		for (pak = 0; com_purePaks[pak].pakname != NULL; pak++)
 		{
-			if( curpack->checksum != pak_checksums[pakBasename[3]-'0'] )
+			if (!Q_stricmpn( path->pack->pakGamename, com_purePaks[pak].gamename, MAX_OSPATH )
+				&& !Q_stricmpn( pakBasename, com_purePaks[pak].pakname, MAX_OSPATH ))
 			{
-				if(pakBasename[3] == '0')
+				if( path->pack->checksum != com_purePaks[pak].checksum )
 				{
 					Com_Printf("\n\n"
-						"**************************************************\n"
-						"WARNING: " BASEGAME "/pak0.pk3 is present but its checksum (%u)\n"
-						"is not correct. Please re-copy pak0.pk3 from your\n"
-						"legitimate Q3 CDROM.\n"
-						"**************************************************\n\n\n",
-						curpack->checksum );
+						"**********************************************************************\n"
+						"WARNING: %s/%s.pk3 is present but its checksum (%u) is not correct.\n"
+						"**********************************************************************\n\n\n",
+						com_purePaks[pak].gamename, com_purePaks[pak].pakname, path->pack->checksum );
+
+					invalidPak |= 1<<pak;
 				}
 				else
 				{
-					Com_Printf("\n\n"
-						"**************************************************\n"
-						"WARNING: " BASEGAME "/pak%d.pk3 is present but its checksum (%u)\n"
-						"is not correct. Please re-install the point release\n"
-						"**************************************************\n\n\n",
-						pakBasename[3]-'0', curpack->checksum );
+					// Found pk3 and its checksum matches.
+					foundPak |= 1<<pak;
 				}
 			}
+		}
+	}
 
-			foundPak |= 1<<(pakBasename[3]-'0');
-		}
-		else if(!Q_stricmpn(curpack->pakGamename, BASETA, MAX_OSPATH)
-			&& strlen(pakBasename) == 4 && !Q_stricmpn(pakBasename, "pak", 3)
-			&& pakBasename[3] >= '0' && pakBasename[3] <= '0' + NUM_TA_PAKS - 1)
-			
-		{
-			if(curpack->checksum != missionpak_checksums[pakBasename[3]-'0'])
-			{
-				Com_Printf("\n\n"
-					"**************************************************\n"
-					"WARNING: " BASETA "/pak%d.pk3 is present but its checksum (%u)\n"
-					"is not correct. Please re-install Team Arena\n"
-					"**************************************************\n\n\n",
-					pakBasename[3]-'0', curpack->checksum );				
-			}
-			
-			foundTA |= 1 << (pakBasename[3]-'0');
-		}
+	if (((foundPak & total) != total) || invalidPak)
+	{
+		const char *line1 = NULL;
+		const char *line2 = "You need to reinstall " PRODUCT_NAME " in order to play on pure servers.";
+
+		// server can't ever be pure (sv_pure), as we're missing the pure files.
+		Cvar_Set("fs_pure", "0");
+
+		if (invalidPak)
+			line1 = "Default Pk3 file(s) are missing, corrupt, or modified.";
 		else
-		{
-			int index;
-			
-			// Finally check whether this pak's checksum is listed because the user tried
-			// to trick us by renaming the file, and set foundPak's highest bit to indicate this case.
-			
-			for(index = 0; index < ARRAY_LEN(pak_checksums); index++)
-			{
-				if(curpack->checksum == pak_checksums[index])
-				{
-					Com_Printf("\n\n"
-						"**************************************************\n"
-						"WARNING: %s is renamed pak file %s%cpak%d.pk3\n"
-						"Running in standalone mode won't work\n"
-						"Please rename, or remove this file\n"
-						"**************************************************\n\n\n",
-						curpack->pakFilename, BASEGAME, PATH_SEP, index);
+			line1 = "Missing default Pk3 file(s).";
 
+		Com_Printf(S_COLOR_YELLOW "WARNING: %s\n%s\n", line1, line2);
 
-					foundPak |= 0x80000000;
-				}
-			}
-
-			for(index = 0; index < ARRAY_LEN(missionpak_checksums); index++)
-			{
-				if(curpack->checksum == missionpak_checksums[index])
-				{
-					Com_Printf("\n\n"
-						"**************************************************\n"
-						"WARNING: %s is renamed pak file %s%cpak%d.pk3\n"
-						"Running in standalone mode won't work\n"
-						"Please rename, or remove this file\n"
-						"**************************************************\n\n\n",
-						curpack->pakFilename, BASETA, PATH_SEP, index);
-
-					foundTA |= 0x80000000;
-				}
-			}
-		}
-	}
-
-	if(!foundPak && !foundTA && Q_stricmp(com_basegame->string, BASEGAME))
-	{
-		Cvar_Set("com_standalone", "1");
-	}
-	else
-		Cvar_Set("com_standalone", "0");
-
-	if(!com_standalone->integer)
-	{
-		if(!(foundPak & 0x01))
-		{
-			if(founddemo)
-			{
-				Com_Printf( "\n\n"
-						"**************************************************\n"
-						"WARNING: It looks like you're using pak0.pk3\n"
-						"from the demo. This may work fine, but it is not\n"
-						"guaranteed or supported.\n"
-						"**************************************************\n\n\n" );
-				
-				foundPak |= 0x01;
-			}
-		}
-	}
-
-
-	if(!com_standalone->integer && (foundPak & 0x1ff) != 0x1ff)
-	{
-		char errorText[MAX_STRING_CHARS] = "";
-
-		if((foundPak & 0x01) != 0x01)
-		{
-			Q_strcat(errorText, sizeof(errorText),
-				"\"pak0.pk3\" is missing. Please copy it "
-				"from your legitimate Q3 CDROM. ");
-		}
-
-		if((foundPak & 0x1fe) != 0x1fe)
-		{
-			Q_strcat(errorText, sizeof(errorText),
-				"Point Release files are missing. Please "
-				"re-install the 1.32 point release. ");
-		}
-
-		Q_strcat(errorText, sizeof(errorText),
-			va("Also check that your ioq3 executable is in "
-			"the correct place and that every file "
-			"in the \"%s\" directory is present and readable", BASEGAME));
-
-		Com_Error(ERR_FATAL, "%s", errorText);
-	}
-	
-	if(!com_standalone->integer && foundTA && (foundTA & 0x0f) != 0x0f)
-	{
-		char errorText[MAX_STRING_CHARS] = "";
-
-		if((foundTA & 0x01) != 0x01)
-		{
-			Com_sprintf(errorText, sizeof(errorText),
-				"\"" BASETA "%cpak0.pk3\" is missing. Please copy it "
-				"from your legitimate Quake 3 Team Arena CDROM. ", PATH_SEP);
-		}
-
-		if((foundTA & 0x0e) != 0x0e)
-		{
-			Q_strcat(errorText, sizeof(errorText),
-				"Team Arena Point Release files are missing. Please "
-				"re-install the latest Team Arena point release.");
-		}
-
-		Com_Error(ERR_FATAL, "%s", errorText);
+#ifndef DEDICATED
+		// Don't warn developers; development takes place without Pk3 files, the files are unzipped.
+		if (hasPakFile || !FS_BaseFileExists("default.cfg"))
+			Sys_Dialog( DT_WARNING, va("%s %s", line1, line2), "Unpure" );
+#endif
 	}
 }
-#endif
 
 /*
 =====================
@@ -3584,6 +3560,9 @@ const char *FS_ReferencedPakPureChecksums( void ) {
 		for ( search = fs_searchpaths ; search ; search = search->next ) {
 			// is the element a pak file and has it been referenced based on flag?
 			if ( search->pack && (search->pack->referenced & nFlags)) {
+				if (FS_PakIsOptional(search->pack)) {
+					continue;
+				}
 				Q_strcat( info, sizeof( info ), va("%i ", search->pack->pure_checksum ) );
 				if (nFlags & (FS_CGAME_REF | FS_UI_REF)) {
 					break;
@@ -3788,9 +3767,7 @@ void FS_InitFilesystem( void ) {
 	// try to start up normally
 	FS_Startup(com_basegame->string);
 
-#ifndef STANDALONE
-	FS_CheckPak0( );
-#endif
+	FS_CheckPaks();
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable
@@ -3823,9 +3800,7 @@ void FS_Restart( int checksumFeed ) {
 	// try to start up normally
 	FS_Startup(com_basegame->string);
 
-#ifndef STANDALONE
-	FS_CheckPak0( );
-#endif
+	FS_CheckPaks();
 
 	// if we can't find default.cfg, assume that the paths are
 	// busted and error out now, rather than getting an unreadable

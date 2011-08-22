@@ -55,6 +55,7 @@ static fileHandle_t logfile;
 fileHandle_t	com_journalFile;			// events are written here
 fileHandle_t	com_journalDataFile;		// config files are written here
 
+cvar_t	*com_fs_pure;
 cvar_t	*com_speeds;
 cvar_t	*com_developer;
 cvar_t	*com_dedicated;
@@ -2572,6 +2573,8 @@ void Com_Init( char *commandLine ) {
 
 	// done early so bind command exists
 	CL_InitKeyCommands();
+
+	com_fs_pure = Cvar_Get ("fs_pure", "1", CVAR_ROM);
 
 	com_standalone = Cvar_Get("com_standalone", "0", CVAR_ROM);
 	com_basegame = Cvar_Get("com_basegame", BASEGAME, CVAR_INIT);

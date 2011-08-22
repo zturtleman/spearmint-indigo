@@ -51,6 +51,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
 
+// id Software games to not auto download
+#define BASEQ3				"baseq3"
 #define BASETA				"missionpack"
 
 #ifndef PRODUCT_VERSION
