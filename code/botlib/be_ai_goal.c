@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *****************************************************************************/
 
 #include "../qcommon/q_shared.h"
+#include "../game/bg_public.h"
 #include "l_utils.h"
 #include "l_libvar.h"
 #include "l_memory.h"
@@ -87,24 +88,6 @@ typedef struct campspot_s
 	float random;
 	struct campspot_s *next;
 } campspot_t;
-
-//FIXME: these are game specific
-typedef enum {
-	GT_FFA,				// free for all
-	GT_TOURNAMENT,		// one on one tournament
-	GT_SINGLE_PLAYER,	// single player tournament
-
-	//-- team games go after this --
-
-	GT_TEAM,			// team deathmatch
-	GT_CTF,				// capture the flag
-#ifdef MISSIONPACK
-	GT_1FCTF,
-	GT_OBELISK,
-	GT_HARVESTER,
-#endif
-	GT_MAX_GAME_TYPE
-} gametype_t;
 
 typedef struct levelitem_s
 {
@@ -1002,9 +985,6 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-
-//NOTE: enum entityType_t in bg_public.h
-#define ET_ITEM			2
 
 void BotUpdateEntityItems(void)
 {

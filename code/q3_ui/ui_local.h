@@ -28,7 +28,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 //NOTE: include the ui_public.h from the new UI
 #include "../ui/ui_public.h"
 #include "../client/keycodes.h"
-#include "../game/bg_public.h"
+#include "../game/bg_misc.h"
 
 typedef void (*voidfunc_f)(void);
 
