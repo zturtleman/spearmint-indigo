@@ -121,15 +121,7 @@ typedef enum {
 	// 1.32
 	UI_FS_SEEK,
 
-	UI_MEMSET = 100,
-	UI_MEMCPY,
-	UI_STRNCPY,
-	UI_SIN,
-	UI_COS,
-	UI_ATAN2,
-	UI_SQRT,
-	UI_FLOOR,
-	UI_CEIL
+	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=100, etc
 } uiImport_t;
 
 typedef enum {

@@ -227,6 +227,8 @@ typedef enum {
 	// 1.32
 	G_FS_SEEK,
 
+	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=100, etc
+
 	BOTLIB_SETUP = 200,				// ( void );
 	BOTLIB_SHUTDOWN,				// ( void );
 	BOTLIB_LIBVAR_SET,
