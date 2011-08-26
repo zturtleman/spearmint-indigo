@@ -300,7 +300,12 @@ int COM_GetCurrentParseLine( void )
 
 char *COM_Parse( char **data_p )
 {
-	return COM_ParseExt( data_p, qtrue );
+	return COM_ParseExt2(data_p, qtrue, 0);
+}
+
+char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
+{
+	return COM_ParseExt2(data_p, allowLineBreaks, 0);
 }
 
 void COM_ParseError( char *format, ... )
@@ -425,7 +430,7 @@ int COM_Compress( char *data_p ) {
 	return out - data_p;
 }
 
-char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
+char *COM_ParseExt2( char **data_p, qboolean allowLineBreaks, char delimiter )
 {
 	int c = 0, len;
 	qboolean hasNewLines = qfalse;
@@ -519,7 +524,7 @@ char *COM_ParseExt( char **data_p, qboolean allowLineBreaks )
 		c = *data;
 		if ( c == '\n' )
 			com_lines++;
-	} while (c>32);
+	} while (c>32 && c != delimiter);
 
 	com_token[len] = 0;
 
