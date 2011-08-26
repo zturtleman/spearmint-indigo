@@ -1,8 +1,37 @@
 #
-# ioq3 Makefile
+# ioq3ztm Makefile
 #
 # GNU Make required
 #
+
+VERSION=1.36
+CLIENTBIN=ioq3ztm
+SERVERBIN=ioq3ztm-server
+
+BASEGAME=baseq3
+BASEGAME_FLAGS =
+
+MISSIONPACK=missionpack
+MISSIONPACK_FLAGS= -DMISSIONPACK
+
+# Add "-DNAME" to define NAME in engine and game/cgame/ui.
+BUILD_DEFINES =
+
+# You can disable building basegame or missionpack by setting the following to 0
+ifndef BUILD_BASEGAME
+  BUILD_BASEGAME =
+endif
+ifndef BUILD_MISSIONPACK
+  BUILD_MISSIONPACK = 0
+endif
+
+ifndef COPYDIR
+COPYDIR="/usr/local/games/ioq3ztm"
+endif
+
+
+# ioquake3 svn version that this is based on
+IOQ3_REVISION = 2148
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -41,16 +70,13 @@ endif
 ifndef BUILD_GAME_QVM
   BUILD_GAME_QVM   =
 endif
-ifndef BUILD_MISSIONPACK
-  BUILD_MISSIONPACK=
+ifndef BUILD_FINAL
+  BUILD_FINAL      =0
 endif
 
 ifneq ($(PLATFORM),darwin)
   BUILD_CLIENT_SMP = 0
 endif
-
-# ioquake3 svn version that this is based on
-IOQ3_REVISION = 2148
 
 #############################################################################
 #
@@ -89,10 +115,6 @@ else
   endif
 endif
 export CROSS_COMPILING
-
-ifndef COPYDIR
-COPYDIR="/usr/local/games/quake3"
-endif
 
 ifndef COPYBINDIR
 COPYBINDIR=$(COPYDIR)
@@ -229,25 +251,28 @@ ifneq ($(BUILD_CLIENT),0)
   endif
 endif
 
-# version info
-VERSION=1.36
+ifneq ($(BUILD_FINAL),1)
+	# Add svn version info
+	USE_SVN=
+	ifeq ($(wildcard .svn),.svn)
+	  SVN_REV=$(shell LANG=C svnversion .)
+	  ifneq ($(SVN_REV),)
+		VERSION:=$(VERSION)_SVN$(SVN_REV)
+		USE_SVN=1
+	  endif
+	else
+	ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
+	  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
+	  ifneq ($(SVN_REV),)
+		VERSION:=$(VERSION)_SVN$(SVN_REV)
+	  endif
+	endif
+	endif
 
-USE_SVN=
-ifeq ($(wildcard .svn),.svn)
-  SVN_REV=$(shell LANG=C svnversion .)
-  ifneq ($(SVN_REV),)
-    VERSION:=$(VERSION)_SVN$(SVN_REV)
-    USE_SVN=1
-  endif
-else
-ifeq ($(wildcard .git/svn/.metadata),.git/svn/.metadata)
-  SVN_REV=$(shell LANG=C git svn info | awk '$$1 == "Revision:" {print $$2; exit 0}')
-  ifneq ($(SVN_REV),)
-    VERSION:=$(VERSION)_SVN$(SVN_REV)
-  endif
+	ifdef IOQ3_REVISION
+	  VERSION:=$(VERSION)_IOQ3r$(IOQ3_REVISION)
+	endif
 endif
-endif
-
 
 #############################################################################
 # SETUP AND BUILD -- LINUX
@@ -821,47 +846,51 @@ ifndef SHLIBNAME
 endif
 
 ifneq ($(BUILD_SERVER),0)
-  TARGETS += $(B)/ioq3ded$(FULLBINEXT)
+  TARGETS += $(B)/$(SERVERBIN)$(FULLBINEXT)
 endif
 
 ifneq ($(BUILD_CLIENT),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
-    TARGETS += $(B)/ioquake3$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
+    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT) $(B)/renderer_opengl1_$(SHLIBNAME)
     ifneq ($(BUILD_CLIENT_SMP),0)
       TARGETS += $(B)/renderer_opengl1_smp_$(SHLIBNAME)
     endif
   else
-    TARGETS += $(B)/ioquake3$(FULLBINEXT)
+    TARGETS += $(B)/$(CLIENTBIN)$(FULLBINEXT)
     ifneq ($(BUILD_CLIENT_SMP),0)
-      TARGETS += $(B)/ioquake3-smp$(FULLBINEXT)
+      TARGETS += $(B)/$(CLIENTBIN)-smp$(FULLBINEXT)
     endif
   endif
 endif
 
 ifneq ($(BUILD_GAME_SO),0)
-  TARGETS += \
-    $(B)/baseq3/cgame$(SHLIBNAME) \
-    $(B)/baseq3/qagame$(SHLIBNAME) \
-    $(B)/baseq3/ui$(SHLIBNAME)
+  ifneq ($(BUILD_BASEGAME),0)
+    TARGETS += \
+	$(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/qagame$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/ui$(SHLIBNAME)
+  endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
-    $(B)/missionpack/cgame$(SHLIBNAME) \
-    $(B)/missionpack/qagame$(SHLIBNAME) \
-    $(B)/missionpack/ui$(SHLIBNAME)
+    $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
+    $(B)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+    $(B)/$(MISSIONPACK)/ui$(SHLIBNAME)
   endif
 endif
 
 ifneq ($(BUILD_GAME_QVM),0)
   ifneq ($(CROSS_COMPILING),1)
-    TARGETS += \
-      $(B)/baseq3/vm/cgame.qvm \
-      $(B)/baseq3/vm/qagame.qvm \
-      $(B)/baseq3/vm/ui.qvm
+    ifneq ($(BUILD_BASEGAME),0)
+      TARGETS += \
+      $(B)/$(BASEGAME)/vm/cgame.qvm \
+      $(B)/$(BASEGAME)/vm/qagame.qvm \
+      $(B)/$(BASEGAME)/vm/ui.qvm
+	endif
     ifneq ($(BUILD_MISSIONPACK),0)
       TARGETS += \
-      $(B)/missionpack/vm/qagame.qvm \
-      $(B)/missionpack/vm/cgame.qvm \
-      $(B)/missionpack/vm/ui.qvm
+      $(B)/$(MISSIONPACK)/vm/qagame.qvm \
+      $(B)/$(MISSIONPACK)/vm/cgame.qvm \
+      $(B)/$(MISSIONPACK)/vm/ui.qvm
     endif
   endif
 endif
@@ -942,6 +971,8 @@ BASE_CFLAGS += -Wstrict-aliasing=2 -Wmissing-format-attribute
 BASE_CFLAGS += -Wdisabled-optimization
 BASE_CFLAGS += -Werror-implicit-function-declaration
 
+BASE_CFLAGS += $(BUILD_DEFINES)
+
 ifeq ($(V),1)
 echo_cmd=@:
 Q=
@@ -976,49 +1007,49 @@ endif
 
 define DO_SHLIB_CC
 $(echo_cmd) "SHLIB_CC $<"
-$(Q)$(CC) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_FLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_FLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_CGAME_CC
 $(echo_cmd) "CGAME_CC $<"
-$(Q)$(CC) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_FLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_UI_CC
 $(echo_cmd) "UI_CC $<"
-$(Q)$(CC) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_FLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_SHLIB_CC_MISSIONPACK
 $(echo_cmd) "SHLIB_CC_MISSIONPACK $<"
-$(Q)$(CC) -DMISSIONPACK $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_FLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_GAME_CC_MISSIONPACK
 $(echo_cmd) "GAME_CC_MISSIONPACK $<"
-$(Q)$(CC) -DMISSIONPACK -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_FLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_CGAME_CC_MISSIONPACK
 $(echo_cmd) "CGAME_CC_MISSIONPACK $<"
-$(Q)$(CC) -DMISSIONPACK -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_FLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_UI_CC_MISSIONPACK
 $(echo_cmd) "UI_CC_MISSIONPACK $<"
-$(Q)$(CC) -DMISSIONPACK -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_FLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1059,7 +1090,7 @@ release:
 # an informational message, then start building
 targets: makedirs
 	@echo ""
-	@echo "Building ioquake3 in $(B):"
+	@echo "Building ioq3ztm in $(B):"
 	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
@@ -1125,18 +1156,26 @@ makedirs:
 	@if [ ! -d $(B)/renderer ];then $(MKDIR) $(B)/renderer;fi
 	@if [ ! -d $(B)/renderersmp ];then $(MKDIR) $(B)/renderersmp;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
-	@if [ ! -d $(B)/baseq3 ];then $(MKDIR) $(B)/baseq3;fi
-	@if [ ! -d $(B)/baseq3/cgame ];then $(MKDIR) $(B)/baseq3/cgame;fi
-	@if [ ! -d $(B)/baseq3/game ];then $(MKDIR) $(B)/baseq3/game;fi
-	@if [ ! -d $(B)/baseq3/ui ];then $(MKDIR) $(B)/baseq3/ui;fi
-	@if [ ! -d $(B)/baseq3/qcommon ];then $(MKDIR) $(B)/baseq3/qcommon;fi
-	@if [ ! -d $(B)/baseq3/vm ];then $(MKDIR) $(B)/baseq3/vm;fi
-	@if [ ! -d $(B)/missionpack ];then $(MKDIR) $(B)/missionpack;fi
-	@if [ ! -d $(B)/missionpack/cgame ];then $(MKDIR) $(B)/missionpack/cgame;fi
-	@if [ ! -d $(B)/missionpack/game ];then $(MKDIR) $(B)/missionpack/game;fi
-	@if [ ! -d $(B)/missionpack/ui ];then $(MKDIR) $(B)/missionpack/ui;fi
-	@if [ ! -d $(B)/missionpack/qcommon ];then $(MKDIR) $(B)/missionpack/qcommon;fi
-	@if [ ! -d $(B)/missionpack/vm ];then $(MKDIR) $(B)/missionpack/vm;fi
+ifneq ($(BUILD_BASEGAME),0)
+	@if [ ! -d $(B)/$(BASEGAME) ];then $(MKDIR) $(B)/$(BASEGAME);fi
+	@if [ ! -d $(B)/$(BASEGAME)/cgame ];then $(MKDIR) $(B)/$(BASEGAME)/cgame;fi
+	@if [ ! -d $(B)/$(BASEGAME)/game ];then $(MKDIR) $(B)/$(BASEGAME)/game;fi
+	@if [ ! -d $(B)/$(BASEGAME)/ui ];then $(MKDIR) $(B)/$(BASEGAME)/ui;fi
+	@if [ ! -d $(B)/$(BASEGAME)/qcommon ];then $(MKDIR) $(B)/$(BASEGAME)/qcommon;fi
+	@if [ ! -d $(B)/$(BASEGAME)/vm ];then $(MKDIR) $(B)/$(BASEGAME)/vm;fi
+endif
+
+	@if [ ! -d $(B)/$(MISSIONPACK) ];then $(MKDIR) $(B)/$(MISSIONPACK);fi
+ifneq ($(BUILD_MISSIONPACK),0)
+	@if [ ! -d $(B)/$(MISSIONPACK)/cgame ];then $(MKDIR) $(B)/$(MISSIONPACK)/cgame;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/game ];then $(MKDIR) $(B)/$(MISSIONPACK)/game;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/ui;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/qcommon ];then $(MKDIR) $(B)/$(MISSIONPACK)/qcommon;fi
+	@if [ ! -d $(B)/$(MISSIONPACK)/vm ];then $(MKDIR) $(B)/$(MISSIONPACK)/vm;fi
+else
+# Need dir for ui_syscalls.o
+	@if [ ! -d $(B)/$(MISSIONPACK)/ui ];then $(MKDIR) $(B)/$(MISSIONPACK)/ui;fi
+endif
 	@if [ ! -d $(B)/tools ];then $(MKDIR) $(B)/tools;fi
 	@if [ ! -d $(B)/tools/asm ];then $(MKDIR) $(B)/tools/asm;fi
 	@if [ ! -d $(B)/tools/etc ];then $(MKDIR) $(B)/tools/etc;fi
@@ -1265,42 +1304,42 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 
 define DO_Q3LCC
 $(echo_cmd) "Q3LCC $<"
-$(Q)$(Q3LCC) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_FLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC
 $(echo_cmd) "CGAME_Q3LCC $<"
-$(Q)$(Q3LCC) -DCGAME -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
 $(echo_cmd) "UI_Q3LCC $<"
-$(Q)$(Q3LCC) -DUI -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_Q3LCC_MISSIONPACK
 $(echo_cmd) "Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) -DMISSIONPACK -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "CGAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) -DMISSIONPACK -DCGAME -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "GAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) -DMISSIONPACK -DQAGAME -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC_MISSIONPACK
 $(echo_cmd) "UI_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) -DMISSIONPACK -DUI -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 
@@ -1674,7 +1713,7 @@ Q3POBJ_SMP += \
   $(B)/renderersmp/sdl_glimp.o
 
 ifneq ($(USE_RENDERER_DLOPEN),0)
-$(B)/ioquake3$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
 		-o $@ $(Q3OBJ) \
@@ -1690,13 +1729,13 @@ $(B)/renderer_opengl1_smp_$(SHLIBNAME): $(Q3ROBJ) $(Q3POBJ_SMP)
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3ROBJ) $(Q3POBJ_SMP) \
 		$(THREAD_LIBS) $(LIBSDLMAIN) $(RENDERER_LIBS) $(LIBS)
 else
-$(B)/ioquake3$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ) \
 		$(LIBSDLMAIN) $(CLIENT_LIBS) $(RENDERER_LIBS) $(LIBS)
 
-$(B)/ioquake3-smp$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN)
+$(B)/$(CLIENTBIN)-smp$(FULLBINEXT): $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ_SMP) $(LIBSDLMAIN)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CLIENT_CFLAGS) $(CFLAGS) $(CLIENT_LDFLAGS) $(LDFLAGS) $(THREAD_LDFLAGS) \
 		-o $@ $(Q3OBJ) $(Q3ROBJ) $(Q3POBJ_SMP) \
@@ -1891,52 +1930,53 @@ ifeq ($(PLATFORM),darwin)
     $(B)/ded/sys_osx.o
 endif
 
-$(B)/ioq3ded$(FULLBINEXT): $(Q3DOBJ)
+$(B)/$(SERVERBIN)$(FULLBINEXT): $(Q3DOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $(Q3DOBJ) $(LIBS)
 
 
 
 #############################################################################
-## BASEQ3 CGAME
+## BASEGAME CGAME
 #############################################################################
 
 Q3CGOBJ_ = \
-  $(B)/baseq3/cgame/cg_main.o \
-  $(B)/baseq3/cgame/bg_misc.o \
-  $(B)/baseq3/cgame/bg_pmove.o \
-  $(B)/baseq3/cgame/bg_slidemove.o \
-  $(B)/baseq3/cgame/bg_lib.o \
-  $(B)/baseq3/cgame/cg_consolecmds.o \
-  $(B)/baseq3/cgame/cg_draw.o \
-  $(B)/baseq3/cgame/cg_drawtools.o \
-  $(B)/baseq3/cgame/cg_effects.o \
-  $(B)/baseq3/cgame/cg_ents.o \
-  $(B)/baseq3/cgame/cg_event.o \
-  $(B)/baseq3/cgame/cg_info.o \
-  $(B)/baseq3/cgame/cg_localents.o \
-  $(B)/baseq3/cgame/cg_marks.o \
-  $(B)/baseq3/cgame/cg_particles.o \
-  $(B)/baseq3/cgame/cg_players.o \
-  $(B)/baseq3/cgame/cg_playerstate.o \
-  $(B)/baseq3/cgame/cg_predict.o \
-  $(B)/baseq3/cgame/cg_scoreboard.o \
-  $(B)/baseq3/cgame/cg_servercmds.o \
-  $(B)/baseq3/cgame/cg_snapshot.o \
-  $(B)/baseq3/cgame/cg_view.o \
-  $(B)/baseq3/cgame/cg_weapons.o \
+  $(B)/$(BASEGAME)/cgame/cg_main.o \
+  $(B)/$(BASEGAME)/cgame/bg_misc.o \
+  $(B)/$(BASEGAME)/cgame/bg_pmove.o \
+  $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
+  $(B)/$(BASEGAME)/cgame/bg_lib.o \
+  $(B)/$(BASEGAME)/cgame/cg_consolecmds.o \
+  $(B)/$(BASEGAME)/cgame/cg_newdraw.o \
+  $(B)/$(BASEGAME)/cgame/cg_draw.o \
+  $(B)/$(BASEGAME)/cgame/cg_drawtools.o \
+  $(B)/$(BASEGAME)/cgame/cg_effects.o \
+  $(B)/$(BASEGAME)/cgame/cg_ents.o \
+  $(B)/$(BASEGAME)/cgame/cg_event.o \
+  $(B)/$(BASEGAME)/cgame/cg_info.o \
+  $(B)/$(BASEGAME)/cgame/cg_localents.o \
+  $(B)/$(BASEGAME)/cgame/cg_marks.o \
+  $(B)/$(BASEGAME)/cgame/cg_particles.o \
+  $(B)/$(BASEGAME)/cgame/cg_players.o \
+  $(B)/$(BASEGAME)/cgame/cg_playerstate.o \
+  $(B)/$(BASEGAME)/cgame/cg_predict.o \
+  $(B)/$(BASEGAME)/cgame/cg_scoreboard.o \
+  $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
+  $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
+  $(B)/$(BASEGAME)/cgame/cg_view.o \
+  $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
-  $(B)/baseq3/qcommon/q_math.o \
-  $(B)/baseq3/qcommon/q_shared.o
+  $(B)/$(BASEGAME)/qcommon/q_math.o \
+  $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3CGOBJ = $(Q3CGOBJ_) $(B)/baseq3/cgame/cg_syscalls.o
+Q3CGOBJ = $(Q3CGOBJ_) $(B)/$(BASEGAME)/cgame/cg_syscalls.o
 Q3CGVMOBJ = $(Q3CGOBJ_:%.o=%.asm)
 
-$(B)/baseq3/cgame$(SHLIBNAME): $(Q3CGOBJ)
+$(B)/$(BASEGAME)/cgame$(SHLIBNAME): $(Q3CGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3CGOBJ)
 
-$(B)/baseq3/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm
 
@@ -1945,96 +1985,96 @@ $(B)/baseq3/vm/cgame.qvm: $(Q3CGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 #############################################################################
 
 MPCGOBJ_ = \
-  $(B)/missionpack/cgame/cg_main.o \
-  $(B)/missionpack/cgame/bg_misc.o \
-  $(B)/missionpack/cgame/bg_pmove.o \
-  $(B)/missionpack/cgame/bg_slidemove.o \
-  $(B)/missionpack/cgame/bg_lib.o \
-  $(B)/missionpack/cgame/cg_consolecmds.o \
-  $(B)/missionpack/cgame/cg_newdraw.o \
-  $(B)/missionpack/cgame/cg_draw.o \
-  $(B)/missionpack/cgame/cg_drawtools.o \
-  $(B)/missionpack/cgame/cg_effects.o \
-  $(B)/missionpack/cgame/cg_ents.o \
-  $(B)/missionpack/cgame/cg_event.o \
-  $(B)/missionpack/cgame/cg_info.o \
-  $(B)/missionpack/cgame/cg_localents.o \
-  $(B)/missionpack/cgame/cg_marks.o \
-  $(B)/missionpack/cgame/cg_particles.o \
-  $(B)/missionpack/cgame/cg_players.o \
-  $(B)/missionpack/cgame/cg_playerstate.o \
-  $(B)/missionpack/cgame/cg_predict.o \
-  $(B)/missionpack/cgame/cg_scoreboard.o \
-  $(B)/missionpack/cgame/cg_servercmds.o \
-  $(B)/missionpack/cgame/cg_snapshot.o \
-  $(B)/missionpack/cgame/cg_view.o \
-  $(B)/missionpack/cgame/cg_weapons.o \
-  $(B)/missionpack/ui/ui_shared.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_main.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_misc.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_slidemove.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_lib.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_consolecmds.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_newdraw.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_draw.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_drawtools.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_effects.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_ents.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_event.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_info.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_localents.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_marks.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_particles.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_players.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_playerstate.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_predict.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_scoreboard.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_servercmds.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_snapshot.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_view.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
+  $(B)/$(MISSIONPACK)/ui/ui_shared.o \
   \
-  $(B)/missionpack/qcommon/q_math.o \
-  $(B)/missionpack/qcommon/q_shared.o
+  $(B)/$(MISSIONPACK)/qcommon/q_math.o \
+  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPCGOBJ = $(MPCGOBJ_) $(B)/missionpack/cgame/cg_syscalls.o
+MPCGOBJ = $(MPCGOBJ_) $(B)/$(MISSIONPACK)/cgame/cg_syscalls.o
 MPCGVMOBJ = $(MPCGOBJ_:%.o=%.asm)
 
-$(B)/missionpack/cgame$(SHLIBNAME): $(MPCGOBJ)
+$(B)/$(MISSIONPACK)/cgame$(SHLIBNAME): $(MPCGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPCGOBJ)
 
-$(B)/missionpack/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/cgame.qvm: $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPCGVMOBJ) $(CGDIR)/cg_syscalls.asm
 
 
 
 #############################################################################
-## BASEQ3 GAME
+## BASEGAME GAME
 #############################################################################
 
 Q3GOBJ_ = \
-  $(B)/baseq3/game/g_main.o \
-  $(B)/baseq3/game/ai_chat.o \
-  $(B)/baseq3/game/ai_cmd.o \
-  $(B)/baseq3/game/ai_dmnet.o \
-  $(B)/baseq3/game/ai_dmq3.o \
-  $(B)/baseq3/game/ai_main.o \
-  $(B)/baseq3/game/ai_team.o \
-  $(B)/baseq3/game/ai_vcmd.o \
-  $(B)/baseq3/game/bg_misc.o \
-  $(B)/baseq3/game/bg_pmove.o \
-  $(B)/baseq3/game/bg_slidemove.o \
-  $(B)/baseq3/game/bg_lib.o \
-  $(B)/baseq3/game/g_active.o \
-  $(B)/baseq3/game/g_arenas.o \
-  $(B)/baseq3/game/g_bot.o \
-  $(B)/baseq3/game/g_client.o \
-  $(B)/baseq3/game/g_cmds.o \
-  $(B)/baseq3/game/g_combat.o \
-  $(B)/baseq3/game/g_items.o \
-  $(B)/baseq3/game/g_mem.o \
-  $(B)/baseq3/game/g_misc.o \
-  $(B)/baseq3/game/g_missile.o \
-  $(B)/baseq3/game/g_mover.o \
-  $(B)/baseq3/game/g_session.o \
-  $(B)/baseq3/game/g_spawn.o \
-  $(B)/baseq3/game/g_svcmds.o \
-  $(B)/baseq3/game/g_target.o \
-  $(B)/baseq3/game/g_team.o \
-  $(B)/baseq3/game/g_trigger.o \
-  $(B)/baseq3/game/g_utils.o \
-  $(B)/baseq3/game/g_weapon.o \
+  $(B)/$(BASEGAME)/game/g_main.o \
+  $(B)/$(BASEGAME)/game/ai_chat.o \
+  $(B)/$(BASEGAME)/game/ai_cmd.o \
+  $(B)/$(BASEGAME)/game/ai_dmnet.o \
+  $(B)/$(BASEGAME)/game/ai_dmq3.o \
+  $(B)/$(BASEGAME)/game/ai_main.o \
+  $(B)/$(BASEGAME)/game/ai_team.o \
+  $(B)/$(BASEGAME)/game/ai_vcmd.o \
+  $(B)/$(BASEGAME)/game/bg_misc.o \
+  $(B)/$(BASEGAME)/game/bg_pmove.o \
+  $(B)/$(BASEGAME)/game/bg_slidemove.o \
+  $(B)/$(BASEGAME)/game/bg_lib.o \
+  $(B)/$(BASEGAME)/game/g_active.o \
+  $(B)/$(BASEGAME)/game/g_arenas.o \
+  $(B)/$(BASEGAME)/game/g_bot.o \
+  $(B)/$(BASEGAME)/game/g_client.o \
+  $(B)/$(BASEGAME)/game/g_cmds.o \
+  $(B)/$(BASEGAME)/game/g_combat.o \
+  $(B)/$(BASEGAME)/game/g_items.o \
+  $(B)/$(BASEGAME)/game/g_mem.o \
+  $(B)/$(BASEGAME)/game/g_misc.o \
+  $(B)/$(BASEGAME)/game/g_missile.o \
+  $(B)/$(BASEGAME)/game/g_mover.o \
+  $(B)/$(BASEGAME)/game/g_session.o \
+  $(B)/$(BASEGAME)/game/g_spawn.o \
+  $(B)/$(BASEGAME)/game/g_svcmds.o \
+  $(B)/$(BASEGAME)/game/g_target.o \
+  $(B)/$(BASEGAME)/game/g_team.o \
+  $(B)/$(BASEGAME)/game/g_trigger.o \
+  $(B)/$(BASEGAME)/game/g_utils.o \
+  $(B)/$(BASEGAME)/game/g_weapon.o \
   \
-  $(B)/baseq3/qcommon/q_math.o \
-  $(B)/baseq3/qcommon/q_shared.o
+  $(B)/$(BASEGAME)/qcommon/q_math.o \
+  $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3GOBJ = $(Q3GOBJ_) $(B)/baseq3/game/g_syscalls.o
+Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
-$(B)/baseq3/qagame$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/baseq3/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2043,111 +2083,111 @@ $(B)/baseq3/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 #############################################################################
 
 MPGOBJ_ = \
-  $(B)/missionpack/game/g_main.o \
-  $(B)/missionpack/game/ai_chat.o \
-  $(B)/missionpack/game/ai_cmd.o \
-  $(B)/missionpack/game/ai_dmnet.o \
-  $(B)/missionpack/game/ai_dmq3.o \
-  $(B)/missionpack/game/ai_main.o \
-  $(B)/missionpack/game/ai_team.o \
-  $(B)/missionpack/game/ai_vcmd.o \
-  $(B)/missionpack/game/bg_misc.o \
-  $(B)/missionpack/game/bg_pmove.o \
-  $(B)/missionpack/game/bg_slidemove.o \
-  $(B)/missionpack/game/bg_lib.o \
-  $(B)/missionpack/game/g_active.o \
-  $(B)/missionpack/game/g_arenas.o \
-  $(B)/missionpack/game/g_bot.o \
-  $(B)/missionpack/game/g_client.o \
-  $(B)/missionpack/game/g_cmds.o \
-  $(B)/missionpack/game/g_combat.o \
-  $(B)/missionpack/game/g_items.o \
-  $(B)/missionpack/game/g_mem.o \
-  $(B)/missionpack/game/g_misc.o \
-  $(B)/missionpack/game/g_missile.o \
-  $(B)/missionpack/game/g_mover.o \
-  $(B)/missionpack/game/g_session.o \
-  $(B)/missionpack/game/g_spawn.o \
-  $(B)/missionpack/game/g_svcmds.o \
-  $(B)/missionpack/game/g_target.o \
-  $(B)/missionpack/game/g_team.o \
-  $(B)/missionpack/game/g_trigger.o \
-  $(B)/missionpack/game/g_utils.o \
-  $(B)/missionpack/game/g_weapon.o \
+  $(B)/$(MISSIONPACK)/game/g_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_chat.o \
+  $(B)/$(MISSIONPACK)/game/ai_cmd.o \
+  $(B)/$(MISSIONPACK)/game/ai_dmnet.o \
+  $(B)/$(MISSIONPACK)/game/ai_dmq3.o \
+  $(B)/$(MISSIONPACK)/game/ai_main.o \
+  $(B)/$(MISSIONPACK)/game/ai_team.o \
+  $(B)/$(MISSIONPACK)/game/ai_vcmd.o \
+  $(B)/$(MISSIONPACK)/game/bg_misc.o \
+  $(B)/$(MISSIONPACK)/game/bg_pmove.o \
+  $(B)/$(MISSIONPACK)/game/bg_slidemove.o \
+  $(B)/$(MISSIONPACK)/game/bg_lib.o \
+  $(B)/$(MISSIONPACK)/game/g_active.o \
+  $(B)/$(MISSIONPACK)/game/g_arenas.o \
+  $(B)/$(MISSIONPACK)/game/g_bot.o \
+  $(B)/$(MISSIONPACK)/game/g_client.o \
+  $(B)/$(MISSIONPACK)/game/g_cmds.o \
+  $(B)/$(MISSIONPACK)/game/g_combat.o \
+  $(B)/$(MISSIONPACK)/game/g_items.o \
+  $(B)/$(MISSIONPACK)/game/g_mem.o \
+  $(B)/$(MISSIONPACK)/game/g_misc.o \
+  $(B)/$(MISSIONPACK)/game/g_missile.o \
+  $(B)/$(MISSIONPACK)/game/g_mover.o \
+  $(B)/$(MISSIONPACK)/game/g_session.o \
+  $(B)/$(MISSIONPACK)/game/g_spawn.o \
+  $(B)/$(MISSIONPACK)/game/g_svcmds.o \
+  $(B)/$(MISSIONPACK)/game/g_target.o \
+  $(B)/$(MISSIONPACK)/game/g_team.o \
+  $(B)/$(MISSIONPACK)/game/g_trigger.o \
+  $(B)/$(MISSIONPACK)/game/g_utils.o \
+  $(B)/$(MISSIONPACK)/game/g_weapon.o \
   \
-  $(B)/missionpack/qcommon/q_math.o \
-  $(B)/missionpack/qcommon/q_shared.o
+  $(B)/$(MISSIONPACK)/qcommon/q_math.o \
+  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPGOBJ = $(MPGOBJ_) $(B)/missionpack/game/g_syscalls.o
+MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
-$(B)/missionpack/qagame$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/missionpack/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/g_syscalls.asm
 
 
 
 #############################################################################
-## BASEQ3 UI
+## BASEGAME UI
 #############################################################################
 
 Q3UIOBJ_ = \
-  $(B)/baseq3/ui/ui_main.o \
-  $(B)/baseq3/ui/bg_misc.o \
-  $(B)/baseq3/ui/bg_lib.o \
-  $(B)/baseq3/ui/ui_addbots.o \
-  $(B)/baseq3/ui/ui_atoms.o \
-  $(B)/baseq3/ui/ui_cinematics.o \
-  $(B)/baseq3/ui/ui_confirm.o \
-  $(B)/baseq3/ui/ui_connect.o \
-  $(B)/baseq3/ui/ui_controls2.o \
-  $(B)/baseq3/ui/ui_credits.o \
-  $(B)/baseq3/ui/ui_demo2.o \
-  $(B)/baseq3/ui/ui_display.o \
-  $(B)/baseq3/ui/ui_gameinfo.o \
-  $(B)/baseq3/ui/ui_ingame.o \
-  $(B)/baseq3/ui/ui_loadconfig.o \
-  $(B)/baseq3/ui/ui_menu.o \
-  $(B)/baseq3/ui/ui_mfield.o \
-  $(B)/baseq3/ui/ui_mods.o \
-  $(B)/baseq3/ui/ui_network.o \
-  $(B)/baseq3/ui/ui_options.o \
-  $(B)/baseq3/ui/ui_playermodel.o \
-  $(B)/baseq3/ui/ui_players.o \
-  $(B)/baseq3/ui/ui_playersettings.o \
-  $(B)/baseq3/ui/ui_preferences.o \
-  $(B)/baseq3/ui/ui_qmenu.o \
-  $(B)/baseq3/ui/ui_removebots.o \
-  $(B)/baseq3/ui/ui_saveconfig.o \
-  $(B)/baseq3/ui/ui_serverinfo.o \
-  $(B)/baseq3/ui/ui_servers2.o \
-  $(B)/baseq3/ui/ui_setup.o \
-  $(B)/baseq3/ui/ui_sound.o \
-  $(B)/baseq3/ui/ui_sparena.o \
-  $(B)/baseq3/ui/ui_specifyserver.o \
-  $(B)/baseq3/ui/ui_splevel.o \
-  $(B)/baseq3/ui/ui_sppostgame.o \
-  $(B)/baseq3/ui/ui_spskill.o \
-  $(B)/baseq3/ui/ui_startserver.o \
-  $(B)/baseq3/ui/ui_team.o \
-  $(B)/baseq3/ui/ui_teamorders.o \
-  $(B)/baseq3/ui/ui_video.o \
+  $(B)/$(BASEGAME)/ui/ui_main.o \
+  $(B)/$(BASEGAME)/ui/bg_misc.o \
+  $(B)/$(BASEGAME)/ui/bg_lib.o \
+  $(B)/$(BASEGAME)/ui/ui_addbots.o \
+  $(B)/$(BASEGAME)/ui/ui_atoms.o \
+  $(B)/$(BASEGAME)/ui/ui_cinematics.o \
+  $(B)/$(BASEGAME)/ui/ui_confirm.o \
+  $(B)/$(BASEGAME)/ui/ui_connect.o \
+  $(B)/$(BASEGAME)/ui/ui_controls2.o \
+  $(B)/$(BASEGAME)/ui/ui_credits.o \
+  $(B)/$(BASEGAME)/ui/ui_demo2.o \
+  $(B)/$(BASEGAME)/ui/ui_display.o \
+  $(B)/$(BASEGAME)/ui/ui_gameinfo.o \
+  $(B)/$(BASEGAME)/ui/ui_ingame.o \
+  $(B)/$(BASEGAME)/ui/ui_loadconfig.o \
+  $(B)/$(BASEGAME)/ui/ui_menu.o \
+  $(B)/$(BASEGAME)/ui/ui_mfield.o \
+  $(B)/$(BASEGAME)/ui/ui_mods.o \
+  $(B)/$(BASEGAME)/ui/ui_network.o \
+  $(B)/$(BASEGAME)/ui/ui_options.o \
+  $(B)/$(BASEGAME)/ui/ui_playermodel.o \
+  $(B)/$(BASEGAME)/ui/ui_players.o \
+  $(B)/$(BASEGAME)/ui/ui_playersettings.o \
+  $(B)/$(BASEGAME)/ui/ui_preferences.o \
+  $(B)/$(BASEGAME)/ui/ui_qmenu.o \
+  $(B)/$(BASEGAME)/ui/ui_removebots.o \
+  $(B)/$(BASEGAME)/ui/ui_saveconfig.o \
+  $(B)/$(BASEGAME)/ui/ui_serverinfo.o \
+  $(B)/$(BASEGAME)/ui/ui_servers2.o \
+  $(B)/$(BASEGAME)/ui/ui_setup.o \
+  $(B)/$(BASEGAME)/ui/ui_sound.o \
+  $(B)/$(BASEGAME)/ui/ui_sparena.o \
+  $(B)/$(BASEGAME)/ui/ui_specifyserver.o \
+  $(B)/$(BASEGAME)/ui/ui_splevel.o \
+  $(B)/$(BASEGAME)/ui/ui_sppostgame.o \
+  $(B)/$(BASEGAME)/ui/ui_spskill.o \
+  $(B)/$(BASEGAME)/ui/ui_startserver.o \
+  $(B)/$(BASEGAME)/ui/ui_team.o \
+  $(B)/$(BASEGAME)/ui/ui_teamorders.o \
+  $(B)/$(BASEGAME)/ui/ui_video.o \
   \
-  $(B)/baseq3/qcommon/q_math.o \
-  $(B)/baseq3/qcommon/q_shared.o
+  $(B)/$(BASEGAME)/qcommon/q_math.o \
+  $(B)/$(BASEGAME)/qcommon/q_shared.o
 
-Q3UIOBJ = $(Q3UIOBJ_) $(B)/missionpack/ui/ui_syscalls.o
+Q3UIOBJ = $(Q3UIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 Q3UIVMOBJ = $(Q3UIOBJ_:%.o=%.asm)
 
-$(B)/baseq3/ui$(SHLIBNAME): $(Q3UIOBJ)
+$(B)/$(BASEGAME)/ui$(SHLIBNAME): $(Q3UIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3UIOBJ)
 
-$(B)/baseq3/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm
 
@@ -2156,26 +2196,26 @@ $(B)/baseq3/vm/ui.qvm: $(Q3UIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 #############################################################################
 
 MPUIOBJ_ = \
-  $(B)/missionpack/ui/ui_main.o \
-  $(B)/missionpack/ui/ui_atoms.o \
-  $(B)/missionpack/ui/ui_gameinfo.o \
-  $(B)/missionpack/ui/ui_players.o \
-  $(B)/missionpack/ui/ui_shared.o \
+  $(B)/$(MISSIONPACK)/ui/ui_main.o \
+  $(B)/$(MISSIONPACK)/ui/ui_atoms.o \
+  $(B)/$(MISSIONPACK)/ui/ui_gameinfo.o \
+  $(B)/$(MISSIONPACK)/ui/ui_players.o \
+  $(B)/$(MISSIONPACK)/ui/ui_shared.o \
   \
-  $(B)/missionpack/ui/bg_misc.o \
-  $(B)/missionpack/ui/bg_lib.o \
+  $(B)/$(MISSIONPACK)/ui/bg_misc.o \
+  $(B)/$(MISSIONPACK)/ui/bg_lib.o \
   \
-  $(B)/missionpack/qcommon/q_math.o \
-  $(B)/missionpack/qcommon/q_shared.o
+  $(B)/$(MISSIONPACK)/qcommon/q_math.o \
+  $(B)/$(MISSIONPACK)/qcommon/q_shared.o
 
-MPUIOBJ = $(MPUIOBJ_) $(B)/missionpack/ui/ui_syscalls.o
+MPUIOBJ = $(MPUIOBJ_) $(B)/$(MISSIONPACK)/ui/ui_syscalls.o
 MPUIVMOBJ = $(MPUIOBJ_:%.o=%.asm)
 
-$(B)/missionpack/ui$(SHLIBNAME): $(MPUIOBJ)
+$(B)/$(MISSIONPACK)/ui$(SHLIBNAME): $(MPUIOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPUIOBJ)
 
-$(B)/missionpack/vm/ui.qvm: $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/ui.qvm: $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPUIVMOBJ) $(UIDIR)/ui_syscalls.asm
 
@@ -2282,79 +2322,79 @@ endif
 ## GAME MODULE RULES
 #############################################################################
 
-$(B)/baseq3/cgame/bg_%.o: $(GDIR)/bg_%.c
+$(B)/$(BASEGAME)/cgame/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_CGAME_CC)
 
-$(B)/baseq3/cgame/%.o: $(CGDIR)/%.c
+$(B)/$(BASEGAME)/cgame/%.o: $(CGDIR)/%.c
 	$(DO_CGAME_CC)
 
-$(B)/baseq3/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+$(B)/$(BASEGAME)/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
-$(B)/baseq3/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
+$(B)/$(BASEGAME)/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC)
 
-$(B)/missionpack/cgame/bg_%.o: $(GDIR)/bg_%.c
+$(B)/$(MISSIONPACK)/cgame/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_CGAME_CC_MISSIONPACK)
 
-$(B)/missionpack/cgame/%.o: $(CGDIR)/%.c
+$(B)/$(MISSIONPACK)/cgame/%.o: $(CGDIR)/%.c
 	$(DO_CGAME_CC_MISSIONPACK)
 
-$(B)/missionpack/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/cgame/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC_MISSIONPACK)
 
-$(B)/missionpack/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/cgame/%.asm: $(CGDIR)/%.c $(Q3LCC)
 	$(DO_CGAME_Q3LCC_MISSIONPACK)
 
 
-$(B)/baseq3/game/%.o: $(GDIR)/%.c
+$(B)/$(BASEGAME)/game/%.o: $(GDIR)/%.c
 	$(DO_GAME_CC)
 
-$(B)/baseq3/game/%.asm: $(GDIR)/%.c $(Q3LCC)
+$(B)/$(BASEGAME)/game/%.asm: $(GDIR)/%.c $(Q3LCC)
 	$(DO_GAME_Q3LCC)
 
-$(B)/missionpack/game/%.o: $(GDIR)/%.c
+$(B)/$(MISSIONPACK)/game/%.o: $(GDIR)/%.c
 	$(DO_GAME_CC_MISSIONPACK)
 
-$(B)/missionpack/game/%.asm: $(GDIR)/%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/game/%.asm: $(GDIR)/%.c $(Q3LCC)
 	$(DO_GAME_Q3LCC_MISSIONPACK)
 
 
-$(B)/baseq3/ui/bg_%.o: $(GDIR)/bg_%.c
+$(B)/$(BASEGAME)/ui/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_UI_CC)
 
-$(B)/baseq3/ui/%.o: $(Q3UIDIR)/%.c
+$(B)/$(BASEGAME)/ui/%.o: $(Q3UIDIR)/%.c
 	$(DO_UI_CC)
 
-$(B)/baseq3/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+$(B)/$(BASEGAME)/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_UI_Q3LCC)
 
-$(B)/baseq3/ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
+$(B)/$(BASEGAME)/ui/%.asm: $(Q3UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_Q3LCC)
 
-$(B)/missionpack/ui/bg_%.o: $(GDIR)/bg_%.c
+$(B)/$(MISSIONPACK)/ui/bg_%.o: $(GDIR)/bg_%.c
 	$(DO_UI_CC_MISSIONPACK)
 
-$(B)/missionpack/ui/%.o: $(UIDIR)/%.c
+$(B)/$(MISSIONPACK)/ui/%.o: $(UIDIR)/%.c
 	$(DO_UI_CC_MISSIONPACK)
 
-$(B)/missionpack/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/ui/bg_%.asm: $(GDIR)/bg_%.c $(Q3LCC)
 	$(DO_UI_Q3LCC_MISSIONPACK)
 
-$(B)/missionpack/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/ui/%.asm: $(UIDIR)/%.c $(Q3LCC)
 	$(DO_UI_Q3LCC_MISSIONPACK)
 
 
-$(B)/baseq3/qcommon/%.o: $(CMDIR)/%.c
+$(B)/$(BASEGAME)/qcommon/%.o: $(CMDIR)/%.c
 	$(DO_SHLIB_CC)
 
-$(B)/baseq3/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
+$(B)/$(BASEGAME)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 	$(DO_Q3LCC)
 
-$(B)/missionpack/qcommon/%.o: $(CMDIR)/%.c
+$(B)/$(MISSIONPACK)/qcommon/%.o: $(CMDIR)/%.c
 	$(DO_SHLIB_CC_MISSIONPACK)
 
-$(B)/missionpack/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
+$(B)/$(MISSIONPACK)/qcommon/%.asm: $(CMDIR)/%.c $(Q3LCC)
 	$(DO_Q3LCC_MISSIONPACK)
 
 
@@ -2369,16 +2409,17 @@ TOOLSOBJ = $(LBURGOBJ) $(Q3CPPOBJ) $(Q3RCCOBJ) $(Q3LCCOBJ) $(Q3ASMOBJ)
 
 
 copyfiles: release
-	@if [ ! -d $(COPYDIR)/baseq3 ]; then echo "You need to set COPYDIR to where your Quake3 data is!"; fi
 ifneq ($(BUILD_GAME_SO),0)
-	-$(MKDIR) -p -m 0755 $(COPYDIR)/baseq3
+  ifneq ($(BUILD_BASEGAME),0)
+	-$(MKDIR) -p -m 0755 $(COPYDIR)/$(BASEGAME)
+  endif
   ifneq ($(BUILD_MISSIONPACK),0)
-	-$(MKDIR) -p -m 0755 $(COPYDIR)/missionpack
+	-$(MKDIR) -p -m 0755 $(COPYDIR)/$(MISSIONPACK)
   endif
 endif
 
 ifneq ($(BUILD_CLIENT),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/ioquake3$(FULLBINEXT) $(COPYBINDIR)/ioquake3$(FULLBINEXT)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)$(FULLBINEXT)
   ifneq ($(USE_RENDERER_DLOPEN),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_$(SHLIBNAME)
   endif
@@ -2389,31 +2430,32 @@ ifneq ($(BUILD_CLIENT_SMP),0)
   ifneq ($(USE_RENDERER_DLOPEN),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/renderer_opengl1_smp_$(SHLIBNAME) $(COPYBINDIR)/renderer_opengl1_smp_$(SHLIBNAME)
   else
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/ioquake3-smp$(FULLBINEXT) $(COPYBINDIR)/ioquake3-smp$(FULLBINEXT)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(CLIENTBIN)-smp$(FULLBINEXT) $(COPYBINDIR)/$(CLIENTBIN)-smp$(FULLBINEXT)
   endif
 endif
 
 ifneq ($(BUILD_SERVER),0)
-	@if [ -f $(BR)/ioq3ded$(FULLBINEXT) ]; then \
-		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/ioq3ded$(FULLBINEXT) $(COPYBINDIR)/ioq3ded$(FULLBINEXT); \
+	@if [ -f $(BR)/$(SERVERBIN)$(FULLBINEXT) ]; then \
+		$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(SERVERBIN)$(FULLBINEXT) $(COPYBINDIR)/$(SERVERBIN)$(FULLBINEXT); \
 	fi
 endif
 
 ifneq ($(BUILD_GAME_SO),0)
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/baseq3/cgame$(SHLIBNAME) \
-					$(COPYDIR)/baseq3/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/baseq3/qagame$(SHLIBNAME) \
-					$(COPYDIR)/baseq3/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/baseq3/ui$(SHLIBNAME) \
-					$(COPYDIR)/baseq3/.
+  ifneq ($(BUILD_BASEGAME),0)
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame$(SHLIBNAME) \
+					$(COPYDIR)/$(BASEGAME)/.
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/qagame$(SHLIBNAME) \
+					$(COPYDIR)/$(BASEGAME)/.
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui$(SHLIBNAME) \
+					$(COPYDIR)/$(BASEGAME)/.
+  endif
   ifneq ($(BUILD_MISSIONPACK),0)
-	-$(MKDIR) -p -m 0755 $(COPYDIR)/missionpack
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/missionpack/cgame$(SHLIBNAME) \
-					$(COPYDIR)/missionpack/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/missionpack/qagame$(SHLIBNAME) \
-					$(COPYDIR)/missionpack/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/missionpack/ui$(SHLIBNAME) \
-					$(COPYDIR)/missionpack/.
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
+					$(COPYDIR)/$(MISSIONPACK)/.
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+					$(COPYDIR)/$(MISSIONPACK)/.
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/ui$(SHLIBNAME) \
+					$(COPYDIR)/$(MISSIONPACK)/.
   endif
 endif
 
@@ -2461,10 +2503,10 @@ else
 endif
 
 dist:
-	rm -rf ioquake3-$(VERSION)
-	svn export . ioquake3-$(VERSION)
-	tar --owner=root --group=root --force-local -cjf ioquake3-$(VERSION).tar.bz2 ioquake3-$(VERSION)
-	rm -rf ioquake3-$(VERSION)
+	rm -rf $(CLIENTBIN)-$(VERSION)
+	svn export . $(CLIENTBIN)-$(VERSION)
+	tar --owner=root --group=root --force-local -cjf $(CLIENTBIN)-$(VERSION).tar.bz2 $(CLIENTBIN)-$(VERSION)
+	rm -rf $(CLIENTBIN)-$(VERSION)
 
 #############################################################################
 # DEPENDENCIES
