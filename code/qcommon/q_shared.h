@@ -36,6 +36,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
   #define GAMENAME_FOR_MASTER		"ioq3ztm"	// must NOT contain whitespace
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
+
+  #ifndef PRODUCT_VERSION
+    #define PRODUCT_VERSION "1.36"
+  #endif
 #else // ioquake3 defaults
   #define PRODUCT_NAME			"ioq3"
   #define BASEGAME			"baseq3"
@@ -46,6 +50,10 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
   #define GAMENAME_FOR_MASTER		"Quake3Arena"
   #define LEGACY_PROTOCOL
+
+  #ifndef PRODUCT_VERSION
+    #define PRODUCT_VERSION "1.36"
+  #endif
 #endif
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
@@ -54,10 +62,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // id Software games to not auto download
 #define BASEQ3				"baseq3"
 #define BASETA				"missionpack"
-
-#ifndef PRODUCT_VERSION
-  #define PRODUCT_VERSION "1.36"
-#endif
 
 #define Q3_VERSION PRODUCT_NAME " " PRODUCT_VERSION
 
