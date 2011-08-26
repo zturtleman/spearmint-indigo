@@ -165,6 +165,8 @@ typedef enum {
 	// 1.32
 	CG_FS_SEEK,
 
+	CG_FS_GETFILELIST,
+
 /*
 	CG_LOADCAMERA,
 	CG_STARTCAMERA,
