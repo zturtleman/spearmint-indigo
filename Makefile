@@ -135,7 +135,7 @@ ifndef USE_CURL_DLOPEN
 endif
 
 ifndef USE_CODEC_VORBIS
-USE_CODEC_VORBIS=0
+USE_CODEC_VORBIS=1
 endif
 
 ifndef USE_MUMBLE
@@ -203,6 +203,8 @@ LOKISETUPDIR=misc/setup
 NSISDIR=misc/nsis
 SDLHDIR=$(MOUNT_DIR)/SDL12
 LIBSDIR=$(MOUNT_DIR)/libs
+OGGDIR=$(MOUNT_DIR)/libogg
+VORBISDIR=$(MOUNT_DIR)/libvorbis
 
 bin_path=$(shell which $(1) 2> /dev/null)
 
@@ -493,25 +495,23 @@ ifeq ($(PLATFORM),mingw32)
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -lopengl32
-  
+
+  ifeq ($(ARCH),x64)
+    WINLIBDIR=$(LIBSDIR)/win64
+  else
+    WINLIBDIR=$(LIBSDIR)/win32
+  endif
+
   ifeq ($(USE_CURL),1)
     CLIENT_CFLAGS += $(CURL_CFLAGS)
     ifneq ($(USE_CURL_DLOPEN),1)
       ifeq ($(USE_LOCAL_HEADERS),1)
         CLIENT_CFLAGS += -DCURL_STATICLIB
-        ifeq ($(ARCH),x64)
-          CLIENT_LIBS += $(LIBSDIR)/win64/libcurl.a
-        else
-          CLIENT_LIBS += $(LIBSDIR)/win32/libcurl.a
-        endif
+        CLIENT_LIBS += $(WINLIBDIR)/libcurl.a
       else
         CLIENT_LIBS += $(CURL_LIBS)
       endif
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   ifeq ($(ARCH),x86)
@@ -527,21 +527,35 @@ ifeq ($(PLATFORM),mingw32)
   
   ifeq ($(USE_LOCAL_HEADERS),1)
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
-    ifeq ($(ARCH), x86)
-    CLIENT_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win32/libSDLmain.a \
-                      $(LIBSDIR)/win32/libSDL.dll.a
+    CLIENT_LIBS += $(WINLIBDIR)/libSDLmain.a
+    ifeq ($(ARCH),x64)
+      CLIENT_LIBS += $(WINLIBDIR)/libSDL64.dll.a
     else
-    CLIENT_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
-    RENDERER_LIBS += $(LIBSDIR)/win64/libSDLmain.a \
-                      $(LIBSDIR)/win64/libSDL64.dll.a
+      CLIENT_LIBS += $(WINLIBDIR)/libSDL.dll.a
+    endif
+
+    RENDERER_LIBS += $(WINLIBDIR)/libSDLmain.a
+    ifeq ($(ARCH),x64)
+      RENDERER_LIBS += $(WINLIBDIR)/libSDL64.dll.a
+    else
+      RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
+    endif
+
+    ifeq ($(USE_CODEC_VORBIS),1)
+      CLIENT_CFLAGS += -I$(OGGDIR)/include \
+                      -I$(VORBISDIR)/include
+      CLIENT_LIBS += $(WINLIBDIR)/libvorbisfile.a \
+                      $(WINLIBDIR)/libvorbis.a \
+                      $(WINLIBDIR)/libogg.a
     endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
+
+    ifeq ($(USE_CODEC_VORBIS),1)
+      CLIENT_LIBS += -lvorbisfile -lvorbis -logg
+    endif
   endif
 
   BUILD_CLIENT_SMP = 0
