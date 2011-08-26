@@ -2346,6 +2346,54 @@ char **FS_ListFiles( const char *path, const char *extension, int *numfiles ) {
 
 /*
 =================
+FS_ListFilesEx
+
+Create a list of files using multiple file extensions
+=================
+*/
+char **FS_ListFilesEx( const char *path, const char **extensions, int numExts, int *numfiles, qboolean allowNonPureFilesOnDisk ) {
+	int		nfiles;
+	char	**listCopy;
+	char	*list[MAX_FOUND_FILES];
+	char	**sysFiles = NULL;
+	int		numSysFiles;
+	char	*name;
+	int		i;
+	int		j;
+
+	nfiles = 0;
+
+	for (i = 0; i < numExts; i++)
+	{
+		sysFiles = FS_ListFilteredFiles( path, extensions[i], NULL, &numSysFiles, allowNonPureFilesOnDisk );
+		for ( j = 0 ; j < numSysFiles ; j++ ) {
+			// unique the match
+			name = sysFiles[j];
+			nfiles = FS_AddFileToList( name, list, nfiles );
+		}
+		Sys_FreeFileList( sysFiles );
+	}
+
+	// return a copy of the list
+	*numfiles = nfiles;
+
+	if ( !nfiles ) {
+		return NULL;
+	}
+
+	FS_SortFileList((char **)&list, nfiles);
+
+	listCopy = Z_Malloc( ( nfiles + 1 ) * sizeof( *listCopy ) );
+	for ( i = 0 ; i < nfiles ; i++ ) {
+		listCopy[i] = list[i];
+	}
+	listCopy[i] = NULL;
+
+	return listCopy;
+}
+
+/*
+=================
 FS_FreeFileList
 =================
 */
@@ -2385,7 +2433,86 @@ int	FS_GetFileList(  const char *path, const char *extension, char *listbuf, int
 		return FS_GetModList(listbuf, bufsize);
 	}
 
-	pFiles = FS_ListFiles(path, extension, &nFiles);
+	if (Q_stricmp(extension, "$videos") == 0)
+	{
+		const char *extensions[] = { "RoQ", "roq" };
+		int extNamesSize = ARRAY_LEN(extensions);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+	}
+	else if (Q_stricmp(extension, "$images") == 0)
+	{
+		const char *extensions[] = { "png", "tga", "jpg", "jpeg", "pcx", "bmp" };
+		int extNamesSize = ARRAY_LEN(extensions);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+	}
+	else if (Q_stricmp(extension, "$sounds") == 0)
+	{
+		const char *extensions[] = { "wav"
+#ifdef USE_CODEC_VORBIS
+			, "ogg"
+#endif
+			};
+		int extNamesSize = ARRAY_LEN(extensions);
+		pFiles = FS_ListFilesEx(path, extensions, extNamesSize, &nFiles, qfalse);
+	}
+	// Allow extension to be a list
+	// Example "RoQ;roq;jpg;wav"
+	else if (strstr(extension, ";"))
+	{
+		const int MAX_EXTS = 8;
+		char buffer[MAX_QPATH];
+		const char *extensions[MAX_EXTS];
+		int numExts;
+		int len;
+		char *s1;
+		char *s2;
+
+		numExts = 0;
+
+		Q_strncpyz(buffer, extension, MAX_QPATH);
+
+		s1 = buffer;
+		s2 = strchr(s1, ';');
+
+		len = s2 - s1 + 1;
+		if (len > 0)
+		{
+			extensions[numExts] = s1;
+			numExts++;
+		}
+
+		while ( 1 )
+		{
+			s1 = s2;
+			if (!s1) {
+				break;
+			}
+			*s1 = 0; // Change ';' to '\0'
+			s1++;
+
+			s2 = strchr(s1, ';');
+			if (s2) {
+				len = s2 - s1 + 1;
+			} else {
+				len = strlen(s1) + 1;
+			}
+
+			if (len > 0)
+			{
+				extensions[numExts] = s1;
+				numExts++;
+				if (numExts == MAX_EXTS) {
+					break;
+				}
+			}
+		}
+
+		pFiles = FS_ListFilesEx(path, extensions, numExts, &nFiles, qfalse);
+	}
+	else
+	{
+		pFiles = FS_ListFiles(path, extension, &nFiles);
+	}
 
 	for (i =0; i < nFiles; i++) {
 		nLen = strlen(pFiles[i]) + 1;
