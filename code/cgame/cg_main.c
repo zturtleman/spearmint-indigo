@@ -58,9 +58,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_DrawActiveFrame( arg0, arg1, arg2 );
 		return 0;
 	case CG_CROSSHAIR_PLAYER:
-		return CG_CrosshairPlayer();
+		return CG_CrosshairPlayer(arg0);
 	case CG_LAST_ATTACKER:
-		return CG_LastAttacker();
+		return CG_LastAttacker(arg0);
 	case CG_KEY_EVENT:
 		CG_KeyEvent(arg0, arg1);
 		return 0;
@@ -409,18 +409,28 @@ void CG_UpdateCvars( void ) {
 	}
 }
 
-int CG_CrosshairPlayer( void ) {
-	if ( cg.time > ( cg.localClients[0].crosshairClientTime + 1000 ) ) {
+int CG_CrosshairPlayer( int localClientNum ) {
+	if (localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
 		return -1;
 	}
-	return cg.localClients[0].crosshairClientNum;
+
+	if ( cg.time > ( cg.localClients[localClientNum].crosshairClientTime + 1000 ) ) {
+		return -1;
+	}
+
+	return cg.localClients[localClientNum].crosshairClientNum;
 }
 
-int CG_LastAttacker( void ) {
-	if ( !cg.localClients[0].attackerTime ) {
+int CG_LastAttacker( int localClientNum ) {
+	if (localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
 		return -1;
 	}
-	return cg.snap->pss[0].persistant[PERS_ATTACKER];
+
+	if ( !cg.localClients[localClientNum].attackerTime ) {
+		return -1;
+	}
+
+	return cg.snap->pss[cg.snap->lcIndex[localClientNum]].persistant[PERS_ATTACKER];
 }
 
 void QDECL CG_Printf( const char *msg, ... ) {
