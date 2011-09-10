@@ -1202,6 +1202,8 @@ void UI_Refresh( int realtime )
 			Menu_Draw( uis.activemenu );
 
 		if( uis.firstdraw ) {
+			int i;
+
 			for (i = 0; i < MAX_SPLITVIEW; ++i) {
 				UI_MouseEvent( i, 0, 0 );
 			}
