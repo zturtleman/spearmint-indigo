@@ -1684,9 +1684,17 @@ void CG_OwnerDraw(float x, float y, float w, float h, float text_x, float text_y
   }
 }
 
-void CG_MouseEvent(int x, int y) {
+void CG_MouseEvent(int localClientNum, int x, int y) {
 	int n;
 	cglc_t *lc;
+
+	if (localClientNum != 0) {
+		// Missionpack HUD currently only supports one cursor
+		return;
+	}
+
+	cgDC.cursorx = cgs.cursorX;
+	cgDC.cursory = cgs.cursorY;
 
 	lc = &cg.localClients[0];
 

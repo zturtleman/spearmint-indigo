@@ -65,11 +65,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		CG_KeyEvent(arg0, arg1);
 		return 0;
 	case CG_MOUSE_EVENT:
-#ifdef MISSIONPACK
-		cgDC.cursorx = cgs.cursorX;
-		cgDC.cursory = cgs.cursorY;
-#endif
-		CG_MouseEvent(arg0, arg1);
+		CG_MouseEvent(arg0, arg1, arg2);
 		return 0;
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
@@ -2009,7 +2005,7 @@ void CG_EventHandling(int type) {
 void CG_KeyEvent(int key, qboolean down) {
 }
 
-void CG_MouseEvent(int x, int y) {
+void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
 
