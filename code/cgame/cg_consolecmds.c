@@ -202,7 +202,7 @@ static void CG_TellAttacker_f( void ) {
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker();
+	clientNum = CG_LastAttacker(0);
 	if ( clientNum == -1 ) {
 		return;
 	}
@@ -232,7 +232,7 @@ static void CG_VoiceTellAttacker_f( void ) {
 	char	command[128];
 	char	message[128];
 
-	clientNum = CG_LastAttacker();
+	clientNum = CG_LastAttacker(0);
 	if ( clientNum == -1 ) {
 		return;
 	}
