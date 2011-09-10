@@ -1077,6 +1077,12 @@ void SpectatorClientEndFrame( gentity_t *ent ) {
 		}
 	}
 
+	if ( ent->client->sess.spectatorState == SPECTATOR_LOCAL_HIDE ) {
+		ent->client->ps.pm_flags |= PMF_LOCAL_HIDE;
+	} else {
+		ent->client->ps.pm_flags &= ~PMF_LOCAL_HIDE;
+	}
+
 	if ( ent->client->sess.spectatorState == SPECTATOR_SCOREBOARD ) {
 		ent->client->ps.pm_flags |= PMF_SCOREBOARD;
 	} else {

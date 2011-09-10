@@ -100,6 +100,8 @@ typedef struct
 	int				numpages;
 	char			modelskin[64];
 	int				selectedmodel;
+	int				localClient;
+	char			bannerString[32];
 } playermodel_t;
 
 static playermodel_t s_playermodel;
@@ -192,10 +194,10 @@ PlayerModel_SaveChanges
 */
 static void PlayerModel_SaveChanges( void )
 {
-	trap_Cvar_Set( "model", s_playermodel.modelskin );
-	trap_Cvar_Set( "headmodel", s_playermodel.modelskin );
-	trap_Cvar_Set( "team_model", s_playermodel.modelskin );
-	trap_Cvar_Set( "team_headmodel", s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "headmodel"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_model"), s_playermodel.modelskin );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playermodel.localClient, "team_headmodel"), s_playermodel.modelskin );
 }
 
 /*
@@ -463,11 +465,11 @@ static void PlayerModel_SetMenuItems( void )
 	char*			pdest;
 
 	// name
-	trap_Cvar_VariableStringBuffer( "name", s_playermodel.playername.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "name"), s_playermodel.playername.string, 16 );
 	Q_CleanStr( s_playermodel.playername.string );
 
 	// model
-	trap_Cvar_VariableStringBuffer( "model", s_playermodel.modelskin, 64 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playermodel.localClient, "model"), s_playermodel.modelskin, 64 );
 	
 	// use default skin if none is set
 	if (!strchr(s_playermodel.modelskin, '/')) {
@@ -517,7 +519,7 @@ static void PlayerModel_SetMenuItems( void )
 PlayerModel_MenuInit
 =================
 */
-static void PlayerModel_MenuInit( void )
+static void PlayerModel_MenuInit( int localClient )
 {
 	int			i;
 	int			j;
@@ -531,6 +533,9 @@ static void PlayerModel_MenuInit( void )
 	// zero set all our globals
 	memset( &s_playermodel, 0 ,sizeof(playermodel_t) );
 
+	s_playermodel.localClient = localClient;
+	Com_sprintf(s_playermodel.bannerString, sizeof (s_playermodel.bannerString), "PLAYER %d MODEL", s_playermodel.localClient+1);
+
 	PlayerModel_Cache();
 
 	s_playermodel.menu.key        = PlayerModel_MenuKey;
@@ -540,7 +545,7 @@ static void PlayerModel_MenuInit( void )
 	s_playermodel.banner.generic.type  = MTYPE_BTEXT;
 	s_playermodel.banner.generic.x     = 320;
 	s_playermodel.banner.generic.y     = 16;
-	s_playermodel.banner.string        = "PLAYER MODEL";
+	s_playermodel.banner.string = s_playermodel.bannerString;
 	s_playermodel.banner.color         = color_white;
 	s_playermodel.banner.style         = UI_CENTER;
 
@@ -724,9 +729,8 @@ void PlayerModel_Cache( void )
 	}
 }
 
-void UI_PlayerModelMenu(void)
-{
-	PlayerModel_MenuInit();
+void UI_PlayerModelMenu(int localClient) {
+	PlayerModel_MenuInit(localClient);
 
 	UI_PushMenu( &s_playermodel.menu );
 

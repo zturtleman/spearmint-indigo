@@ -134,14 +134,15 @@ vmCvar_t	cg_gun_z;
 vmCvar_t	cg_tracerChance;
 vmCvar_t	cg_tracerWidth;
 vmCvar_t	cg_tracerLength;
-vmCvar_t	cg_autoswitch;
+vmCvar_t	cg_autoswitch[MAX_SPLITVIEW];
 vmCvar_t	cg_ignore;
 vmCvar_t	cg_simpleItems;
 vmCvar_t	cg_fov;
 vmCvar_t	cg_zoomFov;
-vmCvar_t	cg_thirdPerson;
-vmCvar_t	cg_thirdPersonRange;
-vmCvar_t	cg_thirdPersonAngle;
+vmCvar_t	cg_thirdPerson[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonRange[MAX_SPLITVIEW];
+vmCvar_t	cg_thirdPersonAngle[MAX_SPLITVIEW];
+vmCvar_t	cg_splitviewVertical;
 vmCvar_t	cg_lagometer;
 vmCvar_t	cg_drawAttacker;
 vmCvar_t	cg_synchronousClients;
@@ -205,7 +206,10 @@ typedef struct {
 
 static cvarTable_t cvarTable[] = {
 	{ &cg_ignore, "cg_ignore", "0", 0 },	// used for debugging
-	{ &cg_autoswitch, "cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[0], "cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[1], "2cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[2], "3cg_autoswitch", "1", CVAR_ARCHIVE },
+	{ &cg_autoswitch[3], "4cg_autoswitch", "1", CVAR_ARCHIVE },
 	{ &cg_drawGun, "cg_drawGun", "1", CVAR_ARCHIVE },
 	{ &cg_zoomFov, "cg_zoomfov", "22.5", CVAR_ARCHIVE },
 	{ &cg_fov, "cg_fov", "90", CVAR_ARCHIVE },
@@ -255,9 +259,19 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_tracerChance, "cg_tracerchance", "0.4", CVAR_CHEAT },
 	{ &cg_tracerWidth, "cg_tracerwidth", "1", CVAR_CHEAT },
 	{ &cg_tracerLength, "cg_tracerlength", "100", CVAR_CHEAT },
-	{ &cg_thirdPersonRange, "cg_thirdPersonRange", "40", CVAR_CHEAT },
-	{ &cg_thirdPersonAngle, "cg_thirdPersonAngle", "0", CVAR_CHEAT },
-	{ &cg_thirdPerson, "cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPersonRange[0], "cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[0], "cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[1], "2cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[1], "2cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[2], "3cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[2], "3cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPersonRange[3], "4cg_thirdPersonRange", "40", CVAR_CHEAT },
+	{ &cg_thirdPersonAngle[3], "4cg_thirdPersonAngle", "0", CVAR_CHEAT },
+	{ &cg_thirdPerson[0], "cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[1], "2cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[2], "3cg_thirdPerson", "0", 0 },
+	{ &cg_thirdPerson[3], "4cg_thirdPerson", "0", 0 },
+	{ &cg_splitviewVertical, "cg_splitviewVertical", "0", CVAR_ARCHIVE },
 	{ &cg_teamChatTime, "cg_teamChatTime", "3000", CVAR_ARCHIVE  },
 	{ &cg_teamChatHeight, "cg_teamChatHeight", "0", CVAR_ARCHIVE  },
 	{ &cg_forceModel, "cg_forceModel", "0", CVAR_ARCHIVE  },
@@ -268,7 +282,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_deferPlayers, "cg_deferPlayers", "1", CVAR_ARCHIVE },
 #endif
 	{ &cg_drawTeamOverlay, "cg_drawTeamOverlay", "0", CVAR_ARCHIVE },
-	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO },
+	{ &cg_teamOverlayUserinfo, "teamoverlay", "0", CVAR_ROM | CVAR_USERINFO_ALL },
 	{ &cg_stats, "cg_stats", "0", 0 },
 	{ &cg_drawFriend, "cg_drawFriend", "1", CVAR_ARCHIVE },
 	{ &cg_teamChatsOnly, "cg_teamChatsOnly", "0", CVAR_ARCHIVE },
@@ -339,6 +353,7 @@ void CG_RegisterCvars( void ) {
 
 	forceModelModificationCount = cg_forceModel.modificationCount;
 
+	// ZTM: FIXME: Add extra local clients, or can this be safely removed?
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	trap_Cvar_Register(NULL, "headmodel", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
 	trap_Cvar_Register(NULL, "team_model", DEFAULT_TEAM_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
@@ -399,17 +414,17 @@ void CG_UpdateCvars( void ) {
 }
 
 int CG_CrosshairPlayer( void ) {
-	if ( cg.time > ( cg.crosshairClientTime + 1000 ) ) {
+	if ( cg.time > ( cg.localClients[0].crosshairClientTime + 1000 ) ) {
 		return -1;
 	}
-	return cg.crosshairClientNum;
+	return cg.localClients[0].crosshairClientNum;
 }
 
 int CG_LastAttacker( void ) {
-	if ( !cg.attackerTime ) {
+	if ( !cg.localClients[0].attackerTime ) {
 		return -1;
 	}
-	return cg.snap->ps.persistant[PERS_ATTACKER];
+	return cg.snap->pss[0].persistant[PERS_ATTACKER];
 }
 
 void QDECL CG_Printf( const char *msg, ... ) {
@@ -1124,14 +1139,23 @@ CG_RegisterClients
 */
 static void CG_RegisterClients( void ) {
 	int		i;
+	int		j;
+	int		numLocalClients = 1; // cg.snap->numPSs; ZTM: FIXME?: cg.snap is NULL here, how can we get number?
 
-	CG_LoadingClient(cg.clientNum);
-	CG_NewClientInfo(cg.clientNum);
+	for (i = 0; i < numLocalClients; i++) {
+		CG_LoadingClient(cg.localClients[i].clientNum);
+		CG_NewClientInfo(cg.localClients[i].clientNum);
+	}
 
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
 		const char		*clientInfo;
 
-		if (cg.clientNum == i) {
+		for (j = 0; j < numLocalClients; j++) {
+			if (cg.localClients[j].clientNum == i) {
+				break;
+			}
+		}
+		if (j != numLocalClients) {
 			continue;
 		}
 
@@ -1526,7 +1550,7 @@ static int CG_FeederCount(float feederID) {
 
 void CG_SetScoreSelection(void *p) {
 	menuDef_t *menu = (menuDef_t*)p;
-	playerState_t *ps = &cg.snap->ps;
+	playerState_t *ps = cg.cur_ps;
 	int i, red, blue;
 	red = blue = 0;
 	for (i = 0; i < cg.numScores; i++) {
@@ -1623,7 +1647,7 @@ static const char *CG_FeederItemText(float feederID, int index, int column, qhan
 				}
 		  break;
 			case 2:
-				if ( cg.snap->ps.stats[ STAT_CLIENTS_READY ] & ( 1 << sp->client ) ) {
+				if ( cg.cur_ps->stats[ STAT_CLIENTS_READY ] & ( 1 << sp->client ) ) {
 					return "Ready";
 				}
 				if (team == -1) {
@@ -1845,6 +1869,7 @@ Will perform callbacks to make the loading info screen update.
 */
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	const char	*s;
+	int			i;
 
 	// clear everything
 	memset( &cgs, 0, sizeof( cgs ) );
@@ -1853,7 +1878,11 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
 
-	cg.clientNum = clientNum;
+	cg.numViewports = 1;
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		cg.localClients[i].clientNum = clientNum;
+	}
 
 	cgs.processedSnapshotNum = serverMessageNum;
 	cgs.serverCommandSequence = serverCommandSequence;
@@ -1869,7 +1898,9 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_InitConsoleCommands();
 
-	cg.weaponSelect = WP_MACHINEGUN;
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
+	}
 
 	cgs.redflag = cgs.blueflag = -1; // For compatibily, default to unset for
 	cgs.flagStatus = -1;

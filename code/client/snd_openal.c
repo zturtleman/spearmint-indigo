@@ -2136,10 +2136,16 @@ S_AL_Respatialize
 =================
 */
 static
-void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater )
+void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, int listener )
 {
 	float		orientation[6];
 	vec3_t	sorigin;
+
+	if (listener != 0)
+	{
+		// ZTM: FIXME: Support multiple listeners!
+		return;
+	}
 
 	VectorCopy( origin, sorigin );
 	S_AL_SanitiseVector( sorigin );

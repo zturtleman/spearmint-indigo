@@ -978,6 +978,21 @@ void Cvar_List_f( void ) {
 		} else {
 			Com_Printf(" ");
 		}
+		if (var->flags & CVAR_USERINFO2) {
+			Com_Printf("2");
+		} else {
+			Com_Printf(" ");
+		}
+		if (var->flags & CVAR_USERINFO3) {
+			Com_Printf("3");
+		} else {
+			Com_Printf(" ");
+		}
+		if (var->flags & CVAR_USERINFO4) {
+			Com_Printf("4");
+		} else {
+			Com_Printf(" ");
+		}
 		if (var->flags & CVAR_ROM) {
 			Com_Printf("R");
 		} else {
@@ -1150,7 +1165,13 @@ char *Cvar_InfoString(int bit)
 	for(var = cvar_vars; var; var = var->next)
 	{
 		if(var->name && (var->flags & bit))
-			Info_SetValueForKey (info, var->name, var->string);
+		{
+			// If extra local client userinfo, remove "#" (2, 3, or 4) from the beginning of each var.
+			if ((bit & (CVAR_USERINFO2|CVAR_USERINFO3|CVAR_USERINFO4)) && isdigit(var->name[0]))
+				Info_SetValueForKey (info, &var->name[1], var->string);
+			else
+				Info_SetValueForKey (info, var->name, var->string);
+		}
 	}
 
 	return info;
@@ -1173,7 +1194,13 @@ char *Cvar_InfoString_Big(int bit)
 	for (var = cvar_vars; var; var = var->next)
 	{
 		if(var->name && (var->flags & bit))
-			Info_SetValueForKey_Big (info, var->name, var->string);
+		{
+			// If extra local client userinfo, remove "#" (2, 3, or 4) from the beginning of each var.
+			if ((bit & (CVAR_USERINFO2|CVAR_USERINFO3|CVAR_USERINFO4)) && isdigit(var->name[0]))
+				Info_SetValueForKey_Big (info, &var->name[1], var->string);
+			else
+				Info_SetValueForKey_Big (info, var->name, var->string);
+		}
 	}
 	return info;
 }

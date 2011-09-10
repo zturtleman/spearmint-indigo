@@ -65,7 +65,6 @@ typedef struct
 #define C_LOOKING		1
 #define C_WEAPONS		2
 #define C_MISC			3
-#define C_MAX			4
 
 #define ID_MOVEMENT		100
 #define ID_LOOKING		101
@@ -219,6 +218,10 @@ typedef struct
 
 	menubitmap_s		back;
 	menutext_s			name;
+
+	int					localClient;
+	menucommon_s		***controls;
+	bind_t				*bindings;
 } controls_t; 	
 
 static controls_t s_controls;
@@ -264,14 +267,155 @@ static bind_t g_bindings[] =
 	{(char*)NULL,		(char*)NULL,		0,				0,				-1,				-1,		-1,	-1},
 };
 
+#define MINIBIND(id, d1,d2) {(char*)NULL, (char*)NULL, (id), 0, (d1), (d2), -1, -1}
+
+static bind_t g_bindings2[] =
+{
+	MINIBIND(ID_SHOWSCORES, -1, -1),
+	MINIBIND(ID_USEITEM, -1, -1),
+	MINIBIND(ID_SPEED, -1, -1),
+	MINIBIND(ID_FORWARD, -1, -1),
+	MINIBIND(ID_BACKPEDAL, -1, -1),
+	MINIBIND(ID_MOVELEFT, -1, -1),
+	MINIBIND(ID_MOVERIGHT, -1, -1),
+	MINIBIND(ID_MOVEUP, -1, -1),
+	MINIBIND(ID_MOVEDOWN, -1, -1),
+	MINIBIND(ID_LEFT, -1, -1),
+	MINIBIND(ID_RIGHT, -1, -1),
+	MINIBIND(ID_STRAFE, -1, -1),
+	MINIBIND(ID_LOOKUP, -1, -1),
+	MINIBIND(ID_LOOKDOWN, -1, -1),
+	MINIBIND(ID_MOUSELOOK, -1, -1),
+	MINIBIND(ID_CENTERVIEW, -1, -1),
+	MINIBIND(ID_ZOOMVIEW, -1, -1),
+	MINIBIND(ID_WEAPON1, -1, -1),
+	MINIBIND(ID_WEAPON2, -1, -1),
+	MINIBIND(ID_WEAPON3, -1, -1),
+	MINIBIND(ID_WEAPON4, -1, -1),
+	MINIBIND(ID_WEAPON5, -1, -1),
+	MINIBIND(ID_WEAPON6, -1, -1),
+	MINIBIND(ID_WEAPON7, -1, -1),
+	MINIBIND(ID_WEAPON8, -1, -1),
+	MINIBIND(ID_WEAPON9, -1, -1),
+	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_WEAPPREV, -1, -1),
+	MINIBIND(ID_WEAPNEXT, -1, -1),
+	MINIBIND(ID_GESTURE, -1, -1),
+	MINIBIND(ID_CHAT, -1, -1),
+	MINIBIND(ID_CHAT2, -1, -1),
+	MINIBIND(ID_CHAT3, -1, -1),
+	MINIBIND(ID_CHAT4, -1, -1),
+	MINIBIND(0, -1, -1),
+};
+
+static bind_t g_bindings3[] =
+{
+	MINIBIND(ID_SHOWSCORES, -1, -1),
+	MINIBIND(ID_USEITEM, -1, -1),
+#ifndef TURTLEARENA // ALWAYS_RUN // NO_SPEED_KEY
+	MINIBIND(ID_SPEED, -1, -1),
+#endif
+	MINIBIND(ID_FORWARD, -1, -1),
+	MINIBIND(ID_BACKPEDAL, -1, -1),
+	MINIBIND(ID_MOVELEFT, -1, -1),
+	MINIBIND(ID_MOVERIGHT, -1, -1),
+	MINIBIND(ID_MOVEUP, -1, -1),
+	MINIBIND(ID_MOVEDOWN, -1, -1),
+	MINIBIND(ID_LEFT, -1, -1),
+	MINIBIND(ID_RIGHT, -1, -1),
+	MINIBIND(ID_STRAFE, -1, -1),
+	MINIBIND(ID_LOOKUP, -1, -1),
+	MINIBIND(ID_LOOKDOWN, -1, -1),
+	MINIBIND(ID_MOUSELOOK, -1, -1),
+	MINIBIND(ID_CENTERVIEW, -1, -1),
+	MINIBIND(ID_ZOOMVIEW, -1, -1),
+	MINIBIND(ID_WEAPON1, -1, -1),
+	MINIBIND(ID_WEAPON2, -1, -1),
+	MINIBIND(ID_WEAPON3, -1, -1),
+	MINIBIND(ID_WEAPON4, -1, -1),
+	MINIBIND(ID_WEAPON5, -1, -1),
+	MINIBIND(ID_WEAPON6, -1, -1),
+	MINIBIND(ID_WEAPON7, -1, -1),
+	MINIBIND(ID_WEAPON8, -1, -1),
+	MINIBIND(ID_WEAPON9, -1, -1),
+	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_WEAPPREV, -1, -1),
+	MINIBIND(ID_WEAPNEXT, -1, -1),
+	MINIBIND(ID_GESTURE, -1, -1),
+	MINIBIND(ID_CHAT, -1, -1),
+	MINIBIND(ID_CHAT2, -1, -1),
+	MINIBIND(ID_CHAT3, -1, -1),
+	MINIBIND(ID_CHAT4, -1, -1),
+	MINIBIND(0, -1, -1),
+};
+
+static bind_t g_bindings4[] =
+{
+	MINIBIND(ID_SHOWSCORES, -1, -1),
+	MINIBIND(ID_USEITEM, -1, -1),
+	MINIBIND(ID_SPEED, -1, -1),
+	MINIBIND(ID_FORWARD, -1, -1),
+	MINIBIND(ID_BACKPEDAL, -1, -1),
+	MINIBIND(ID_MOVELEFT, -1, -1),
+	MINIBIND(ID_MOVERIGHT, -1, -1),
+	MINIBIND(ID_MOVEUP, -1, -1),
+	MINIBIND(ID_MOVEDOWN, -1, -1),
+	MINIBIND(ID_LEFT, -1, -1),
+	MINIBIND(ID_RIGHT, -1, -1),
+	MINIBIND(ID_STRAFE, -1, -1),
+	MINIBIND(ID_LOOKUP, -1, -1),
+	MINIBIND(ID_LOOKDOWN, -1, -1),
+	MINIBIND(ID_MOUSELOOK, -1, -1),
+	MINIBIND(ID_CENTERVIEW, -1, -1),
+	MINIBIND(ID_ZOOMVIEW, -1, -1),
+	MINIBIND(ID_WEAPON1, -1, -1),
+	MINIBIND(ID_WEAPON2, -1, -1),
+	MINIBIND(ID_WEAPON3, -1, -1),
+	MINIBIND(ID_WEAPON4, -1, -1),
+	MINIBIND(ID_WEAPON5, -1, -1),
+	MINIBIND(ID_WEAPON6, -1, -1),
+	MINIBIND(ID_WEAPON7, -1, -1),
+	MINIBIND(ID_WEAPON8, -1, -1),
+	MINIBIND(ID_WEAPON9, -1, -1),
+	MINIBIND(ID_ATTACK, -1, -1),
+	MINIBIND(ID_WEAPPREV, -1, -1),
+	MINIBIND(ID_WEAPNEXT, -1, -1),
+	MINIBIND(ID_GESTURE, -1, -1),
+	MINIBIND(ID_CHAT, -1, -1),
+	MINIBIND(ID_CHAT2, -1, -1),
+	MINIBIND(ID_CHAT3, -1, -1),
+	MINIBIND(ID_CHAT4, -1, -1),
+	MINIBIND(0, -1, -1),
+};
+
+bind_t *g_bindings_list[MAX_SPLITVIEW] =
+{
+	g_bindings,
+	g_bindings2,
+	g_bindings3,
+	g_bindings4
+};
+
 static configcvar_t g_configcvars[] =
 {
 	{"cl_run",			0,					0},
+	{"2cl_run",			0,					0},
+	{"3cl_run",			0,					0},
+	{"4cl_run",			0,					0},
 	{"m_pitch",			0,					0},
 	{"cg_autoswitch",	0,					0},
+	{"2cg_autoswitch",	0,					0},
+	{"3cg_autoswitch",	0,					0},
+	{"4cg_autoswitch",	0,					0},
 	{"sensitivity",		0,					0},
 	{"in_joystick",		0,					0},
+	{"2in_joystick",	0,					0},
+	{"3in_joystick",	0,					0},
+	{"4in_joystick",	0,					0},
 	{"joy_threshold",	0,					0},
+	{"2joy_threshold",	0,					0},
+	{"3joy_threshold",	0,					0},
+	{"4joy_threshold",	0,					0},
 	{"m_filter",		0,					0},
 	{"cl_freelook",		0,					0},
 	{NULL,				0,					0}
@@ -341,6 +485,49 @@ static menucommon_s **g_controls[] = {
 	g_looking_controls,
 	g_weapons_controls,
 	g_misc_controls,
+	NULL
+};
+
+static menucommon_s *g_looking_mini_controls[] = {
+	(menucommon_s *)&s_controls.lookup,
+	(menucommon_s *)&s_controls.lookdown,
+	(menucommon_s *)&s_controls.centerview,
+	(menucommon_s *)&s_controls.zoomview,
+	(menucommon_s *)&s_controls.joyenable,
+	(menucommon_s *)&s_controls.joythreshold,
+	NULL,
+};
+
+static menucommon_s *g_misc_mini_controls[] = {
+	(menucommon_s *)&s_controls.useitem,
+	(menucommon_s *)&s_controls.gesture,
+	NULL,
+};
+
+static menucommon_s *g_unused_controls[] = {
+	// looking
+	(menucommon_s *)&s_controls.sensitivity,
+	(menucommon_s *)&s_controls.smoothmouse,
+	(menucommon_s *)&s_controls.invertmouse,
+	(menucommon_s *)&s_controls.mouselook,
+	(menucommon_s *)&s_controls.freelook,
+
+	// misc
+	(menucommon_s *)&s_controls.showscores,
+	(menucommon_s *)&s_controls.chat,
+	(menucommon_s *)&s_controls.chat2,
+	(menucommon_s *)&s_controls.chat3,
+	(menucommon_s *)&s_controls.chat4,
+	NULL,
+};
+
+static menucommon_s **g_mini_controls[] = {
+	g_movement_controls,
+	g_looking_mini_controls,
+	g_weapons_controls,
+	g_misc_mini_controls,
+	g_unused_controls, // dummy controls that are not used but are disabled so they are not seen.
+	NULL
 };
 
 /*
@@ -559,14 +746,14 @@ static void Controls_Update( void ) {
 	menucommon_s	*control;
 
 	// disable all controls in all groups
-	for( i = 0; i < C_MAX; i++ ) {
-		controls = g_controls[i];
+	for( i = 0; s_controls.controls[i] != NULL; i++ ) {
+		controls = s_controls.controls[i];
 		for( j = 0;  (control = controls[j]) ; j++ ) {
 			control->flags |= (QMF_HIDDEN|QMF_INACTIVE);
 		}
 	}
 
-	controls = g_controls[s_controls.section];
+	controls = s_controls.controls[s_controls.section];
 
 	// enable controls in active group (and count number of items for vertical centering)
 	for( j = 0;  (control = controls[j]) ; j++ ) {
@@ -655,6 +842,7 @@ static void Controls_DrawKeyBinding( void *self )
 	qboolean		c;
 	char			name[32];
 	char			name2[32];
+	bind_t			*bindptr;
 
 	a = (menuaction_s*) self;
 
@@ -663,7 +851,9 @@ static void Controls_DrawKeyBinding( void *self )
 
 	c = (Menu_ItemAtCursor( a->generic.parent ) == a);
 
-	b1 = g_bindings[a->generic.id].bind1;
+	bindptr = &s_controls.bindings[a->generic.id];
+
+	b1 = bindptr->bind1;
 	if (b1 == -1)
 		strcpy(name,"???");
 	else
@@ -671,7 +861,7 @@ static void Controls_DrawKeyBinding( void *self )
 		trap_Key_KeynumToStringBuf( b1, name, 32 );
 		Q_strupr(name);
 
-		b2 = g_bindings[a->generic.id].bind2;
+		b2 = bindptr->bind2;
 		if (b2 != -1)
 		{
 			trap_Key_KeynumToStringBuf( b2, name2, 32 );
@@ -736,7 +926,7 @@ static void Controls_DrawPlayer( void *self ) {
 	menubitmap_s	*b;
 	char			buf[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( "model", buf, sizeof( buf ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "model"), buf, sizeof( buf ) );
 	if ( strcmp( buf, s_controls.playerModel ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_controls.playerinfo, buf );
 		strcpy( s_controls.playerModel, buf );
@@ -785,6 +975,7 @@ Controls_GetConfig
 static void Controls_GetConfig( void )
 {
 	int		i;
+	int		j;
 	int		twokeys[2];
 	bind_t*	bindptr;
 
@@ -797,20 +988,25 @@ static void Controls_GetConfig( void )
 		if (!bindptr->label)
 			break;
 
-		Controls_GetKeyAssignment(bindptr->command, twokeys);
+		for (j = 0; j < MAX_SPLITVIEW; j++) {
+			Controls_GetKeyAssignment(Com_LocalClientCvarName(j, bindptr->command), twokeys);
 
-		bindptr->bind1 = twokeys[0];
-		bindptr->bind2 = twokeys[1];
+			g_bindings_list[j][i].bind1 = twokeys[0];
+			g_bindings_list[j][i].bind2 = twokeys[1];
+		}
 	}
 
-	s_controls.invertmouse.curvalue  = Controls_GetCvarValue( "m_pitch" ) < 0;
-	s_controls.smoothmouse.curvalue  = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "m_filter" ) );
-	s_controls.alwaysrun.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_run" ) );
-	s_controls.autoswitch.curvalue   = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cg_autoswitch" ) );
-	s_controls.sensitivity.curvalue  = UI_ClampCvar( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
+	if (s_controls.localClient == 0) {
+		s_controls.invertmouse.curvalue  = Controls_GetCvarValue( "m_pitch" ) < 0;
+		s_controls.smoothmouse.curvalue  = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "m_filter" ) );
+		s_controls.sensitivity.curvalue  = UI_ClampCvar( 2, 30, Controls_GetCvarValue( "sensitivity" ) );
+		s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
+	}
+
+	s_controls.alwaysrun.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
+	s_controls.autoswitch.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
 	s_controls.joyenable.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "in_joystick" ) );
-	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( "joy_threshold" ) );
-	s_controls.freelook.curvalue     = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "cl_freelook" ) );
+	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) ) );
 }
 
 /*
@@ -821,6 +1017,7 @@ Controls_SetConfig
 static void Controls_SetConfig( void )
 {
 	int		i;
+	int		j;
 	bind_t*	bindptr;
 
 	// set the bindings from the local store
@@ -832,13 +1029,24 @@ static void Controls_SetConfig( void )
 		if (!bindptr->label)
 			break;
 
-		if (bindptr->bind1 != -1)
-		{	
-			trap_Key_SetBinding( bindptr->bind1, bindptr->command );
+		for (j = 0; j < MAX_SPLITVIEW; j++) {
+			if (g_bindings_list[j][i].bind1 != -1)
+			{
+				trap_Key_SetBinding( g_bindings_list[j][i].bind1, Com_LocalClientCvarName(j, bindptr->command) );
 
-			if (bindptr->bind2 != -1)
-				trap_Key_SetBinding( bindptr->bind2, bindptr->command );
+				if (g_bindings_list[j][i].bind2 != -1)
+					trap_Key_SetBinding( g_bindings_list[j][i].bind2, Com_LocalClientCvarName(j, bindptr->command) );
+			}
 		}
+	}
+
+	if (s_controls.localClient != 0) {
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ), s_controls.joythreshold.curvalue );
+
+		trap_Cmd_ExecuteText( EXEC_APPEND, "in_restart\n" );
+		return;
 	}
 
 	if ( s_controls.invertmouse.curvalue )
@@ -867,16 +1075,23 @@ static void Controls_SetDefaults( void )
 	bind_t*	bindptr;
 
 	// set the bindings from the local store
-	bindptr = g_bindings;
+	bindptr = s_controls.bindings;
 
 	// iterate each command, set its default binding
 	for (i=0; ;i++,bindptr++)
 	{
-		if (!bindptr->label)
+		if (!g_bindings[i].label)
 			break;
 
 		bindptr->bind1 = bindptr->defaultbind1;
 		bindptr->bind2 = bindptr->defaultbind2;
+	}
+
+	if (s_controls.localClient != 0) {
+		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) );
+		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
+		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) );
+		return;
 	}
 
 	s_controls.invertmouse.curvalue  = Controls_GetCvarDefault( "m_pitch" ) < 0;
@@ -944,29 +1159,34 @@ static sfxHandle_t Controls_MenuKey( int key )
 	if (key != -1)
 	{
 		// remove from any other bind
-		bindptr = g_bindings;
-		for (i=0; ;i++,bindptr++)
-		{
-			if (!bindptr->label)	
-				break;
+		int j;
 
-			if (bindptr->bind2 == key)
-				bindptr->bind2 = -1;
+		for (j = 0; j < MAX_SPLITVIEW; j++) {
+			bindptr = g_bindings_list[j];
 
-			if (bindptr->bind1 == key)
+			for (i=0; ;i++,bindptr++)
 			{
-				bindptr->bind1 = bindptr->bind2;	
-				bindptr->bind2 = -1;
+				if (!g_bindings[i].label)
+					break;
+
+				if (bindptr->bind2 == key)
+					bindptr->bind2 = -1;
+
+				if (bindptr->bind1 == key)
+				{
+					bindptr->bind1 = bindptr->bind2;	
+					bindptr->bind2 = -1;
+				}
 			}
 		}
 	}
 
 	// assign key to local store
 	id      = ((menucommon_s*)(s_controls.menu.items[s_controls.menu.cursor]))->id;
-	bindptr = g_bindings;
+	bindptr = s_controls.bindings;
 	for (i=0; ;i++,bindptr++)
 	{
-		if (!bindptr->label)	
+		if (!g_bindings[i].label)
 			break;
 		
 		if (bindptr->id == id)
@@ -1182,12 +1402,30 @@ static void Controls_InitWeapons( void ) {
 Controls_MenuInit
 =================
 */
-static void Controls_MenuInit( void )
+static void Controls_MenuInit( int localClient )
 {
 	static char playername[32];
+	int			y;
 
 	// zero set all our globals
 	memset( &s_controls, 0 ,sizeof(controls_t) );
+
+	s_controls.localClient = localClient;
+
+	if (s_controls.localClient == 0) {
+		s_controls.controls = g_controls;
+		s_controls.bindings = g_bindings;
+	} else {
+		s_controls.controls = g_mini_controls;
+
+		if (s_controls.localClient == 1) {
+			s_controls.bindings = g_bindings2;
+		} else if (s_controls.localClient == 2) {
+			s_controls.bindings = g_bindings3;
+		} else {
+			s_controls.bindings = g_bindings4;
+		}
+	}
 
 	Controls_Cache();
 
@@ -1219,42 +1457,47 @@ static void Controls_MenuInit( void )
 	s_controls.framer.width  	    = 256;
 	s_controls.framer.height  	    = 334;
 
+	y = 240 - 2 * PROP_HEIGHT;
+
 	s_controls.looking.generic.type     = MTYPE_PTEXT;
 	s_controls.looking.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_controls.looking.generic.id	    = ID_LOOKING;
 	s_controls.looking.generic.callback	= Controls_MenuEvent;
 	s_controls.looking.generic.x	    = 152;
-	s_controls.looking.generic.y	    = 240 - 2 * PROP_HEIGHT;
+	s_controls.looking.generic.y	    = y;
 	s_controls.looking.string			= "LOOK";
 	s_controls.looking.style			= UI_RIGHT;
 	s_controls.looking.color			= color_red;
 
+	y += PROP_HEIGHT;
 	s_controls.movement.generic.type     = MTYPE_PTEXT;
 	s_controls.movement.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_controls.movement.generic.id	     = ID_MOVEMENT;
 	s_controls.movement.generic.callback = Controls_MenuEvent;
 	s_controls.movement.generic.x	     = 152;
-	s_controls.movement.generic.y	     = 240 - PROP_HEIGHT;
+	s_controls.movement.generic.y	     = y;
 	s_controls.movement.string			= "MOVE";
 	s_controls.movement.style			= UI_RIGHT;
 	s_controls.movement.color			= color_red;
 
+	y += PROP_HEIGHT;
 	s_controls.weapons.generic.type	    = MTYPE_PTEXT;
 	s_controls.weapons.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_controls.weapons.generic.id	    = ID_WEAPONS;
 	s_controls.weapons.generic.callback	= Controls_MenuEvent;
 	s_controls.weapons.generic.x	    = 152;
-	s_controls.weapons.generic.y	    = 240;
+	s_controls.weapons.generic.y	    = y;
 	s_controls.weapons.string			= "SHOOT";
 	s_controls.weapons.style			= UI_RIGHT;
 	s_controls.weapons.color			= color_red;
 
+	y += PROP_HEIGHT;
 	s_controls.misc.generic.type	 = MTYPE_PTEXT;
 	s_controls.misc.generic.flags    = QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_controls.misc.generic.id	     = ID_MISC;
 	s_controls.misc.generic.callback = Controls_MenuEvent;
 	s_controls.misc.generic.x		 = 152;
-	s_controls.misc.generic.y		 = 240 + PROP_HEIGHT;
+	s_controls.misc.generic.y		 = y;
 	s_controls.misc.string			= "MISC";
 	s_controls.misc.style			= UI_RIGHT;
 	s_controls.misc.color			= color_red;
@@ -1617,7 +1860,7 @@ static void Controls_MenuInit( void )
 
 	Menu_AddItem( &s_controls.menu, &s_controls.back );
 
-	trap_Cvar_VariableStringBuffer( "name", s_controls.name.string, 16 );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_controls.localClient, "name"), s_controls.name.string, 16 );
 	Q_CleanStr( s_controls.name.string );
 
 	// initialize the configurable cvars
@@ -1658,7 +1901,7 @@ void Controls_Cache( void ) {
 UI_ControlsMenu
 =================
 */
-void UI_ControlsMenu( void ) {
-	Controls_MenuInit();
+void UI_ControlsMenu( int localClient ) {
+	Controls_MenuInit(localClient);
 	UI_PushMenu( &s_controls.menu );
 }

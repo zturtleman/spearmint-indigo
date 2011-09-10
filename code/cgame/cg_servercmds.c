@@ -64,34 +64,34 @@ CG_ParseScores
 
 =================
 */
-static void CG_ParseScores( void ) {
+static void CG_ParseScores( int start ) {
 	int		i, powerups;
 
-	cg.numScores = atoi( CG_Argv( 1 ) );
+	cg.numScores = atoi( CG_Argv( 1 + start) );
 	if ( cg.numScores > MAX_CLIENTS ) {
 		cg.numScores = MAX_CLIENTS;
 	}
 
-	cg.teamScores[0] = atoi( CG_Argv( 2 ) );
-	cg.teamScores[1] = atoi( CG_Argv( 3 ) );
+	cg.teamScores[0] = atoi( CG_Argv( 2 + start) );
+	cg.teamScores[1] = atoi( CG_Argv( 3 + start) );
 
 	memset( cg.scores, 0, sizeof( cg.scores ) );
 	for ( i = 0 ; i < cg.numScores ; i++ ) {
 		//
-		cg.scores[i].client = atoi( CG_Argv( i * 14 + 4 ) );
-		cg.scores[i].score = atoi( CG_Argv( i * 14 + 5 ) );
-		cg.scores[i].ping = atoi( CG_Argv( i * 14 + 6 ) );
-		cg.scores[i].time = atoi( CG_Argv( i * 14 + 7 ) );
-		cg.scores[i].scoreFlags = atoi( CG_Argv( i * 14 + 8 ) );
-		powerups = atoi( CG_Argv( i * 14 + 9 ) );
-		cg.scores[i].accuracy = atoi(CG_Argv(i * 14 + 10));
-		cg.scores[i].impressiveCount = atoi(CG_Argv(i * 14 + 11));
-		cg.scores[i].excellentCount = atoi(CG_Argv(i * 14 + 12));
-		cg.scores[i].guantletCount = atoi(CG_Argv(i * 14 + 13));
-		cg.scores[i].defendCount = atoi(CG_Argv(i * 14 + 14));
-		cg.scores[i].assistCount = atoi(CG_Argv(i * 14 + 15));
-		cg.scores[i].perfect = atoi(CG_Argv(i * 14 + 16));
-		cg.scores[i].captures = atoi(CG_Argv(i * 14 + 17));
+		cg.scores[i].client = atoi( CG_Argv( i * 14 + 4 + start) );
+		cg.scores[i].score = atoi( CG_Argv( i * 14 + 5 + start) );
+		cg.scores[i].ping = atoi( CG_Argv( i * 14 + 6 + start) );
+		cg.scores[i].time = atoi( CG_Argv( i * 14 + 7 + start) );
+		cg.scores[i].scoreFlags = atoi( CG_Argv( i * 14 + 8 + start) );
+		powerups = atoi( CG_Argv( i * 14 + 9 + start) );
+		cg.scores[i].accuracy = atoi(CG_Argv(i * 14 + 10 + start));
+		cg.scores[i].impressiveCount = atoi(CG_Argv(i * 14 + 11 + start));
+		cg.scores[i].excellentCount = atoi(CG_Argv(i * 14 + 12 + start));
+		cg.scores[i].guantletCount = atoi(CG_Argv(i * 14 + 13 + start));
+		cg.scores[i].defendCount = atoi(CG_Argv(i * 14 + 14 + start));
+		cg.scores[i].assistCount = atoi(CG_Argv(i * 14 + 15 + start));
+		cg.scores[i].perfect = atoi(CG_Argv(i * 14 + 16 + start));
+		cg.scores[i].captures = atoi(CG_Argv(i * 14 + 17 + start));
 
 		if ( cg.scores[i].client < 0 || cg.scores[i].client >= MAX_CLIENTS ) {
 			cg.scores[i].client = 0;
@@ -445,6 +445,8 @@ require a reload of all the media
 ===============
 */
 static void CG_MapRestart( void ) {
+	int	lc;
+
 	if ( cg_showmiss.integer ) {
 		CG_Printf( "CG_MapRestart\n" );
 	}
@@ -484,7 +486,10 @@ static void CG_MapRestart( void ) {
 		}
 	}
 #endif
-	trap_Cvar_Set("cg_thirdPerson", "0");
+
+	for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
+		trap_Cvar_Set(Com_LocalClientCvarName(lc, "cg_thirdPerson"), "0");
+	}
 }
 
 #define MAX_VOICEFILESIZE	16384
@@ -825,7 +830,7 @@ void CG_PlayVoiceChat( bufferedVoiceChat_t *vchat ) {
 
 	if ( !cg_noVoiceChats.integer ) {
 		trap_S_StartLocalSound( vchat->snd, CHAN_VOICE);
-		if (vchat->clientNum != cg.snap->ps.clientNum) {
+		if (vchat->clientNum != cg.snap->pss[0].clientNum) {
 			int orderTask = CG_ValidOrder(vchat->cmd);
 			if (orderTask > 0) {
 				cgs.acceptOrderTime = cg.time + 5000;
@@ -990,28 +995,47 @@ Cmd_Argc() / Cmd_Argv()
 static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
+	int			start = 0;
+	int			lc = 0;
 
-	cmd = CG_Argv(0);
+	cmd = CG_Argv(start);
 
 	if ( !cmd[0] ) {
 		// server claimed the command
 		return;
 	}
 
+	// Commands for splitscreen clients begin "lc# "
+	if (cmd[0] == 'l' && cmd[1] =='c' && isdigit(cmd[2])) {
+		lc = atoi(&cmd[2]);
+
+		if (lc > MAX_SPLITVIEW) {
+			return;
+		}
+
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+
 	if ( !strcmp( cmd, "cp" ) ) {
-		CG_CenterPrint( CG_Argv(1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+		cg.cur_lc = &cg.localClients[lc];
+		CG_CenterPrint( CG_Argv(start+1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 		return;
 	}
 
 	if ( !strcmp( cmd, "cs" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_ConfigStringModified();
 		return;
 	}
 
 	if ( !strcmp( cmd, "print" ) ) {
-		CG_Printf( "%s", CG_Argv(1) );
 #ifdef MISSIONPACK
-		cmd = CG_Argv(1);			// yes, this is obviously a hack, but so is the way we hear about
+		cmd = CG_Argv(start+1);			// yes, this is obviously a hack, but so is the way we hear about
 									// votes passing or failing
 		if ( !Q_stricmpn( cmd, "vote failed", 11 ) || !Q_stricmpn( cmd, "team vote failed", 16 )) {
 			trap_S_StartLocalSound( cgs.media.voteFailed, CHAN_ANNOUNCER );
@@ -1019,13 +1043,24 @@ static void CG_ServerCommand( void ) {
 			trap_S_StartLocalSound( cgs.media.votePassed, CHAN_ANNOUNCER );
 		}
 #endif
+
+		if (lc != 0) {
+			// Show which client this is for.
+			CG_Printf("(For Local Client %d): ", lc+1);
+		}
+		CG_Printf( "%s", CG_Argv(start+1) );
 		return;
 	}
 
 	if ( !strcmp( cmd, "chat" ) ) {
 		if ( !cg_teamChatsOnly.integer ) {
 			trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
-			Q_strncpyz( text, CG_Argv(1), MAX_SAY_TEXT );
+			if (lc != 0) {
+				// Show which client this is for.
+				Com_sprintf(text, MAX_SAY_TEXT, "(For Local Client %d): %s", lc+1, CG_Argv(start+1));
+			} else {
+				Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
+			}
 			CG_RemoveChatEscapeChar( text );
 			CG_Printf( "%s\n", text );
 		}
@@ -1034,53 +1069,82 @@ static void CG_ServerCommand( void ) {
 
 	if ( !strcmp( cmd, "tchat" ) ) {
 		trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
-		Q_strncpyz( text, CG_Argv(1), MAX_SAY_TEXT );
+		if (lc != 0) {
+			// Show which client this is for.
+			Com_sprintf(text, MAX_SAY_TEXT, "(For Local Client %d): %s", lc+1, CG_Argv(start+1));
+		} else {
+			Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
+		}
 		CG_RemoveChatEscapeChar( text );
 		CG_AddToTeamChat( text );
 		CG_Printf( "%s\n", text );
 		return;
 	}
 	if ( !strcmp( cmd, "vchat" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_VoiceChat( SAY_ALL );
 		return;
 	}
 
 	if ( !strcmp( cmd, "vtchat" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_VoiceChat( SAY_TEAM );
 		return;
 	}
 
 	if ( !strcmp( cmd, "vtell" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_VoiceChat( SAY_TELL );
 		return;
 	}
 
 	if ( !strcmp( cmd, "scores" ) ) {
-		CG_ParseScores();
+		CG_ParseScores(start);
 		return;
 	}
 
 	if ( !strcmp( cmd, "tinfo" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_ParseTeamInfo();
 		return;
 	}
 
 	if ( !strcmp( cmd, "map_restart" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_MapRestart();
 		return;
 	}
 
 	if ( Q_stricmp (cmd, "remapShader") == 0 )
 	{
+		if (lc != 0) {
+			return;
+		}
+
 		if (trap_Argc() == 4)
 		{
 			char shader1[MAX_QPATH];
 			char shader2[MAX_QPATH];
 			char shader3[MAX_QPATH];
 
-			Q_strncpyz(shader1, CG_Argv(1), sizeof(shader1));
-			Q_strncpyz(shader2, CG_Argv(2), sizeof(shader2));
-			Q_strncpyz(shader3, CG_Argv(3), sizeof(shader3));
+			Q_strncpyz(shader1, CG_Argv(start+1), sizeof(shader1));
+			Q_strncpyz(shader2, CG_Argv(start+2), sizeof(shader2));
+			Q_strncpyz(shader3, CG_Argv(start+3), sizeof(shader3));
 
 			trap_R_RemapShader(shader1, shader2, shader3);
 		}
@@ -1090,6 +1154,10 @@ static void CG_ServerCommand( void ) {
 
 	// loaddeferred can be both a servercmd and a consolecmd
 	if ( !strcmp( cmd, "loaddeferred" ) ) {
+		if (lc != 0) {
+			return;
+		}
+
 		CG_LoadDeferredPlayers();
 		return;
 	}

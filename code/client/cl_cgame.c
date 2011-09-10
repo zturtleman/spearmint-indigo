@@ -57,8 +57,8 @@ void CL_GetGlconfig( glconfig_t *glconfig ) {
 CL_GetUserCmd
 ====================
 */
-qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
-	// cmds[cmdNumber] is the last properly generated command
+qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum ) {
+	// cmdss[#][cmdNumber] is the last properly generated command
 
 	// can't return anything that we haven't created yet
 	if ( cmdNumber > cl.cmdNumber ) {
@@ -71,7 +71,7 @@ qboolean CL_GetUserCmd( int cmdNumber, usercmd_t *ucmd ) {
 		return qfalse;
 	}
 
-	*ucmd = cl.cmds[ cmdNumber & CMD_MASK ];
+	*ucmd = cl.cmdss[localClientNum][cmdNumber & CMD_MASK];
 
 	return qtrue;
 }
@@ -148,7 +148,13 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 	snapshot->ping = clSnap->ping;
 	snapshot->serverTime = clSnap->serverTime;
 	Com_Memcpy( snapshot->areamask, clSnap->areamask, sizeof( snapshot->areamask ) );
-	snapshot->ps = clSnap->ps;
+	snapshot->numPSs = clSnap->numPSs;
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		snapshot->lcIndex[i] = clSnap->lcIndex[i];
+	}
+	for (i = 0; i < snapshot->numPSs; i++) {
+		snapshot->pss[i] = clSnap->pss[i];
+	}
 	count = clSnap->numEntities;
 	if ( count > MAX_ENTITIES_IN_SNAPSHOT ) {
 		Com_DPrintf( "CL_GetSnapshot: truncated %i entities to %i\n", count, MAX_ENTITIES_IN_SNAPSHOT );
@@ -170,9 +176,9 @@ qboolean	CL_GetSnapshot( int snapshotNumber, snapshot_t *snapshot ) {
 CL_SetUserCmdValue
 =====================
 */
-void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale ) {
-	cl.cgameUserCmdValue = userCmdValue;
-	cl.cgameSensitivity = sensitivityScale;
+void CL_SetUserCmdValue( int userCmdValue, float sensitivityScale, int localClientNum ) {
+	cl.localClients[localClientNum].cgameUserCmdValue = userCmdValue;
+	cl.localClients[localClientNum].cgameSensitivity = sensitivityScale;
 }
 
 /*
@@ -341,7 +347,7 @@ rescan:
 		Con_ClearNotify();
 		// reparse the string, because Con_ClearNotify() may have done another Cmd_TokenizeString()
 		Cmd_TokenizeString( s );
-		Com_Memset( cl.cmds, 0, sizeof( cl.cmds ) );
+		Com_Memset( cl.cmdss, 0, sizeof( cl.cmdss ) );
 		return qtrue;
 	}
 
@@ -530,7 +536,7 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		S_UpdateEntityPosition( args[1], VMA(2) );
 		return 0;
 	case CG_S_RESPATIALIZE:
-		S_Respatialize( args[1], VMA(2), VMA(3), args[4] );
+		S_Respatialize( args[1], VMA(2), VMA(3), args[4], args[5] );
 		return 0;
 	case CG_S_REGISTERSOUND:
 		return S_RegisterSound( VMA(1), args[2] );
@@ -601,9 +607,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETCURRENTCMDNUMBER:
 		return CL_GetCurrentCmdNumber();
 	case CG_GETUSERCMD:
-		return CL_GetUserCmd( args[1], VMA(2) );
+		return CL_GetUserCmd( args[1], VMA(2), args[3] );
 	case CG_SETUSERCMDVALUE:
-		CL_SetUserCmdValue( args[1], VMF(2) );
+		CL_SetUserCmdValue( args[1], VMF(2), args[3] );
 		return 0;
 	case CG_MEMORY_REMAINING:
 		return Hunk_MemoryRemaining();

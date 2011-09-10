@@ -181,9 +181,10 @@ Sets the coordinates of the rendered window
 */
 static void CG_CalcVrect (void) {
 	int		size;
+	int		width, height;
 
 	// the intermission should allways be full screen
-	if ( cg.snap->ps.pm_type == PM_INTERMISSION ) {
+	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;
 	} else {
 		// bound normal viewsize
@@ -196,8 +197,8 @@ static void CG_CalcVrect (void) {
 		} else {
 			size = cg_viewsize.integer;
 		}
-
 	}
+
 	cg.refdef.width = cgs.glconfig.vidWidth*size/100;
 	cg.refdef.width &= ~1;
 
@@ -206,6 +207,76 @@ static void CG_CalcVrect (void) {
 
 	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width)/2;
 	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height)/2;
+
+	// Setup splitscreen viewports
+	if (cg.numViewports == 2) {
+		if (cg_splitviewVertical.integer) {
+			cg.refdef.width *= 0.5f;
+
+			if (cg.viewport == 1) {
+				cg.refdef.x += cg.refdef.width;
+			}
+		} else {
+			cg.refdef.height *= 0.5f;
+
+			if (cg.viewport == 1) {
+				cg.refdef.y += cg.refdef.height;
+			}
+		}
+	} else if (cg.numViewports == 3) {
+		if (cg_splitviewVertical.integer) {
+			if (cg.viewport == 2) {
+				cg.refdef.width *= 0.5f;
+				cg.refdef.x += cg.refdef.width;
+			} else {
+				cg.refdef.width *= 0.5f;
+				cg.refdef.height *= 0.5f;
+
+				if (cg.viewport == 1) {
+					cg.refdef.y += cg.refdef.height;
+				}
+			}
+		} else {
+			if (cg.viewport == 2) {
+				cg.refdef.height *= 0.5f;
+				cg.refdef.y += cg.refdef.height;
+			} else {
+				cg.refdef.width *= 0.5f;
+				cg.refdef.height *= 0.5f;
+
+				if (cg.viewport == 1) {
+					cg.refdef.x += cg.refdef.width;
+				}
+			}
+		}
+	} else if (cg.numViewports > 1 && cg.numViewports <= 4) {
+		cg.refdef.width *= 0.5f;
+		cg.refdef.height *= 0.5f;
+
+		if (cg.viewport == 1 || cg.viewport == 3) {
+			cg.refdef.x += cg.refdef.width;
+		}
+
+		if (cg.viewport == 2 || cg.viewport == 3) {
+			cg.refdef.y += cg.refdef.height;
+		}
+	}
+
+	height = cg.refdef.height * 100/size;
+	width = cg.refdef.width * 100/size;
+
+	if ( width * 480 > height * 640 ) {
+		cgs.screenXScale = width * (1.0/640.0);
+		cgs.screenYScale = height * (1.0/480.0);
+		// wide screen
+		cgs.screenXBias = 0.5 * ( width - ( height * (640.0/480.0) ) );
+		cgs.screenXScale = cgs.screenYScale;
+	} else {
+		cgs.screenXScale = width * (1.0/640.0);
+		cgs.screenYScale = height * (1.0/480.0);
+		// no wide screen
+		cgs.screenXBias = 0;
+	}
 }
 
 //==============================================================================
@@ -229,14 +300,14 @@ static void CG_OffsetThirdPersonView( void ) {
 	float		focusDist;
 	float		forwardScale, sideScale;
 
-	cg.refdef.vieworg[2] += cg.predictedPlayerState.viewheight;
+	cg.refdef.vieworg[2] += cg.cur_lc->predictedPlayerState.viewheight;
 
 	VectorCopy( cg.refdefViewAngles, focusAngles );
 
 	// if dead, look at killer
-	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
-		focusAngles[YAW] = cg.predictedPlayerState.stats[STAT_DEAD_YAW];
-		cg.refdefViewAngles[YAW] = cg.predictedPlayerState.stats[STAT_DEAD_YAW];
+	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
+		focusAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
+		cg.refdefViewAngles[YAW] = cg.cur_lc->predictedPlayerState.stats[STAT_DEAD_YAW];
 	}
 
 	if ( focusAngles[PITCH] > 45 ) {
@@ -254,16 +325,16 @@ static void CG_OffsetThirdPersonView( void ) {
 
 	AngleVectors( cg.refdefViewAngles, forward, right, up );
 
-	forwardScale = cos( cg_thirdPersonAngle.value / 180 * M_PI );
-	sideScale = sin( cg_thirdPersonAngle.value / 180 * M_PI );
-	VectorMA( view, -cg_thirdPersonRange.value * forwardScale, forward, view );
-	VectorMA( view, -cg_thirdPersonRange.value * sideScale, right, view );
+	forwardScale = cos( cg_thirdPersonAngle[cg.cur_localClientNum].value / 180 * M_PI );
+	sideScale = sin( cg_thirdPersonAngle[cg.cur_localClientNum].value / 180 * M_PI );
+	VectorMA( view, -cg_thirdPersonRange[cg.cur_localClientNum].value * forwardScale, forward, view );
+	VectorMA( view, -cg_thirdPersonRange[cg.cur_localClientNum].value * sideScale, right, view );
 
 	// trace a ray from the origin to the viewpoint to make sure the view isn't
 	// in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
 
 	if (!cg_cameraMode.integer) {
-		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID );
+		CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.clientNum, MASK_SOLID );
 
 		if ( trace.fraction != 1.0 ) {
 			VectorCopy( trace.endpos, view );
@@ -271,7 +342,7 @@ static void CG_OffsetThirdPersonView( void ) {
 			// try another trace to this position, because a tunnel may have the ceiling
 			// close enogh that this is poking out
 
-			CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.predictedPlayerState.clientNum, MASK_SOLID );
+			CG_Trace( &trace, cg.refdef.vieworg, mins, maxs, view, cg.cur_lc->predictedPlayerState.clientNum, MASK_SOLID );
 			VectorCopy( trace.endpos, view );
 		}
 	}
@@ -286,7 +357,7 @@ static void CG_OffsetThirdPersonView( void ) {
 		focusDist = 1;	// should never happen
 	}
 	cg.refdefViewAngles[PITCH] = -180 / M_PI * atan2( focusPoint[2], focusDist );
-	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle.value;
+	cg.refdefViewAngles[YAW] -= cg_thirdPersonAngle[cg.cur_localClientNum].value;
 }
 
 
@@ -295,9 +366,9 @@ static void CG_StepOffset( void ) {
 	int		timeDelta;
 	
 	// smooth out stair climbing
-	timeDelta = cg.time - cg.stepTime;
+	timeDelta = cg.time - cg.cur_lc->stepTime;
 	if ( timeDelta < STEP_TIME ) {
-		cg.refdef.vieworg[2] -= cg.stepChange 
+		cg.refdef.vieworg[2] -= cg.cur_lc->stepChange 
 			* (STEP_TIME - timeDelta) / STEP_TIME;
 	}
 }
@@ -319,7 +390,7 @@ static void CG_OffsetFirstPersonView( void ) {
 	vec3_t			predictedVelocity;
 	int				timeDelta;
 	
-	if ( cg.snap->ps.pm_type == PM_INTERMISSION ) {
+	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		return;
 	}
 
@@ -327,40 +398,40 @@ static void CG_OffsetFirstPersonView( void ) {
 	angles = cg.refdefViewAngles;
 
 	// if dead, fix the angle and don't add any kick
-	if ( cg.snap->ps.stats[STAT_HEALTH] <= 0 ) {
+	if ( cg.cur_ps->stats[STAT_HEALTH] <= 0 ) {
 		angles[ROLL] = 40;
 		angles[PITCH] = -15;
-		angles[YAW] = cg.snap->ps.stats[STAT_DEAD_YAW];
-		origin[2] += cg.predictedPlayerState.viewheight;
+		angles[YAW] = cg.cur_ps->stats[STAT_DEAD_YAW];
+		origin[2] += cg.cur_lc->predictedPlayerState.viewheight;
 		return;
 	}
 
 	// add angles based on damage kick
-	if ( cg.damageTime ) {
-		ratio = cg.time - cg.damageTime;
+	if ( cg.cur_lc->damageTime ) {
+		ratio = cg.time - cg.cur_lc->damageTime;
 		if ( ratio < DAMAGE_DEFLECT_TIME ) {
 			ratio /= DAMAGE_DEFLECT_TIME;
-			angles[PITCH] += ratio * cg.v_dmg_pitch;
-			angles[ROLL] += ratio * cg.v_dmg_roll;
+			angles[PITCH] += ratio * cg.cur_lc->v_dmg_pitch;
+			angles[ROLL] += ratio * cg.cur_lc->v_dmg_roll;
 		} else {
 			ratio = 1.0 - ( ratio - DAMAGE_DEFLECT_TIME ) / DAMAGE_RETURN_TIME;
 			if ( ratio > 0 ) {
-				angles[PITCH] += ratio * cg.v_dmg_pitch;
-				angles[ROLL] += ratio * cg.v_dmg_roll;
+				angles[PITCH] += ratio * cg.cur_lc->v_dmg_pitch;
+				angles[ROLL] += ratio * cg.cur_lc->v_dmg_roll;
 			}
 		}
 	}
 
 	// add pitch based on fall kick
 #if 0
-	ratio = ( cg.time - cg.landTime) / FALL_TIME;
+	ratio = ( cg.time - cg.cur_lc->landTime) / FALL_TIME;
 	if (ratio < 0)
 		ratio = 0;
 	angles[PITCH] += ratio * cg.fall_value;
 #endif
 
 	// add angles based on velocity
-	VectorCopy( cg.predictedPlayerState.velocity, predictedVelocity );
+	VectorCopy( cg.cur_lc->predictedPlayerState.velocity, predictedVelocity );
 
 	delta = DotProduct ( predictedVelocity, cg.refdef.viewaxis[0]);
 	angles[PITCH] += delta * cg_runpitch.value;
@@ -374,11 +445,11 @@ static void CG_OffsetFirstPersonView( void ) {
 	speed = cg.xyspeed > 200 ? cg.xyspeed : 200;
 
 	delta = cg.bobfracsin * cg_bobpitch.value * speed;
-	if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
+	if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
 		delta *= 3;		// crouching
 	angles[PITCH] += delta;
 	delta = cg.bobfracsin * cg_bobroll.value * speed;
-	if (cg.predictedPlayerState.pm_flags & PMF_DUCKED)
+	if (cg.cur_lc->predictedPlayerState.pm_flags & PMF_DUCKED)
 		delta *= 3;		// crouching accentuates roll
 	if (cg.bobcycle & 1)
 		delta = -delta;
@@ -387,12 +458,12 @@ static void CG_OffsetFirstPersonView( void ) {
 //===================================
 
 	// add view height
-	origin[2] += cg.predictedPlayerState.viewheight;
+	origin[2] += cg.cur_lc->predictedPlayerState.viewheight;
 
 	// smooth out duck height changes
-	timeDelta = cg.time - cg.duckTime;
+	timeDelta = cg.time - cg.cur_lc->duckTime;
 	if ( timeDelta < DUCK_TIME) {
-		cg.refdef.vieworg[2] -= cg.duckChange 
+		cg.refdef.vieworg[2] -= cg.cur_lc->duckChange 
 			* (DUCK_TIME - timeDelta) / DUCK_TIME;
 	}
 
@@ -406,14 +477,14 @@ static void CG_OffsetFirstPersonView( void ) {
 
 
 	// add fall height
-	delta = cg.time - cg.landTime;
+	delta = cg.time - cg.cur_lc->landTime;
 	if ( delta < LAND_DEFLECT_TIME ) {
 		f = delta / LAND_DEFLECT_TIME;
-		cg.refdef.vieworg[2] += cg.landChange * f;
+		cg.refdef.vieworg[2] += cg.cur_lc->landChange * f;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
 		delta -= LAND_DEFLECT_TIME;
 		f = 1.0 - ( delta / LAND_RETURN_TIME );
-		cg.refdef.vieworg[2] += cg.landChange * f;
+		cg.refdef.vieworg[2] += cg.cur_lc->landChange * f;
 	}
 
 	// add step offset
@@ -435,20 +506,56 @@ static void CG_OffsetFirstPersonView( void ) {
 
 //======================================================================
 
-void CG_ZoomDown_f( void ) { 
-	if ( cg.zoomed ) {
+void CG_ZoomDown( int localClient ) { 
+	cg.cur_lc = &cg.localClients[localClient];
+
+	if ( cg.cur_lc->zoomed ) {
 		return;
 	}
-	cg.zoomed = qtrue;
-	cg.zoomTime = cg.time;
+
+	cg.cur_lc->zoomed = qtrue;
+	cg.cur_lc->zoomTime = cg.time;
+}
+
+void CG_ZoomUp( int localClient ) { 
+	cg.cur_lc = &cg.localClients[localClient];
+	if ( !cg.cur_lc->zoomed ) {
+		return;
+	}
+	cg.cur_lc->zoomed = qfalse;
+	cg.cur_lc->zoomTime = cg.time;
+}
+
+void CG_ZoomDown_f( void ) { 
+	CG_ZoomDown(0);
 }
 
 void CG_ZoomUp_f( void ) { 
-	if ( !cg.zoomed ) {
-		return;
-	}
-	cg.zoomed = qfalse;
-	cg.zoomTime = cg.time;
+	CG_ZoomUp(0);
+}
+
+void CG_2ZoomDown_f( void ) { 
+	CG_ZoomDown(1);
+}
+
+void CG_2ZoomUp_f( void ) { 
+	CG_ZoomUp(1);
+}
+
+void CG_3ZoomDown_f( void ) { 
+	CG_ZoomDown(2);
+}
+
+void CG_3ZoomUp_f( void ) { 
+	CG_ZoomUp(2);
+}
+
+void CG_4ZoomDown_f( void ) { 
+	CG_ZoomDown(3);
+}
+
+void CG_4ZoomUp_f( void ) { 
+	CG_ZoomUp(3);
 }
 
 
@@ -472,7 +579,7 @@ static int CG_CalcFov( void ) {
 	float	f;
 	int		inwater;
 
-	if ( cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
 		fov_x = 90;
 	} else {
@@ -497,15 +604,15 @@ static int CG_CalcFov( void ) {
 			zoomFov = 160;
 		}
 
-		if ( cg.zoomed ) {
-			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
+		if ( cg.cur_lc->zoomed ) {
+			f = ( cg.time - cg.cur_lc->zoomTime ) / (float)ZOOM_TIME;
 			if ( f > 1.0 ) {
 				fov_x = zoomFov;
 			} else {
 				fov_x = fov_x + f * ( zoomFov - fov_x );
 			}
 		} else {
-			f = ( cg.time - cg.zoomTime ) / (float)ZOOM_TIME;
+			f = ( cg.time - cg.cur_lc->zoomTime ) / (float)ZOOM_TIME;
 			if ( f > 1.0 ) {
 				fov_x = fov_x;
 			} else {
@@ -514,6 +621,16 @@ static int CG_CalcFov( void ) {
 		}
 	}
 
+	// Do FOV Correction for some viewports
+	if ((cg.numViewports == 2) || (cg.numViewports == 3 && cg.viewport == 2)) {
+		if (cg_splitviewVertical.integer == 1) {
+			// Tall/narrow view
+			fov_x *= 0.6f; // 0.5 would be correct, but fov gets real small.
+		} else {
+			// Short/wide view
+			fov_x *= 1.4f; // 1.5 would be correct, but fov gets real big.
+		}
+	}
 	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
 	fov_y = atan2( cg.refdef.height, x );
 	fov_y = fov_y * 360 / M_PI;
@@ -536,10 +653,10 @@ static int CG_CalcFov( void ) {
 	cg.refdef.fov_x = fov_x;
 	cg.refdef.fov_y = fov_y;
 
-	if ( !cg.zoomed ) {
-		cg.zoomSensitivity = 1;
+	if ( !cg.cur_lc->zoomed ) {
+		cg.cur_lc->zoomSensitivity = 1;
 	} else {
-		cg.zoomSensitivity = cg.refdef.fov_y / 75.0;
+		cg.cur_lc->zoomSensitivity = cg.refdef.fov_y / 75.0;
 	}
 
 	return inwater;
@@ -558,7 +675,7 @@ static void CG_DamageBlendBlob( void ) {
 	int			maxTime;
 	refEntity_t		ent;
 
-	if ( !cg.damageValue ) {
+	if ( !cg.cur_lc->damageValue ) {
 		return;
 	}
 
@@ -572,7 +689,7 @@ static void CG_DamageBlendBlob( void ) {
 	}
 
 	maxTime = DAMAGE_TIME;
-	t = cg.time - cg.damageTime;
+	t = cg.time - cg.cur_lc->damageTime;
 	if ( t <= 0 || t >= maxTime ) {
 		return;
 	}
@@ -583,10 +700,10 @@ static void CG_DamageBlendBlob( void ) {
 	ent.renderfx = RF_FIRST_PERSON;
 
 	VectorMA( cg.refdef.vieworg, 8, cg.refdef.viewaxis[0], ent.origin );
-	VectorMA( ent.origin, cg.damageX * -8, cg.refdef.viewaxis[1], ent.origin );
-	VectorMA( ent.origin, cg.damageY * 8, cg.refdef.viewaxis[2], ent.origin );
+	VectorMA( ent.origin, cg.cur_lc->damageX * -8, cg.refdef.viewaxis[1], ent.origin );
+	VectorMA( ent.origin, cg.cur_lc->damageY * 8, cg.refdef.viewaxis[2], ent.origin );
 
-	ent.radius = cg.damageValue * 3;
+	ent.radius = cg.cur_lc->damageValue * 3;
 	ent.customShader = cgs.media.viewBloodShader;
 	ent.shaderRGBA[0] = 255;
 	ent.shaderRGBA[1] = 255;
@@ -615,7 +732,7 @@ static int CG_CalcViewValues( void ) {
 	// calculate size of 3D view
 	CG_CalcVrect();
 
-	ps = &cg.predictedPlayerState;
+	ps = &cg.cur_lc->predictedPlayerState;
 /*
 	if (cg.cameraMode) {
 		vec3_t origin, angles;
@@ -650,7 +767,7 @@ static int CG_CalcViewValues( void ) {
 	if (cg_cameraOrbit.integer) {
 		if (cg.time > cg.nextOrbitTime) {
 			cg.nextOrbitTime = cg.time + cg_cameraOrbitDelay.integer;
-			cg_thirdPersonAngle.value += cg_cameraOrbit.value;
+			cg_thirdPersonAngle[cg.cur_localClientNum].value += cg_cameraOrbit.value;
 		}
 	}
 	// add error decay
@@ -658,12 +775,12 @@ static int CG_CalcViewValues( void ) {
 		int		t;
 		float	f;
 
-		t = cg.time - cg.predictedErrorTime;
+		t = cg.time - cg.cur_lc->predictedErrorTime;
 		f = ( cg_errorDecay.value - t ) / cg_errorDecay.value;
 		if ( f > 0 && f < 1 ) {
-			VectorMA( cg.refdef.vieworg, f, cg.predictedError, cg.refdef.vieworg );
+			VectorMA( cg.refdef.vieworg, f, cg.cur_lc->predictedError, cg.refdef.vieworg );
 		} else {
-			cg.predictedErrorTime = 0;
+			cg.cur_lc->predictedErrorTime = 0;
 		}
 	}
 
@@ -678,7 +795,7 @@ static int CG_CalcViewValues( void ) {
 	// position eye reletive to origin
 	AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
 
-	if ( cg.hyperspace ) {
+	if ( cg.cur_lc->hyperspace ) {
 		cg.refdef.rdflags |= RDF_NOWORLDMODEL | RDF_HYPERSPACE;
 	}
 
@@ -698,7 +815,7 @@ static void CG_PowerupTimerSounds( void ) {
 
 	// powerup timers going away
 	for ( i = 0 ; i < MAX_POWERUPS ; i++ ) {
-		t = cg.snap->ps.powerups[i];
+		t = cg.cur_ps->powerups[i];
 		if ( t <= cg.time ) {
 			continue;
 		}
@@ -706,7 +823,7 @@ static void CG_PowerupTimerSounds( void ) {
 			continue;
 		}
 		if ( ( t - cg.time ) / POWERUP_BLINK_TIME != ( t - cg.oldTime ) / POWERUP_BLINK_TIME ) {
-			trap_S_StartSound( NULL, cg.snap->ps.clientNum, CHAN_ITEM, cgs.media.wearOffSound );
+			trap_S_StartSound( NULL, cg.cur_ps->clientNum, CHAN_ITEM, cgs.media.wearOffSound );
 		}
 	}
 }
@@ -753,6 +870,8 @@ Generates and draws a game scene and status information at the given time.
 */
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback ) {
 	int		inwater;
+	qboolean renderClientViewport[MAX_SPLITVIEW];
+	int		i;
 
 	cg.time = serverTime;
 	cg.demoPlayback = demoPlayback;
@@ -784,81 +903,119 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		return;
 	}
 
-	// let the client system know what our weapon and zoom settings are
-	trap_SetUserCmdValue( cg.weaponSelect, cg.zoomSensitivity );
-
 	// this counter will be bumped for every valid scene we generate
 	cg.clientFrame++;
 
-	// update cg.predictedPlayerState
-	CG_PredictPlayerState();
+	// Single camera mode only uses one viewport for viewing all local clients
+	cg.singleCamera = (cg.snap->pss[0].pm_type == PM_INTERMISSION);
 
-	// decide on third person view
-	cg.renderingThirdPerson = cg_thirdPerson.integer || (cg.snap->ps.stats[STAT_HEALTH] <= 0);
-
-	// build cg.refdef
-	inwater = CG_CalcViewValues();
-
-	// first person blend blobs, done after AnglesToAxis
-	if ( !cg.renderingThirdPerson ) {
-		CG_DamageBlendBlob();
-	}
-
-	// build the render lists
-	if ( !cg.hyperspace ) {
-		CG_AddPacketEntities();			// adter calcViewValues, so predicted player state is correct
-		CG_AddMarks();
-		CG_AddParticles ();
-		CG_AddLocalEntities();
-	}
-	CG_AddViewWeapon( &cg.predictedPlayerState );
-
-	// add buffered sounds
-	CG_PlayBufferedSounds();
-
-	// play buffered voice chats
-	CG_PlayBufferedVoiceChats();
-
-	// finish up the rest of the refdef
-	if ( cg.testModelEntity.hModel ) {
-		CG_AddTestModel();
-	}
-	cg.refdef.time = cg.time;
-	memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );
-
-	// warning sounds when powerup is wearing off
-	CG_PowerupTimerSounds();
-
-	// update audio positions
-	trap_S_Respatialize( cg.snap->ps.clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater );
-
-	// make sure the lagometerSample and frame timing isn't done twice when in stereo
-	if ( stereoView != STEREO_RIGHT ) {
-		cg.frametime = cg.time - cg.oldTime;
-		if ( cg.frametime < 0 ) {
-			cg.frametime = 0;
+	cg.numViewports = 0;
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (cg.snap->lcIndex[i] == -1) {
+			renderClientViewport[i] = qfalse;
+			continue;
 		}
-		cg.oldTime = cg.time;
-		CG_AddLagometerFrameInfo();
-	}
-	if (cg_timescale.value != cg_timescaleFadeEnd.value) {
-		if (cg_timescale.value < cg_timescaleFadeEnd.value) {
-			cg_timescale.value += cg_timescaleFadeSpeed.value * ((float)cg.frametime) / 1000;
-			if (cg_timescale.value > cg_timescaleFadeEnd.value)
-				cg_timescale.value = cg_timescaleFadeEnd.value;
+		cg.cur_localClientNum = i;
+		cg.cur_lc = &cg.localClients[i];
+		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+
+		// Check if viewport should be drawn.
+		if ((cg.singleCamera && cg.numViewports >= 1) || (cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR && (cg.cur_ps->pm_flags & PMF_LOCAL_HIDE))) {
+			renderClientViewport[i] = qfalse;
+		} else {
+			cg.numViewports++;
+			renderClientViewport[i] = qtrue;
 		}
-		else {
-			cg_timescale.value -= cg_timescaleFadeSpeed.value * ((float)cg.frametime) / 1000;
-			if (cg_timescale.value < cg_timescaleFadeEnd.value)
-				cg_timescale.value = cg_timescaleFadeEnd.value;
-		}
-		if (cg_timescaleFadeSpeed.value) {
-			trap_Cvar_Set("timescale", va("%f", cg_timescale.value));
-		}
+
+		// let the client system know what our weapon and zoom settings are
+		trap_SetUserCmdValue( cg.cur_lc->weaponSelect, cg.cur_lc->zoomSensitivity, cg.cur_localClientNum );
+
+		// update cg.predictedPlayerState
+		CG_PredictPlayerState();
 	}
 
-	// actually issue the rendering calls
-	CG_DrawActive( stereoView );
+	// If all local clients dropped out from playing still draw main local client.
+	if (cg.numViewports == 0) {
+		cg.numViewports = 1;
+		renderClientViewport[0] = qtrue;
+	}
+
+	for (i = 0, cg.viewport = -1; i < MAX_SPLITVIEW; i++) {
+		if (!renderClientViewport[i]) {
+			continue;
+		}
+		cg.viewport++;
+		cg.cur_localClientNum = i;
+		cg.cur_lc = &cg.localClients[i];
+		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+
+		// decide on third person view
+		cg.renderingThirdPerson = cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0);
+
+		// build cg.refdef
+		inwater = CG_CalcViewValues();
+
+		// first person blend blobs, done after AnglesToAxis
+		if ( !cg.renderingThirdPerson ) {
+			CG_DamageBlendBlob();
+		}
+
+		// build the render lists
+		if ( !cg.cur_lc->hyperspace ) {
+			CG_AddPacketEntities();			// adter calcViewValues, so predicted player state is correct
+			CG_AddMarks();
+			CG_AddParticles ();
+			CG_AddLocalEntities();
+		}
+		CG_AddViewWeapon( &cg.cur_lc->predictedPlayerState );
+
+		// add buffered sounds
+		CG_PlayBufferedSounds();
+
+		// play buffered voice chats
+		CG_PlayBufferedVoiceChats();
+
+		// finish up the rest of the refdef
+		if ( cg.testModelEntity.hModel ) {
+			CG_AddTestModel();
+		}
+		cg.refdef.time = cg.time;
+		memcpy( cg.refdef.areamask, cg.snap->areamask, sizeof( cg.refdef.areamask ) );
+
+		// warning sounds when powerup is wearing off
+		CG_PowerupTimerSounds();
+
+		// update audio positions
+		trap_S_Respatialize( cg.cur_ps->clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater, cg.cur_localClientNum );
+
+		// make sure the lagometerSample and frame timing isn't done twice when in stereo
+		if ( stereoView != STEREO_RIGHT && cg.viewport == 0 ) {
+			cg.frametime = cg.time - cg.oldTime;
+			if ( cg.frametime < 0 ) {
+				cg.frametime = 0;
+			}
+			cg.oldTime = cg.time;
+			CG_AddLagometerFrameInfo();
+		}
+		if (cg_timescale.value != cg_timescaleFadeEnd.value) {
+			if (cg_timescale.value < cg_timescaleFadeEnd.value) {
+				cg_timescale.value += cg_timescaleFadeSpeed.value * ((float)cg.frametime) / 1000;
+				if (cg_timescale.value > cg_timescaleFadeEnd.value)
+					cg_timescale.value = cg_timescaleFadeEnd.value;
+			}
+			else {
+				cg_timescale.value -= cg_timescaleFadeSpeed.value * ((float)cg.frametime) / 1000;
+				if (cg_timescale.value < cg_timescaleFadeEnd.value)
+					cg_timescale.value = cg_timescaleFadeEnd.value;
+			}
+			if (cg_timescaleFadeSpeed.value) {
+				trap_Cvar_Set("timescale", va("%f", cg_timescale.value));
+			}
+		}
+
+		// actually issue the rendering calls
+		CG_DrawActive( stereoView );
+	}
 
 	if ( cg_stats.integer ) {
 		CG_Printf( "cg.clientFrame:%i\n", cg.clientFrame );

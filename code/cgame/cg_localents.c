@@ -820,6 +820,12 @@ void CG_AddLocalEntities( void ) {
 			CG_FreeLocalEntity( le );
 			continue;
 		}
+
+		// Check if local entity should be rendered by this local client.
+		if (le->localClients && !(le->localClients & (1<<cg.cur_localClientNum))) {
+			continue;
+		}
+
 		switch ( le->leType ) {
 		default:
 			CG_Error( "Bad leType: %i", le->leType );

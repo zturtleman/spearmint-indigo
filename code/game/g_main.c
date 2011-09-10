@@ -601,6 +601,7 @@ void AddTournamentPlayer( void ) {
 		}
 		// never select the dedicated follow or scoreboard clients
 		if ( client->sess.spectatorState == SPECTATOR_SCOREBOARD || 
+			client->sess.spectatorState == SPECTATOR_LOCAL_HIDE || 
 			client->sess.spectatorClient < 0  ) {
 			continue;
 		}

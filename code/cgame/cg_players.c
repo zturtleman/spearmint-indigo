@@ -1559,7 +1559,7 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 	if (!cg_enableBreath.integer) {
 		return;
 	}
-	if ( cent->currentState.number == cg.snap->ps.clientNum && !cg.renderingThirdPerson) {
+	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.renderingThirdPerson) {
 		return;
 	}
 	if ( cent->currentState.eFlags & EF_DEAD ) {
@@ -1917,7 +1917,7 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 	int				rf;
 	refEntity_t		ent;
 
-	if ( cent->currentState.number == cg.snap->ps.clientNum && !cg.renderingThirdPerson ) {
+	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.renderingThirdPerson ) {
 		rf = RF_THIRD_PERSON;		// only show in mirrors
 	} else {
 		rf = 0;
@@ -1991,7 +1991,7 @@ static void CG_PlayerSprites( centity_t *cent ) {
 
 	team = cgs.clientinfo[ cent->currentState.clientNum ].team;
 	if ( !(cent->currentState.eFlags & EF_DEAD) && 
-		cg.snap->ps.persistant[PERS_TEAM] == team &&
+		cg.cur_ps->persistant[PERS_TEAM] == team &&
 		cgs.gametype >= GT_TEAM) {
 		if (cg_drawFriend.integer) {
 			CG_PlayerFloatSprite( cent, cgs.media.friendShader );
@@ -2281,7 +2281,7 @@ void CG_Player( centity_t *cent ) {
 
 	// get the player model information
 	renderfx = 0;
-	if ( cent->currentState.number == cg.snap->ps.clientNum) {
+	if ( cent->currentState.number == cg.cur_ps->clientNum) {
 		if (!cg.renderingThirdPerson) {
 			renderfx = RF_THIRD_PERSON;			// only draw in mirrors
 		} else {

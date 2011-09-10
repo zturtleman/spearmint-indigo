@@ -60,9 +60,19 @@ static		qboolean	s_soundMuted;
 
 dma_t		dma;
 
-static int			listener_number;
-static vec3_t		listener_origin;
-static vec3_t		listener_axis[3];
+typedef struct
+{
+	int			number;
+	vec3_t		origin;
+	vec3_t		axis[3];
+} listener_t;
+
+// ZTM: Currently the only listeners are local client, maybe increase and in the future allow listening through portals?
+#define MAX_LISTENERS		MAX_SPLITVIEW
+static listener_t listeners[MAX_LISTENERS];
+static unsigned int numListeners;
+static unsigned int numListenersPrevious;
+static qboolean respatialize;
 
 int			s_soundtime;		// sample PAIRS
 int   		s_paintedtime; 		// sample PAIRS
@@ -423,54 +433,78 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
     vec_t		lscale, rscale, scale;
     vec3_t		source_vec;
     vec3_t		vec;
+	int i;
 
 	const float dist_mult = SOUND_ATTENUATE;
 	
-	// calculate stereo seperation and distance attenuation
-	VectorSubtract(origin, listener_origin, source_vec);
+	*right_vol = 0;
+	*left_vol = 0;
 
-	dist = VectorNormalize(source_vec);
-	dist -= SOUND_FULLVOLUME;
-	if (dist < 0)
-		dist = 0;			// close enough to be at full volume
-	dist *= dist_mult;		// different attenuation levels
+	for (i = 0; i < numListeners; i++) {
+		// calculate stereo seperation and distance attenuation
+		VectorSubtract(origin, listeners[i].origin, source_vec);
+
+		dist = VectorNormalize(source_vec);
+		dist -= SOUND_FULLVOLUME;
+		if (dist < 0)
+			dist = 0;			// close enough to be at full volume
+		dist *= dist_mult;		// different attenuation levels
 	
-	VectorRotate( source_vec, listener_axis, vec );
+		VectorRotate( source_vec, listeners[i].axis, vec );
 
-	dot = -vec[1];
+		dot = -vec[1];
 
-	if (dma.channels == 1)
-	{ // no attenuation = no spatialization
-		rscale = 1.0;
-		lscale = 1.0;
-	}
-	else
-	{
-		rscale = 0.5 * (1.0 + dot);
-		lscale = 0.5 * (1.0 - dot);
-		if ( rscale < 0 ) {
-			rscale = 0;
+		if (dma.channels == 1)
+		{ // no attenuation = no spatialization
+			rscale = 1.0;
+			lscale = 1.0;
 		}
-		if ( lscale < 0 ) {
-			lscale = 0;
+		else
+		{
+			rscale = 0.5 * (1.0 + dot);
+			lscale = 0.5 * (1.0 - dot);
+			if ( rscale < 0 ) {
+				rscale = 0;
+			}
+			if ( lscale < 0 ) {
+				lscale = 0;
+			}
 		}
+
+		// add in distance effect
+		scale = (1.0 - dist) * rscale;
+		*right_vol += (master_vol * scale);
+		if (*right_vol < 0)
+			*right_vol = 0;
+
+		scale = (1.0 - dist) * lscale;
+		*left_vol += (master_vol * scale);
+		if (*left_vol < 0)
+			*left_vol = 0;
 	}
-
-	// add in distance effect
-	scale = (1.0 - dist) * rscale;
-	*right_vol = (master_vol * scale);
-	if (*right_vol < 0)
-		*right_vol = 0;
-
-	scale = (1.0 - dist) * lscale;
-	*left_vol = (master_vol * scale);
-	if (*left_vol < 0)
-		*left_vol = 0;
 }
 
 // =======================================================================
 // Start a sound effect
 // =======================================================================
+
+/*
+====================
+S_EntityIsListener
+====================
+*/
+qboolean S_EntityIsListener(int entityNum) {
+	int i;
+
+	// ZTM: NOTE: Listeners/numListenersPrevious may not one frame out of date.
+	for (i = 0; i < numListenersPrevious; i++) {
+		if (entityNum == listeners[i].number) {
+			return qtrue;
+		}
+	}
+
+	return qfalse;
+}
 
 /*
 ====================
@@ -484,8 +518,9 @@ Entchannel 0 will never override a playing sound
 void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle ) {
 	channel_t	*ch;
 	sfx_t		*sfx;
-  int i, oldest, chosen, time;
-  int	inplay, allowed;
+	int			i, oldest, chosen, time;
+	int			inplay, allowed;
+	qboolean	fullVolume;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -515,9 +550,16 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 //	Com_Printf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
-	allowed = 4;
-	if (entityNum == listener_number) {
+	if (entityNum == MAX_GENTITIES) {
+		// Special case for sounds started using StartLocalSound
+		allowed = 4 * MAX_SPLITVIEW;
+		fullVolume = qtrue;
+	} else if (S_EntityIsListener(entityNum)) {
 		allowed = 8;
+		fullVolume = qtrue;
+	} else {
+		allowed = 4;
+		fullVolume = qfalse;
 	}
 
 	ch = s_channels;
@@ -547,7 +589,7 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 		oldest = sfx->lastTimeUsed;
 		chosen = -1;
 		for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-			if (ch->entnum != listener_number && ch->entnum == entityNum && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
+			if (!S_EntityIsListener(ch->entnum) && ch->entnum == entityNum && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
 				oldest = ch->allocTime;
 				chosen = i;
 			}
@@ -555,14 +597,14 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 		if (chosen == -1) {
 			ch = s_channels;
 			for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-				if (ch->entnum != listener_number && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
+				if (!S_EntityIsListener(ch->entnum) && ch->allocTime<oldest && ch->entchannel != CHAN_ANNOUNCER) {
 					oldest = ch->allocTime;
 					chosen = i;
 				}
 			}
 			if (chosen == -1) {
 				ch = s_channels;
-				if (ch->entnum == listener_number) {
+				if (S_EntityIsListener(ch->entnum)) {
 					for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
 						if (ch->allocTime<oldest) {
 							oldest = ch->allocTime;
@@ -595,6 +637,7 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 	ch->leftvol = ch->master_vol;		// these will get calced at next spatialize
 	ch->rightvol = ch->master_vol;		// unless the game isn't running
 	ch->doppler = qfalse;
+	ch->fullVolume = fullVolume;
 }
 
 
@@ -613,7 +656,7 @@ void S_Base_StartLocalSound( sfxHandle_t sfxHandle, int channelNum ) {
 		return;
 	}
 
-	S_Base_StartSound (NULL, listener_number, channelNum, sfxHandle );
+	S_Base_StartSound (NULL, MAX_GENTITIES, channelNum, sfxHandle );
 }
 
 
@@ -741,10 +784,11 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 		vec3_t	out;
 		float	lena, lenb;
 
+		// ZTM: FIXME: Support doppler effect for all listeners
 		loopSounds[entityNum].doppler = qtrue;
-		lena = DistanceSquared(loopSounds[listener_number].origin, loopSounds[entityNum].origin);
+		lena = DistanceSquared(loopSounds[listeners[0].number].origin, loopSounds[entityNum].origin);
 		VectorAdd(loopSounds[entityNum].origin, loopSounds[entityNum].velocity, out);
-		lenb = DistanceSquared(loopSounds[listener_number].origin, out);
+		lenb = DistanceSquared(loopSounds[listeners[0].number].origin, out);
 		if ((loopSounds[entityNum].framenum+1) != cls.framecount) {
 			loopSounds[entityNum].oldDopplerScale = 1.0;
 		} else {
@@ -874,6 +918,7 @@ void S_AddLoopSounds (void) {
 		ch->doppler = loop->doppler;
 		ch->dopplerScale = loop->dopplerScale;
 		ch->oldDopplerScale = loop->oldDopplerScale;
+		ch->fullVolume = qfalse;
 		numLoopChannels++;
 		if (numLoopChannels == MAX_CHANNELS) {
 			return;
@@ -1052,44 +1097,24 @@ S_Respatialize
 Change the volumes of all the playing sounds for changes in their positions
 ============
 */
-void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater ) {
-	int			i;
-	channel_t	*ch;
-	vec3_t		origin;
+void S_Base_Respatialize( int entityNum, const vec3_t head, vec3_t axis[3], int inwater, int listener ) {
+	(void)listener; // ZTM: Currently unused
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
 	}
 
-	listener_number = entityNum;
-	VectorCopy(head, listener_origin);
-	VectorCopy(axis[0], listener_axis[0]);
-	VectorCopy(axis[1], listener_axis[1]);
-	VectorCopy(axis[2], listener_axis[2]);
-
-	// update spatialization for dynamic sounds	
-	ch = s_channels;
-	for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
-		if ( !ch->thesfx ) {
-			continue;
-		}
-		// anything coming from the view entity will always be full volume
-		if (ch->entnum == listener_number) {
-			ch->leftvol = ch->master_vol;
-			ch->rightvol = ch->master_vol;
-		} else {
-			if (ch->fixed_origin) {
-				VectorCopy( ch->origin, origin );
-			} else {
-				VectorCopy( loopSounds[ ch->entnum ].origin, origin );
-			}
-
-			S_SpatializeOrigin (origin, ch->master_vol, &ch->leftvol, &ch->rightvol);
-		}
+	if (numListeners >= MAX_LISTENERS-1) {
+		return;
 	}
 
-	// add loopsounds
-	S_AddLoopSounds ();
+	respatialize = qtrue;
+	listeners[numListeners].number = entityNum;
+	VectorCopy(head, listeners[numListeners].origin);
+	VectorCopy(axis[0], listeners[numListeners].axis[0]);
+	VectorCopy(axis[1], listeners[numListeners].axis[1]);
+	VectorCopy(axis[2], listeners[numListeners].axis[2]);
+	numListeners++;
 }
 
 
@@ -1139,12 +1164,42 @@ Called once each time through the main loop
 */
 void S_Base_Update( void ) {
 	int			i;
+	vec3_t		origin;
 	int			total;
 	channel_t	*ch;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 //		Com_DPrintf ("not started or muted\n");
 		return;
+	}
+
+	// update spatialization for dynamic sounds
+	if (respatialize) {
+		respatialize = qfalse;
+
+		ch = s_channels;
+		for ( i = 0 ; i < MAX_CHANNELS ; i++, ch++ ) {
+			if ( !ch->thesfx ) {
+				continue;
+			}
+
+			// anything coming from the view entity will always be full volume
+			if (ch->fullVolume) {
+				ch->leftvol = ch->master_vol;
+				ch->rightvol = ch->master_vol;
+			} else {
+				if (ch->fixed_origin) {
+					VectorCopy( ch->origin, origin );
+				} else {
+					VectorCopy( loopSounds[ ch->entnum ].origin, origin );
+				}
+
+				S_SpatializeOrigin (origin, ch->master_vol, &ch->leftvol, &ch->rightvol);
+			}
+		}
+
+		// add loopsounds
+		S_AddLoopSounds ();
 	}
 
 	//
@@ -1168,6 +1223,10 @@ void S_Base_Update( void ) {
 
 	// mix some sound
 	S_Update_();
+
+	// Reset numListeners for nextFrame
+	numListenersPrevious = numListeners;
+	numListeners = 0;
 }
 
 void S_GetSoundtime(void)
@@ -1511,6 +1570,9 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 
 		s_soundtime = 0;
 		s_paintedtime = 0;
+
+		Com_Memset(listeners, 0, sizeof(listeners));
+		numListeners = numListenersPrevious = respatialize = 0;
 
 		S_Base_StopAllSounds( );
 	} else {

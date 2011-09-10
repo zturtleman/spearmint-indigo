@@ -929,11 +929,11 @@ static void CG_CalculateWeaponPosition( vec3_t origin, vec3_t angles ) {
 	angles[PITCH] += cg.xyspeed * cg.bobfracsin * 0.005;
 
 	// drop the weapon when landing
-	delta = cg.time - cg.landTime;
+	delta = cg.time - cg.cur_lc->landTime;
 	if ( delta < LAND_DEFLECT_TIME ) {
-		origin[2] += cg.landChange*0.25 * delta / LAND_DEFLECT_TIME;
+		origin[2] += cg.cur_lc->landChange*0.25 * delta / LAND_DEFLECT_TIME;
 	} else if ( delta < LAND_DEFLECT_TIME + LAND_RETURN_TIME ) {
-		origin[2] += cg.landChange*0.25 * 
+		origin[2] += cg.cur_lc->landChange*0.25 * 
 			(LAND_DEFLECT_TIME + LAND_RETURN_TIME - delta) / LAND_RETURN_TIME;
 	}
 
@@ -981,7 +981,7 @@ static void CG_LightningBolt( centity_t *cent, vec3_t origin ) {
 	memset( &beam, 0, sizeof( beam ) );
 
 	// CPMA  "true" lightning
-	if ((cent->currentState.number == cg.predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
+	if ((cent->currentState.number == cg.cur_lc->predictedPlayerState.clientNum) && (cg_trueLightning.value != 0)) {
 		vec3_t angle;
 		int i;
 
@@ -1288,7 +1288,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 		CG_AddWeaponWithPowerups( &barrel, cent->currentState.powerups );
 	}
 
-	// make sure we aren't looking at cg.predictedPlayerEntity for LG
+	// make sure we aren't looking at cg.cur_lc->predictedPlayerEntity for LG
 	nonPredictedCent = &cg_entities[cent->currentState.clientNum];
 
 	// if the index of the nonPredictedCent is not the same as the clientNum
@@ -1338,7 +1338,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	trap_R_AddRefEntityToScene( &flash );
 
 	if ( ps || cg.renderingThirdPerson ||
-		cent->currentState.number != cg.predictedPlayerState.clientNum ) {
+		cent->currentState.number != cg.cur_lc->predictedPlayerState.clientNum ) {
 		// add lightning bolt
 		CG_LightningBolt( nonPredictedCent, flash.origin );
 
@@ -1383,7 +1383,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	if ( !cg_drawGun.integer ) {
 		vec3_t		origin;
 
-		if ( cg.predictedPlayerState.eFlags & EF_FIRING ) {
+		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {
 			// special hack for lightning gun...
 			VectorCopy( cg.refdef.vieworg, origin );
 			VectorMA( origin, -8, cg.refdef.viewaxis[2], origin );
@@ -1404,7 +1404,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 		fovOffset = 0;
 	}
 
-	cent = &cg.predictedPlayerEntity;	// &cg_entities[cg.snap->ps.clientNum];
+	cent = &cg.cur_lc->predictedPlayerEntity;	// &cg_entities[cg.snap->ps.clientNum];
 	CG_RegisterWeapon( ps->weapon );
 	weapon = &cg_weapons[ ps->weapon ];
 
@@ -1436,7 +1436,7 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	hand.renderfx = RF_DEPTHHACK | RF_FIRST_PERSON | RF_MINLIGHT;
 
 	// add everything onto the hand
-	CG_AddPlayerWeapon( &hand, ps, &cg.predictedPlayerEntity, ps->persistant[PERS_TEAM] );
+	CG_AddPlayerWeapon( &hand, ps, &cg.cur_lc->predictedPlayerEntity, ps->persistant[PERS_TEAM] );
 }
 
 /*
@@ -1461,21 +1461,21 @@ void CG_DrawWeaponSelect( void ) {
 	float	*color;
 
 	// don't display if dead
-	if ( cg.predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
+	if ( cg.cur_lc->predictedPlayerState.stats[STAT_HEALTH] <= 0 ) {
 		return;
 	}
 
-	color = CG_FadeColor( cg.weaponSelectTime, WEAPON_SELECT_TIME );
+	color = CG_FadeColor( cg.cur_lc->weaponSelectTime, WEAPON_SELECT_TIME );
 	if ( !color ) {
 		return;
 	}
 	trap_R_SetColor( color );
 
 	// showing weapon select clears pickup item display, but not the blend blob
-	cg.itemPickupTime = 0;
+	cg.cur_lc->itemPickupTime = 0;
 
 	// count the number of weapons owned
-	bits = cg.snap->ps.stats[ STAT_WEAPONS ];
+	bits = cg.cur_ps->stats[ STAT_WEAPONS ];
 	count = 0;
 	for ( i = 1 ; i < MAX_WEAPONS ; i++ ) {
 		if ( bits & ( 1 << i ) ) {
@@ -1497,12 +1497,12 @@ void CG_DrawWeaponSelect( void ) {
 		CG_DrawPic( x, y, 32, 32, cg_weapons[i].weaponIcon );
 
 		// draw selection marker
-		if ( i == cg.weaponSelect ) {
+		if ( i == cg.cur_lc->weaponSelect ) {
 			CG_DrawPic( x-4, y-4, 40, 40, cgs.media.selectShader );
 		}
 
 		// no ammo cross on top
-		if ( !cg.snap->ps.ammo[ i ] ) {
+		if ( !cg.cur_ps->ammo[ i ] ) {
 			CG_DrawPic( x, y, 32, 32, cgs.media.noammoShader );
 		}
 
@@ -1510,8 +1510,8 @@ void CG_DrawWeaponSelect( void ) {
 	}
 
 	// draw the selected name
-	if ( cg_weapons[ cg.weaponSelect ].item ) {
-		name = cg_weapons[ cg.weaponSelect ].item->pickup_name;
+	if ( cg_weapons[ cg.cur_lc->weaponSelect ].item ) {
+		name = cg_weapons[ cg.cur_lc->weaponSelect ].item->pickup_name;
 		if ( name ) {
 			w = CG_DrawStrlen( name ) * BIGCHAR_WIDTH;
 			x = ( SCREEN_WIDTH - w ) / 2;
@@ -1528,11 +1528,11 @@ void CG_DrawWeaponSelect( void ) {
 CG_WeaponSelectable
 ===============
 */
-static qboolean CG_WeaponSelectable( int i ) {
-	if ( !cg.snap->ps.ammo[i] ) {
+static qboolean CG_WeaponSelectable( playerState_t *ps, int i ) {
+	if ( !ps->ammo[i] ) {
 		return qfalse;
 	}
-	if ( ! (cg.snap->ps.stats[ STAT_WEAPONS ] & ( 1 << i ) ) ) {
+	if ( ! (ps->stats[ STAT_WEAPONS ] & ( 1 << i ) ) ) {
 		return qfalse;
 	}
 
@@ -1541,88 +1541,118 @@ static qboolean CG_WeaponSelectable( int i ) {
 
 /*
 ===============
-CG_NextWeapon_f
+CG_NextWeapon
 ===============
 */
-void CG_NextWeapon_f( void ) {
+void CG_NextWeapon( int localClient ) {
 	int		i;
 	int		original;
+	playerState_t	*ps;
+	cglc_t			*lc;
 
 	if ( !cg.snap ) {
 		return;
 	}
-	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
+
+	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
 		return;
 	}
 
-	cg.weaponSelectTime = cg.time;
-	original = cg.weaponSelect;
+	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	lc = &cg.localClients[localClient];
+
+	if ( ps->pm_flags & PMF_FOLLOW ) {
+		return;
+	}
+
+	lc->weaponSelectTime = cg.time;
+	original = lc->weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-		cg.weaponSelect++;
-		if ( cg.weaponSelect == MAX_WEAPONS ) {
-			cg.weaponSelect = 0;
+		lc->weaponSelect++;
+		if ( lc->weaponSelect == MAX_WEAPONS ) {
+			lc->weaponSelect = 0;
 		}
-		if ( cg.weaponSelect == WP_GAUNTLET ) {
+		if ( lc->weaponSelect == WP_GAUNTLET ) {
 			continue;		// never cycle to gauntlet
 		}
-		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
+		if ( CG_WeaponSelectable( ps, lc->weaponSelect ) ) {
 			break;
 		}
 	}
 	if ( i == MAX_WEAPONS ) {
-		cg.weaponSelect = original;
+		lc->weaponSelect = original;
 	}
 }
 
 /*
 ===============
-CG_PrevWeapon_f
+CG_PrevWeapon
 ===============
 */
-void CG_PrevWeapon_f( void ) {
+void CG_PrevWeapon( int localClient ) {
 	int		i;
 	int		original;
+	playerState_t	*ps;
+	cglc_t			*lc;
 
 	if ( !cg.snap ) {
 		return;
 	}
-	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
+
+	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
 		return;
 	}
 
-	cg.weaponSelectTime = cg.time;
-	original = cg.weaponSelect;
+	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	lc = &cg.localClients[localClient];
+
+	if ( ps->pm_flags & PMF_FOLLOW ) {
+		return;
+	}
+
+	lc->weaponSelectTime = cg.time;
+	original = lc->weaponSelect;
 
 	for ( i = 0 ; i < MAX_WEAPONS ; i++ ) {
-		cg.weaponSelect--;
-		if ( cg.weaponSelect == -1 ) {
-			cg.weaponSelect = MAX_WEAPONS - 1;
+		lc->weaponSelect--;
+		if ( lc->weaponSelect == -1 ) {
+			lc->weaponSelect = MAX_WEAPONS - 1;
 		}
-		if ( cg.weaponSelect == WP_GAUNTLET ) {
+		if ( lc->weaponSelect == WP_GAUNTLET ) {
 			continue;		// never cycle to gauntlet
 		}
-		if ( CG_WeaponSelectable( cg.weaponSelect ) ) {
+		if ( CG_WeaponSelectable( ps, lc->weaponSelect ) ) {
 			break;
 		}
 	}
 	if ( i == MAX_WEAPONS ) {
-		cg.weaponSelect = original;
+		lc->weaponSelect = original;
 	}
 }
 
 /*
 ===============
-CG_Weapon_f
+CG_Weapon
 ===============
 */
-void CG_Weapon_f( void ) {
+void CG_Weapon( int localClient ) {
 	int		num;
+	playerState_t	*ps;
+	cglc_t			*lc;
 
 	if ( !cg.snap ) {
 		return;
 	}
-	if ( cg.snap->ps.pm_flags & PMF_FOLLOW ) {
+
+	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
+		return;
+	}
+
+	ps = &cg.snap->pss[cg.snap->lcIndex[localClient]];
+	lc = &cg.localClients[localClient];
+
+	if ( ps->pm_flags & PMF_FOLLOW ) {
 		return;
 	}
 
@@ -1632,13 +1662,61 @@ void CG_Weapon_f( void ) {
 		return;
 	}
 
-	cg.weaponSelectTime = cg.time;
+	lc->weaponSelectTime = cg.time;
 
-	if ( ! ( cg.snap->ps.stats[STAT_WEAPONS] & ( 1 << num ) ) ) {
+	if ( ! ( ps->stats[STAT_WEAPONS] & ( 1 << num ) ) ) {
 		return;		// don't have the weapon
 	}
 
-	cg.weaponSelect = num;
+	lc->weaponSelect = num;
+}
+
+void CG_NextWeapon_f( void ) {
+	CG_NextWeapon( 0 );
+}
+
+void CG_PrevWeapon_f( void ) {
+	CG_PrevWeapon( 0 );
+}
+
+void CG_Weapon_f( void ) {
+	CG_Weapon( 0 );
+}
+
+void CG_2NextWeapon_f( void ) {
+	CG_NextWeapon( 1 );
+}
+
+void CG_2PrevWeapon_f( void ) {
+	CG_PrevWeapon( 1 );
+}
+
+void CG_2Weapon_f( void ) {
+	CG_Weapon( 1 );
+}
+
+void CG_3NextWeapon_f( void ) {
+	CG_NextWeapon( 2 );
+}
+
+void CG_3PrevWeapon_f( void ) {
+	CG_PrevWeapon( 2 );
+}
+
+void CG_3Weapon_f( void ) {
+	CG_Weapon( 2 );
+}
+
+void CG_4NextWeapon_f( void ) {
+	CG_NextWeapon( 3 );
+}
+
+void CG_4PrevWeapon_f( void ) {
+	CG_PrevWeapon( 3 );
+}
+
+void CG_4Weapon_f( void ) {
+	CG_Weapon( 3 );
 }
 
 /*
@@ -1651,11 +1729,11 @@ The current weapon has just run out of ammo
 void CG_OutOfAmmoChange( void ) {
 	int		i;
 
-	cg.weaponSelectTime = cg.time;
+	cg.cur_lc->weaponSelectTime = cg.time;
 
 	for ( i = MAX_WEAPONS-1 ; i > 0 ; i-- ) {
-		if ( CG_WeaponSelectable( i ) ) {
-			cg.weaponSelect = i;
+		if ( CG_WeaponSelectable( cg.cur_ps, i ) ) {
+			cg.cur_lc->weaponSelect = i;
 			break;
 		}
 	}
@@ -2187,10 +2265,10 @@ static qboolean	CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 	centity_t	*cent;
 	int			anim;
 
-	if ( entityNum == cg.snap->ps.clientNum ) {
-		VectorCopy( cg.snap->ps.origin, muzzle );
-		muzzle[2] += cg.snap->ps.viewheight;
-		AngleVectors( cg.snap->ps.viewangles, forward, NULL, NULL );
+	if ( entityNum == cg.cur_ps->clientNum ) {
+		VectorCopy( cg.cur_ps->origin, muzzle );
+		muzzle[2] += cg.cur_ps->viewheight;
+		AngleVectors( cg.cur_ps->viewangles, forward, NULL, NULL );
 		VectorMA( muzzle, 14, forward, muzzle );
 		return qtrue;
 	}

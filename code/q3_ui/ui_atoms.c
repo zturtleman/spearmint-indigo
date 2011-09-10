@@ -936,6 +936,7 @@ UI_Cache
 void UI_Cache_f( void ) {
 	MainMenu_Cache();
 	InGame_Cache();
+	InSelectPlayer_Cache();
 	ConfirmMenu_Cache();
 	PlayerModel_Cache();
 	PlayerSettings_Cache();
@@ -960,6 +961,7 @@ void UI_Cache_f( void ) {
 	UI_AddBots_Cache();
 	UI_RemoveBots_Cache();
 	UI_SetupMenu_Cache();
+	UI_SelectPlayer_Cache();
 //	UI_LoadConfig_Cache();
 //	UI_SaveConfigMenu_Cache();
 	UI_BotSelectMenu_Cache();

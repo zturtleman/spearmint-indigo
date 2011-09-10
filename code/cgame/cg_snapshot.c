@@ -73,6 +73,57 @@ static void CG_TransitionEntity( centity_t *cent ) {
 
 
 /*
+===============
+CG_SetPlayerSolid
+
+Client side prediction of player solid.
+Must set for local client perdiction to work correctly
+and so local clients can be found by CG_ScanForCrosshairEntity
+===============
+*/
+void CG_SetPlayerSolid(playerState_t *ps, entityState_t *s
+#ifdef TA_PLAYERSYS
+					, bg_playercfg_t *playercfg
+#endif
+					)
+{
+	if (ps->stats[STAT_HEALTH] > 0 && !(ps->pm_flags & PM_DEAD)
+		&& ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
+#ifdef TURTLEARENA // POWERS
+		&& !ps->powerups[PW_FLASHING]
+#endif
+		)
+	{
+		int i, j, k;
+
+		// assume that x/y are equal and symetric
+		i = 15;
+		if (i<1)
+			i = 1;
+		if (i>255)
+			i = 255;
+
+		// z is not symetric
+		j = 24;
+		if (j<1)
+			j = 1;
+		if (j>255)
+			j = 255;
+
+		// and z maxs can be negative...
+		k = 32+32;
+		if (k<1)
+			k = 1;
+		if (k>255)
+			k = 255;
+
+		s->solid = (k<<16) | (j<<8) | i;
+	} else {
+		s->solid = 0;
+	}
+}
+
+/*
 ==================
 CG_SetInitialSnapshot
 
@@ -90,7 +141,17 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	cg.snap = snap;
 
-	BG_PlayerStateToEntityState( &snap->ps, &cg_entities[ snap->ps.clientNum ].currentState, qfalse );
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (cg.snap->lcIndex[i] != -1) {
+			// Set clientNum as extra local client don't have it yet.
+			cg.localClients[i].clientNum = cg.snap->pss[cg.snap->lcIndex[i]].clientNum;
+		}
+	}
+
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
+		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState);
+	}
 
 	// sort out solid entities
 	CG_BuildSolidList();
@@ -99,7 +160,7 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	// set our local weapon selection pointer to
 	// what the server has indicated the current weapon is
-	CG_Respawn();
+	CG_Respawn(-1);
 
 	for ( i = 0 ; i < cg.snap->numEntities ; i++ ) {
 		state = &cg.snap->entities[ i ];
@@ -154,8 +215,11 @@ static void CG_TransitionSnapshot( void ) {
 	oldFrame = cg.snap;
 	cg.snap = cg.nextSnap;
 
-	BG_PlayerStateToEntityState( &cg.snap->ps, &cg_entities[ cg.snap->ps.clientNum ].currentState, qfalse );
-	cg_entities[ cg.snap->ps.clientNum ].interpolate = qfalse;
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
+		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState);
+		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
+	}
 
 	for ( i = 0 ; i < cg.snap->numEntities ; i++ ) {
 		cent = &cg_entities[ cg.snap->entities[ i ].number ];
@@ -171,18 +235,28 @@ static void CG_TransitionSnapshot( void ) {
 	if ( oldFrame ) {
 		playerState_t	*ops, *ps;
 
-		ops = &oldFrame->ps;
-		ps = &cg.snap->ps;
-		// teleporting checks are irrespective of prediction
-		if ( ( ps->eFlags ^ ops->eFlags ) & EF_TELEPORT_BIT ) {
-			cg.thisFrameTeleport = qtrue;	// will be cleared by prediction code
-		}
+		for (i = 0; i < MAX_SPLITVIEW; i++) {
+			if (oldFrame->lcIndex[i] == -1 || cg.snap->lcIndex[i] == -1) {
+				continue;
+			}
 
-		// if we are not doing client side movement prediction for any
-		// reason, then the client events and view changes will be issued now
-		if ( cg.demoPlayback || (cg.snap->ps.pm_flags & PMF_FOLLOW)
-			|| cg_nopredict.integer || cg_synchronousClients.integer ) {
-			CG_TransitionPlayerState( ps, ops );
+			cg.cur_localClientNum = i;
+			cg.cur_lc = &cg.localClients[i];
+
+			ops = &oldFrame->pss[oldFrame->lcIndex[i]];
+			ps = &cg.snap->pss[cg.snap->lcIndex[i]];
+
+			// teleporting checks are irrespective of prediction
+			if ( ( ps->eFlags ^ ops->eFlags ) & EF_TELEPORT_BIT ) {
+				cg.thisFrameTeleport = qtrue;	// will be cleared by prediction code
+			}
+
+			// if we are not doing client side movement prediction for any
+			// reason, then the client events and view changes will be issued now
+			if ( cg.demoPlayback || (ps->pm_flags & PMF_FOLLOW)
+				|| cg_nopredict.integer || cg_synchronousClients.integer ) {
+				CG_TransitionPlayerState( ps, ops );
+			}
 		}
 	}
 
@@ -200,11 +274,15 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 	int					num;
 	entityState_t		*es;
 	centity_t			*cent;
+	int					i;
 
 	cg.nextSnap = snap;
 
-	BG_PlayerStateToEntityState( &snap->ps, &cg_entities[ snap->ps.clientNum ].nextState, qfalse );
-	cg_entities[ cg.snap->ps.clientNum ].interpolate = qtrue;
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState, qfalse );
+		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState);
+		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qtrue;
+	}
 
 	// check for extrapolation errors
 	for ( num = 0 ; num < snap->numEntities ; num++ ) {
@@ -223,17 +301,18 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 		}
 	}
 
-	// if the next frame is a teleport for the playerstate, we
-	// can't interpolate during demos
-	if ( cg.snap && ( ( snap->ps.eFlags ^ cg.snap->ps.eFlags ) & EF_TELEPORT_BIT ) ) {
-		cg.nextFrameTeleport = qtrue;
-	} else {
-		cg.nextFrameTeleport = qfalse;
-	}
+	cg.nextFrameTeleport = qfalse;
+	for (i = 0; i < cg.snap->numPSs; i++) {
+		// if the next frame is a teleport for the playerstate, we
+		// can't interpolate during demos
+		if ( cg.snap && ( ( snap->pss[i].eFlags ^ cg.snap->pss[i].eFlags ) & EF_TELEPORT_BIT ) ) {
+			cg.nextFrameTeleport = qtrue;
+		}
 
-	// if changing follow mode, don't interpolate
-	if ( cg.nextSnap->ps.clientNum != cg.snap->ps.clientNum ) {
-		cg.nextFrameTeleport = qtrue;
+		// if changing follow mode, don't interpolate
+		if ( cg.nextSnap->pss[i].clientNum != cg.snap->pss[i].clientNum ) {
+			cg.nextFrameTeleport = qtrue;
+		}
 	}
 
 	// if changing server restarts, don't interpolate
@@ -399,5 +478,22 @@ void CG_ProcessSnapshots( void ) {
 		CG_Error( "CG_ProcessSnapshots: cg.nextSnap->serverTime <= cg.time" );
 	}
 
+}
+
+/*
+=============
+CG_LocalClient
+=============
+*/
+int CG_LocalClient(int clientNum) {
+	int i;
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[cg.snap->lcIndex[i]].clientNum == clientNum) {
+			return i;
+		}
+	}
+
+	return -1;
 }
 

@@ -39,7 +39,12 @@ A normal server packet will look like:
 1	snapFlags
 1	areaBytes
 <areabytes>
-<playerstate>
+if (snapFlags & SNAPFLAG_MULTIPLE_PSS)
+	1   number of player states
+	<playerstates>
+else
+	<playerstate>
+endif
 <packetentities>
 
 =============================================================================
@@ -182,6 +187,9 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	if ( client->state != CS_ACTIVE ) {
 		snapFlags |= SNAPFLAG_NOT_ACTIVE;
 	}
+	if (frame->numPSs > 1 || frame->lcIndex[0] != 0) {
+		snapFlags |= SNAPFLAG_MULTIPLE_PSS;
+	}
 
 	MSG_WriteByte (msg, snapFlags);
 
@@ -189,11 +197,31 @@ static void SV_WriteSnapshotToClient( client_t *client, msg_t *msg ) {
 	MSG_WriteByte (msg, frame->areabytes);
 	MSG_WriteData (msg, frame->areabits, frame->areabytes);
 
-	// delta encode the playerstate
-	if ( oldframe ) {
-		MSG_WriteDeltaPlayerstate( msg, &oldframe->ps, &frame->ps );
-	} else {
-		MSG_WriteDeltaPlayerstate( msg, NULL, &frame->ps );
+	// send playerstates
+	if (frame->numPSs > MAX_SPLITVIEW) {
+		Com_DPrintf(S_COLOR_YELLOW "Warning: Almost sent numPSs as %d (max=%d)\n", frame->numPSs, MAX_SPLITVIEW);
+		frame->numPSs = MAX_SPLITVIEW;
+	}
+
+	// send number of playerstates and local client indexes if needed
+	if (snapFlags & SNAPFLAG_MULTIPLE_PSS) {
+		MSG_WriteByte (msg, frame->numPSs);
+		for (i = 0; i < MAX_SPLITVIEW; i++) {
+			MSG_WriteByte (msg, frame->lcIndex[i]);
+		}
+	}
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (frame->lcIndex[i] == -1) {
+			continue;
+		}
+
+		// delta encode the playerstate
+		if ( oldframe && oldframe->lcIndex[i] != -1) {
+			MSG_WriteDeltaPlayerstate( msg, &oldframe->pss[oldframe->lcIndex[i]], &frame->pss[frame->lcIndex[i]] );
+		} else {
+			MSG_WriteDeltaPlayerstate( msg, NULL, &frame->pss[frame->lcIndex[i]] );
+		}
 	}
 
 	// delta encode the entities
@@ -337,22 +365,40 @@ static void SV_AddEntitiesVisibleFromPoint( vec3_t origin, clientSnapshot_t *fra
 
 		// entities can be flagged to be sent to only one client
 		if ( ent->r.svFlags & SVF_SINGLECLIENT ) {
-			if ( ent->r.singleClient != frame->ps.clientNum ) {
+			// If it's for one of client's ps, send it.
+			for (i = 0; i < frame->numPSs; i++) {
+				if ( ent->r.singleClient == frame->pss[i].clientNum ) {
+					break;
+				}
+			}
+			if (i == frame->numPSs) {
 				continue;
 			}
 		}
 		// entities can be flagged to be sent to everyone but one client
 		if ( ent->r.svFlags & SVF_NOTSINGLECLIENT ) {
-			if ( ent->r.singleClient == frame->ps.clientNum ) {
+			// If it's for one of client's ps, send it.
+			for (i = 0; i < frame->numPSs; i++) {
+				if ( ent->r.singleClient != frame->pss[i].clientNum ) {
+					break;
+				}
+			}
+			if (i == frame->numPSs) {
 				continue;
 			}
 		}
 		// entities can be flagged to be sent to a given mask of clients
 		if ( ent->r.svFlags & SVF_CLIENTMASK ) {
-			if (frame->ps.clientNum >= 32)
-				Com_Error( ERR_DROP, "SVF_CLIENTMASK: clientNum >= 32" );
-			if (~ent->r.singleClient & (1 << frame->ps.clientNum))
+			// If it's for one of client's ps, send it.
+			for (i = 0; i < frame->numPSs; i++) {
+				if (frame->pss[i].clientNum >= 32)
+					Com_Error( ERR_DROP, "SVF_CLIENTMASK: clientNum >= 32" );
+				if (~ent->r.singleClient & (1 << frame->pss[i].clientNum))
+					break;
+			}
+			if (i != frame->numPSs) {
 				continue;
+			}
 		}
 
 		svEnt = SV_SvEntityForGentity( ent );
@@ -445,6 +491,10 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 	clientSnapshot_t			*frame;
 	snapshotEntityNumbers_t		entityNumbers;
 	int							i;
+#if 0
+	int							j, k;
+	int							viewclients[MAX_SPLITVIEW] = {-1, -1, -1, -1};
+#endif
 	sharedEntity_t				*ent;
 	entityState_t				*state;
 	svEntity_t					*svEnt;
@@ -472,25 +522,89 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 	// grab the current playerState_t
 	ps = SV_GameClientNum( client - svs.clients );
-	frame->ps = *ps;
+	frame->pss[0] = *ps;
+	frame->numPSs = 1;
+	frame->lcIndex[0] = 0;
+
+	// Add splitscreen clients
+	for (i = 1; i < MAX_SPLITVIEW; i++) {
+		if (client->local_clients[i-1] == -1) {
+			frame->lcIndex[i] = -1;
+			continue;
+		}
+		ps = SV_GameClientNum( client->local_clients[i-1] );
+		frame->pss[frame->numPSs] = *ps;
+		frame->lcIndex[i] = frame->numPSs;
+		frame->numPSs++;
+	}
+
+#if 0 // ZTM: FIXME: Set viewclients, should be done in game
+	j = 1;
+	for (i = 0; i < sv_maxclients->integer; i++)
+	{
+		if (i == client - svs.clients) {
+			continue;
+		}
+		if (!svs.clients[i].state) {
+			continue;
+		}
+
+		for (k = 1; k < MAX_SPLITVIEW; k++) {
+			if (client->local_clients[k-1] == i) {
+				break;
+			}
+		}
+		if (k != MAX_SPLITVIEW) {
+			continue;
+		}
+
+		viewclients[j-1] = i;
+		j++;
+		if (j >= MAX_SPLITVIEW) {
+			break;
+		}
+	}
+#endif
+
+#if 0
+	// Add viewclients
+	for (i = 1; i < MAX_SPLITVIEW; i++) {
+		if ((viewclients[i-1] < 0 || viewclients[i-1] >= MAX_CLIENTS)) {
+			continue;
+		}
+		ps = SV_GameClientNum( viewclients[i-1] );
+		frame->pss[frame->numPSs] = *ps;
+		frame->pss[frame->numPSs].pm_flags |= PMF_FOLLOW;
+		frame->lcIndex[i] = frame->numPSs;
+		frame->numPSs++;
+		if (frame->numPSs >= MAX_SPLITVIEW) {
+			break;
+		}
+	}
+#endif
 
 	// never send client's own entity, because it can
 	// be regenerated from the playerstate
-	clientNum = frame->ps.clientNum;
-	if ( clientNum < 0 || clientNum >= MAX_GENTITIES ) {
-		Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
+	for (i = 0; i < frame->numPSs; i++) {
+		clientNum = frame->pss[i].clientNum;
+		if ( clientNum < 0 || clientNum >= MAX_GENTITIES ) {
+			Com_Error( ERR_DROP, "SV_SvEntityForGentity: bad gEnt" );
+		}
+		svEnt = &sv.svEntities[ clientNum ];
+
+		svEnt->snapshotCounter = sv.snapshotCounter;
 	}
-	svEnt = &sv.svEntities[ clientNum ];
 
-	svEnt->snapshotCounter = sv.snapshotCounter;
+	// Now that local clients have been marked as no send, add visible entities.
+	for (i = 0; i < frame->numPSs; i++) {
+		// find the client's viewpoint
+		VectorCopy( frame->pss[i].origin, org );
+		org[2] += frame->pss[i].viewheight;
 
-	// find the client's viewpoint
-	VectorCopy( ps->origin, org );
-	org[2] += ps->viewheight;
-
-	// add all the entities directly visible to the eye, which
-	// may include portal entities that merge other viewpoints
-	SV_AddEntitiesVisibleFromPoint( org, frame, &entityNumbers, qfalse );
+		// add all the entities directly visible to the eye, which
+		// may include portal entities that merge other viewpoints
+		SV_AddEntitiesVisibleFromPoint( org, frame, &entityNumbers, qfalse );
+	}
 
 	// if there were portals visible, there may be out of order entities
 	// in the list which will need to be resorted for the delta compression
@@ -598,6 +712,11 @@ Also called by SV_FinalMessage
 void SV_SendClientSnapshot( client_t *client ) {
 	byte		msg_buf[MAX_MSGLEN];
 	msg_t		msg;
+
+	// Splitscreen clients are sent with main client.
+	if (client->owner != -1) {
+		return;
+	}
 
 	// build the snapshot
 	SV_BuildClientSnapshot( client );

@@ -893,9 +893,14 @@ default values.
 #define CVAR_SERVER_CREATED	0x0800	// cvar was created by a server the client connected to.
 #define CVAR_VM_CREATED		0x1000	// cvar was created exclusively in one of the VMs.
 #define CVAR_PROTECTED		0x2000	// prevent modifying this var from VMs or the server
+#define CVAR_USERINFO2		0x4000 // userinfo for second local client
+#define CVAR_USERINFO3		0x8000 // userinfo for third local client
+#define CVAR_USERINFO4		0x10000 // userinfo for fourth local client
 // These flags are only returned by the Cvar_Flags() function
 #define CVAR_MODIFIED		0x40000000	// Cvar was modified
 #define CVAR_NONEXISTENT	0x80000000	// Cvar doesn't exist.
+
+#define CVAR_USERINFO_ALL	(CVAR_USERINFO|CVAR_USERINFO2|CVAR_USERINFO3|CVAR_USERINFO4)
 
 // nothing outside the Cvar_*() functions should modify these fields!
 typedef struct cvar_s cvar_t;
@@ -1059,6 +1064,7 @@ typedef enum {
 #define	SNAPFLAG_RATE_DELAYED	1
 #define	SNAPFLAG_NOT_ACTIVE		2	// snapshot used during connection and for zombies
 #define SNAPFLAG_SERVERCOUNT	4	// toggled every map_restart so transitions can be detected
+#define SNAPFLAG_MULTIPLE_PSS	8	// snap contains multiple playerstates
 
 //
 // per-level limits
@@ -1188,6 +1194,9 @@ typedef struct playerState_s {
 	int			entityEventSequence;
 } playerState_t;
 
+
+// Max local clients for splitscreen.
+#define MAX_SPLITVIEW 4
 
 //====================================================================
 
@@ -1340,6 +1349,10 @@ typedef struct {
   float glyphScale;
   char name[MAX_QPATH];
 } fontInfo_t;
+
+#ifndef QAGAME
+char *Com_LocalClientCvarName(int localClient, char *in_cvarName);
+#endif
 
 #define Square(x) ((x)*(x))
 

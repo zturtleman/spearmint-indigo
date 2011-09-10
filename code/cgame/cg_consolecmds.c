@@ -164,6 +164,7 @@ static void CG_spWin_f( void) {
 	trap_Cvar_Set("cg_thirdPersonRange", "100");
 	CG_AddBufferedSound(cgs.media.winnerSound);
 	//trap_S_StartLocalSound(cgs.media.winnerSound, CHAN_ANNOUNCER);
+	cg.cur_lc = &cg.localClients[0];
 	CG_CenterPrint("YOU WIN!", SCREEN_HEIGHT * .30, 0);
 }
 
@@ -175,6 +176,7 @@ static void CG_spLose_f( void) {
 	trap_Cvar_Set("cg_thirdPersonRange", "100");
 	CG_AddBufferedSound(cgs.media.loserSound);
 	//trap_S_StartLocalSound(cgs.media.loserSound, CHAN_ANNOUNCER);
+	cg.cur_lc = &cg.localClients[0];
 	CG_CenterPrint("YOU LOSE...", SCREEN_HEIGHT * .30, 0);
 }
 
@@ -252,9 +254,9 @@ static void CG_PrevTeamMember_f( void ) {
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
 static void CG_NextOrder_f( void ) {
-	clientInfo_t *ci = cgs.clientinfo + cg.snap->ps.clientNum;
+	clientInfo_t *ci = cgs.clientinfo + cg.snap->pss[0].clientNum;
 	if (ci) {
-		if (!ci->teamLeader && sortedTeamPlayers[cg_currentSelectedPlayer.integer] != cg.snap->ps.clientNum) {
+		if (!ci->teamLeader && sortedTeamPlayers[cg_currentSelectedPlayer.integer] != cg.snap->pss[0].clientNum) {
 			return;
 		}
 	}
@@ -462,11 +464,26 @@ static consoleCommand_t	commands[] = {
 	{ "-scores", CG_ScoresUp_f },
 	{ "+zoom", CG_ZoomDown_f },
 	{ "-zoom", CG_ZoomUp_f },
+	{ "+2zoom", CG_2ZoomDown_f },
+	{ "-2zoom", CG_2ZoomUp_f },
+	{ "+3zoom", CG_3ZoomDown_f },
+	{ "-3zoom", CG_3ZoomUp_f },
+	{ "+4zoom", CG_4ZoomDown_f },
+	{ "-4zoom", CG_4ZoomUp_f },
 	{ "sizeup", CG_SizeUp_f },
 	{ "sizedown", CG_SizeDown_f },
 	{ "weapnext", CG_NextWeapon_f },
 	{ "weapprev", CG_PrevWeapon_f },
 	{ "weapon", CG_Weapon_f },
+	{ "2weapnext", CG_2NextWeapon_f },
+	{ "2weapprev", CG_2PrevWeapon_f },
+	{ "2weapon", CG_2Weapon_f },
+	{ "3weapnext", CG_3NextWeapon_f },
+	{ "3weapprev", CG_3PrevWeapon_f },
+	{ "3weapon", CG_3Weapon_f },
+	{ "4weapnext", CG_4NextWeapon_f },
+	{ "4weapprev", CG_4PrevWeapon_f },
+	{ "4weapon", CG_4Weapon_f },
 	{ "tell_target", CG_TellTarget_f },
 	{ "tell_attacker", CG_TellAttacker_f },
 	{ "vtell_target", CG_VoiceTellTarget_f },
@@ -548,30 +565,35 @@ void CG_InitConsoleCommands( void ) {
 	// the game server will interpret these commands, which will be automatically
 	// forwarded to the server after they are not recognized locally
 	//
-	trap_AddCommand ("kill");
-	trap_AddCommand ("say");
-	trap_AddCommand ("say_team");
-	trap_AddCommand ("tell");
-	trap_AddCommand ("vsay");
-	trap_AddCommand ("vsay_team");
-	trap_AddCommand ("vtell");
-	trap_AddCommand ("vtaunt");
-	trap_AddCommand ("vosay");
-	trap_AddCommand ("vosay_team");
-	trap_AddCommand ("votell");
-	trap_AddCommand ("give");
-	trap_AddCommand ("god");
-	trap_AddCommand ("notarget");
-	trap_AddCommand ("noclip");
-	trap_AddCommand ("team");
-	trap_AddCommand ("follow");
-	trap_AddCommand ("levelshot");
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		trap_AddCommand(Com_LocalClientCvarName(i, "say"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "say_team"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "tell"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vsay"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vsay_team"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vtell"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vosay"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vosay_team"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "votell"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vtaunt"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "give"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "god"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "notarget"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "noclip"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "kill"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "teamtask"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "levelshot"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "follow"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "follownext"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "followprev"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "team"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "callvote"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "vote"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "callteamvote"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "teamvote"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "setviewpos"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "stats"));
+	}
+
 	trap_AddCommand ("addbot");
-	trap_AddCommand ("setviewpos");
-	trap_AddCommand ("callvote");
-	trap_AddCommand ("vote");
-	trap_AddCommand ("callteamvote");
-	trap_AddCommand ("teamvote");
-	trap_AddCommand ("stats");
-	trap_AddCommand ("teamtask");
 }

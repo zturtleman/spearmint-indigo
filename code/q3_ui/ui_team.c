@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ID_JOINBLUE		101
 #define ID_JOINGAME		102
 #define ID_SPECTATE		103
+#define ID_HIDE			104
 
 
 typedef struct
@@ -43,6 +44,9 @@ typedef struct
 	menutext_s		joinblue;
 	menutext_s		joingame;
 	menutext_s		spectate;
+	menutext_s		hide;
+
+	int				localClient;
 } teammain_t;
 
 static teammain_t	s_teammain;
@@ -53,28 +57,37 @@ TeamMain_MenuEvent
 ===============
 */
 static void TeamMain_MenuEvent( void* ptr, int event ) {
+	char *teamCmd;
+
 	if( event != QM_ACTIVATED ) {
 		return;
 	}
 
+	teamCmd = Com_LocalClientCvarName(s_teammain.localClient, "team");
+
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_JOINRED:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team red\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s red\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_JOINBLUE:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team blue\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s blue\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_JOINGAME:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team free\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s free\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 
 	case ID_SPECTATE:
-		trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team spectator\n" );
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s spectator\n", teamCmd) );
+		UI_ForceMenuOff();
+		break;
+
+	case ID_HIDE:
+		trap_Cmd_ExecuteText( EXEC_APPEND, va("cmd %s hide\n", teamCmd) );
 		UI_ForceMenuOff();
 		break;
 	}
@@ -86,12 +99,17 @@ static void TeamMain_MenuEvent( void* ptr, int event ) {
 TeamMain_MenuInit
 ===============
 */
-void TeamMain_MenuInit( void ) {
+void TeamMain_MenuInit( int localClient ) {
 	int		y;
 	int		gametype;
 	char	info[MAX_INFO_STRING];
+	uiClientState_t	cs;
+
+	trap_GetClientState( &cs );
 
 	memset( &s_teammain, 0, sizeof(s_teammain) );
+
+	s_teammain.localClient = localClient;
 
 	TeamMain_Cache();
 
@@ -152,6 +170,21 @@ void TeamMain_MenuInit( void ) {
 	s_teammain.spectate.color            = colorRed;
 	y += 20;
 
+	s_teammain.hide.generic.type     = MTYPE_PTEXT;
+	s_teammain.hide.generic.flags    = QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	s_teammain.hide.generic.id       = ID_HIDE;
+	s_teammain.hide.generic.callback = TeamMain_MenuEvent;
+	s_teammain.hide.generic.x        = 320;
+	s_teammain.hide.generic.y        = y;
+	s_teammain.hide.string           = "HIDE VIEWPORT";
+	s_teammain.hide.style            = UI_CENTER|UI_SMALLFONT;
+	s_teammain.hide.color            = colorRed;
+	y += 20;
+
+	if (cs.numLocalClients <= 1) {
+		s_teammain.hide.generic.flags  |= QMF_GRAYED;
+	}
+
 	trap_GetConfigString(CS_SERVERINFO, info, MAX_INFO_STRING);   
 	gametype = atoi( Info_ValueForKey( info,"g_gametype" ) );
 			      
@@ -176,6 +209,7 @@ void TeamMain_MenuInit( void ) {
 	Menu_AddItem( &s_teammain.menu, (void*) &s_teammain.joinblue );
 	Menu_AddItem( &s_teammain.menu, (void*) &s_teammain.joingame );
 	Menu_AddItem( &s_teammain.menu, (void*) &s_teammain.spectate );
+	Menu_AddItem( &s_teammain.menu, (void*) &s_teammain.hide );
 }
 
 
@@ -194,7 +228,7 @@ void TeamMain_Cache( void ) {
 UI_TeamMainMenu
 ===============
 */
-void UI_TeamMainMenu( void ) {
-	TeamMain_MenuInit();
+void UI_TeamMainMenu( int localClient ) {
+	TeamMain_MenuInit(localClient);
 	UI_PushMenu ( &s_teammain.menu );
 }

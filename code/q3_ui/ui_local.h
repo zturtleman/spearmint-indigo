@@ -328,6 +328,12 @@ extern void InGame_Cache( void );
 extern void UI_InGameMenu(void);
 
 //
+// ui_ingame_selectplayer.c
+//
+extern void InSelectPlayer_Cache( void );
+extern void InSelectPlayerMenu( void (*playerfunc)(int), const char *banner, qboolean disableMissingPlayers );
+
+//
 // ui_confirm.c
 //
 extern void ConfirmMenu_Cache( void );
@@ -344,7 +350,7 @@ extern void UI_SetupMenu(void);
 //
 // ui_team.c
 //
-extern void UI_TeamMainMenu( void );
+extern void UI_TeamMainMenu( int localClient );
 extern void TeamMain_Cache( void );
 
 //
@@ -353,9 +359,15 @@ extern void TeamMain_Cache( void );
 extern void UI_DrawConnectScreen( qboolean overlay );
 
 //
+// ui_selectplayer.c
+//
+extern void UI_SelectPlayerMenu( void (*playerfunc)(int), const char *banner );
+extern void UI_SelectPlayer_Cache( void );
+
+//
 // ui_controls2.c
 //
-extern void UI_ControlsMenu( void );
+extern void UI_ControlsMenu( int localClient );
 extern void Controls_Cache( void );
 
 //
@@ -380,13 +392,13 @@ extern void UI_ModsMenu_Cache( void );
 //
 // ui_playermodel.c
 //
-extern void UI_PlayerModelMenu( void );
+extern void UI_PlayerModelMenu( int localClient );
 extern void PlayerModel_Cache( void );
 
 //
 // ui_playersettings.c
 //
-extern void UI_PlayerSettingsMenu( void );
+extern void UI_PlayerSettingsMenu( int localClient );
 extern void PlayerSettings_Cache( void );
 
 //

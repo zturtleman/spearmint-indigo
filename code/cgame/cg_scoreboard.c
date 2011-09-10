@@ -181,17 +181,17 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	}
 
 	// highlight your position
-	if ( score->client == cg.snap->ps.clientNum ) {
+	if ( score->client == cg.cur_ps->clientNum || (cg.singleCamera && CG_LocalClient(score->client) != -1) ) {
 		float	hcolor[4];
 		int		rank;
 
 		localClient = qtrue;
 
-		if ( cg.snap->ps.persistant[PERS_TEAM] == TEAM_SPECTATOR 
+		if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_SPECTATOR 
 			|| cgs.gametype >= GT_TEAM ) {
 			rank = -1;
 		} else {
-			rank = cg.snap->ps.persistant[PERS_RANK] & ~RANK_TIED_FLAG;
+			rank = cg.cur_ps->persistant[PERS_RANK] & ~RANK_TIED_FLAG;
 		}
 		if ( rank == 0 ) {
 			hcolor[0] = 0;
@@ -219,7 +219,7 @@ static void CG_DrawClientScore( int y, score_t *score, float *color, float fade,
 	CG_DrawBigString( SB_SCORELINE_X + (SB_RATING_WIDTH / 2), y, string, fade );
 
 	// add the "ready" marker for intermission exiting
-	if ( cg.snap->ps.stats[ STAT_CLIENTS_READY ] & ( 1 << score->client ) ) {
+	if ( cg.cur_ps->stats[ STAT_CLIENTS_READY ] & ( 1 << score->client ) ) {
 		CG_DrawBigStringColor( iconx, y, "READY", color );
 	}
 }
@@ -278,7 +278,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		return qfalse;
 	}
 
-	if ( cgs.gametype == GT_SINGLE_PLAYER && cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if ( cgs.gametype == GT_SINGLE_PLAYER && cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		cg.deferredPlayerLoading = 0;
 		return qfalse;
 	}
@@ -288,8 +288,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 		return qfalse;
 	}
 
-	if ( cg.showScores || cg.predictedPlayerState.pm_type == PM_DEAD ||
-		 cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
+	if ( cg.showScores || cg.cur_lc->predictedPlayerState.pm_type == PM_DEAD ||
+		 cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
 		fadeColor = colorWhite;
 	} else {
@@ -298,7 +298,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 		if ( !fadeColor ) {
 			// next time scoreboard comes up, don't print killer
 			cg.deferredPlayerLoading = 0;
-			cg.killerName[0] = 0;
+			cg.cur_lc->killerName[0] = 0;
 			return qfalse;
 		}
 		fade = *fadeColor;
@@ -306,8 +306,8 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 
 	// fragged by ... line
-	if ( cg.killerName[0] ) {
-		s = va("Fragged by %s", cg.killerName );
+	if ( cg.cur_lc->killerName[0] ) {
+		s = va("Fragged by %s", cg.cur_lc->killerName );
 		w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 		x = ( SCREEN_WIDTH - w ) / 2;
 		y = 40;
@@ -316,10 +316,10 @@ qboolean CG_DrawOldScoreboard( void ) {
 
 	// current rank
 	if ( cgs.gametype < GT_TEAM) {
-		if (cg.snap->ps.persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
+		if (cg.cur_ps->persistant[PERS_TEAM] != TEAM_SPECTATOR ) {
 			s = va("%s place with %i",
-				CG_PlaceString( cg.snap->ps.persistant[PERS_RANK] + 1 ),
-				cg.snap->ps.persistant[PERS_SCORE] );
+				CG_PlaceString( cg.cur_ps->persistant[PERS_RANK] + 1 ),
+				cg.cur_ps->persistant[PERS_SCORE] );
 			w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
 			x = ( SCREEN_WIDTH - w ) / 2;
 			y = 60;
@@ -406,7 +406,7 @@ qboolean CG_DrawOldScoreboard( void ) {
 	if (!localClient) {
 		// draw local client at the bottom
 		for ( i = 0 ; i < cg.numScores ; i++ ) {
-			if ( cg.scores[i].client == cg.snap->ps.clientNum ) {
+			if ( cg.scores[i].client == cg.cur_ps->clientNum ) {
 				CG_DrawClientScore( y, &cg.scores[i], fadeColor, fade, lineHeight == SB_NORMAL_HEIGHT );
 				break;
 			}

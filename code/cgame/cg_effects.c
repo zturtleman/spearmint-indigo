@@ -388,14 +388,29 @@ void CG_ScorePlum( int client, vec3_t org, int score ) {
 	localEntity_t	*le;
 	refEntity_t		*re;
 	vec3_t			angles;
+	int				lc, localClients;
 	static vec3_t lastPos;
 
 	// only visualize for the client that scored
-	if (client != cg.predictedPlayerState.clientNum || cg_scorePlum.integer == 0) {
+	if (cg_scorePlum.integer == 0) {
+		return;
+	}
+
+	// Select local clients to show the plum to
+	localClients = 0;
+	for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
+		if (cg.snap->lcIndex[lc] != -1 && client == cg.localClients[lc].predictedPlayerState.clientNum) {
+			localClients |= (1<<lc);
+		}
+	}
+
+	// Not going to be rendered
+	if (!localClients) {
 		return;
 	}
 
 	le = CG_AllocLocalEntity();
+	le->localClients = localClients;
 	le->leFlags = 0;
 	le->leType = LE_SCOREPLUM;
 	le->startTime = cg.time;
@@ -514,7 +529,7 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 	ex->refEntity.customShader = cgs.media.bloodExplosionShader;
 
 	// don't show player's own blood in view
-	if ( entityNum == cg.snap->ps.clientNum ) {
+	if ( CG_LocalClient(entityNum) != -1 && (!cg.snap || cg.snap->numPSs <= 1) ) {
 		ex->refEntity.renderfx |= RF_THIRD_PERSON;
 	}
 }

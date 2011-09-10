@@ -58,7 +58,10 @@ typedef struct {
 	byte			areamask[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
 
 	int				cmdNum;			// the next cmdNum the server is expecting
-	playerState_t	ps;						// complete information about the current player at this time
+
+	int				numPSs;
+	playerState_t	pss[MAX_SPLITVIEW];		// complete information about the current players at this time
+	int				lcIndex[MAX_SPLITVIEW];
 
 	int				numEntities;			// all of the entities that need to be presented
 	int				parseEntitiesNum;		// at the time of this snapshot
@@ -91,6 +94,25 @@ typedef struct {
 
 extern int g_console_field_width;
 
+// Client Active Local Client
+typedef struct {
+	int			mouseDx[2], mouseDy[2];	// added to by mouse events
+	int			mouseIndex;
+	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
+
+	// cgame communicates a few values to the client system
+	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
+	float		cgameSensitivity;
+
+	// the client maintains its own idea of view angles, which are
+	// sent to the server each frame.  It is cleared to 0 upon entering each level.
+	// the server sends a delta each frame which is added to the locally
+	// tracked view angles to account for standing on rotating objects,
+	// and teleport direction changes
+	vec3_t		viewangles;
+
+} calc_t;
+
 typedef struct {
 	int			timeoutcount;		// it requres several frames in a timeout condition
 									// to disconnect, preventing debugging breaks from
@@ -111,28 +133,15 @@ typedef struct {
 
 	int			parseEntitiesNum;	// index (not anded off) into cl_parse_entities[]
 
-	int			mouseDx[2], mouseDy[2];	// added to by mouse events
-	int			mouseIndex;
-	int			joystickAxis[MAX_JOYSTICK_AXIS];	// set by joystick events
-
-	// cgame communicates a few values to the client system
-	int			cgameUserCmdValue;	// current weapon to add to usercmd_t
-	float		cgameSensitivity;
+	calc_t		localClients[MAX_SPLITVIEW];
 
 	// cmds[cmdNumber] is the predicted command, [cmdNumber-1] is the last
 	// properly generated command
-	usercmd_t	cmds[CMD_BACKUP];	// each mesage will send several old cmds
+	usercmd_t	cmdss[MAX_SPLITVIEW][CMD_BACKUP];	// each mesage will send several old cmds
 	int			cmdNumber;			// incremented each frame, because multiple
 									// frames may need to be packed into a single packet
 
 	outPacket_t	outPackets[PACKET_BACKUP];	// information about each packet we have sent out
-
-	// the client maintains its own idea of view angles, which are
-	// sent to the server each frame.  It is cleared to 0 upon entering each level.
-	// the server sends a delta each frame which is added to the locally
-	// tracked view angles to account for standing on rotating objects,
-	// and teleport direction changes
-	vec3_t		viewangles;
 
 	int			serverId;			// included in each client message so the server
 												// can tell if it is for a prior map_restart
@@ -375,10 +384,10 @@ extern	cvar_t	*cl_timeNudge;
 extern	cvar_t	*cl_showTimeDelta;
 extern	cvar_t	*cl_freezeDemo;
 
-extern	cvar_t	*cl_yawspeed;
-extern	cvar_t	*cl_pitchspeed;
-extern	cvar_t	*cl_run;
-extern	cvar_t	*cl_anglespeedkey;
+extern	cvar_t	*cl_yawspeed[MAX_SPLITVIEW];
+extern	cvar_t	*cl_pitchspeed[MAX_SPLITVIEW];
+extern	cvar_t	*cl_anglespeedkey[MAX_SPLITVIEW];
+extern	cvar_t	*cl_run[MAX_SPLITVIEW];
 
 extern	cvar_t	*cl_sensitivity;
 extern	cvar_t	*cl_freelook;
@@ -394,14 +403,14 @@ extern	cvar_t	*m_forward;
 extern	cvar_t	*m_side;
 extern	cvar_t	*m_filter;
 
-extern	cvar_t	*j_pitch;
-extern	cvar_t	*j_yaw;
-extern	cvar_t	*j_forward;
-extern	cvar_t	*j_side;
-extern	cvar_t	*j_pitch_axis;
-extern	cvar_t	*j_yaw_axis;
-extern	cvar_t	*j_forward_axis;
-extern	cvar_t	*j_side_axis;
+extern	cvar_t	*j_pitch[MAX_SPLITVIEW];
+extern	cvar_t	*j_yaw[MAX_SPLITVIEW];
+extern	cvar_t	*j_forward[MAX_SPLITVIEW];
+extern	cvar_t	*j_side[MAX_SPLITVIEW];
+extern	cvar_t	*j_pitch_axis[MAX_SPLITVIEW];
+extern	cvar_t	*j_yaw_axis[MAX_SPLITVIEW];
+extern	cvar_t	*j_forward_axis[MAX_SPLITVIEW];
+extern	cvar_t	*j_side_axis[MAX_SPLITVIEW];
 
 extern	cvar_t	*cl_timedemo;
 extern	cvar_t	*cl_aviFrameRate;
@@ -482,10 +491,6 @@ typedef struct {
 	qboolean	active;			// current state
 	qboolean	wasPressed;		// set when down, not cleared when up
 } kbutton_t;
-
-extern	kbutton_t	in_mlook, in_klook;
-extern 	kbutton_t 	in_strafe;
-extern 	kbutton_t 	in_speed;
 
 #ifdef USE_VOIP
 extern 	kbutton_t 	in_voiprecord;

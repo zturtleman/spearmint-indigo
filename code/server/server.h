@@ -100,7 +100,9 @@ typedef struct {
 typedef struct {
 	int				areabytes;
 	byte			areabits[MAX_MAP_AREA_BYTES];		// portalarea visibility bits
-	playerState_t	ps;
+	int				numPSs;
+	playerState_t	pss[MAX_SPLITVIEW];
+	int				lcIndex[MAX_SPLITVIEW];
 	int				num_entities;
 	int				first_entity;		// into the circular sv_packet_entities[]
 										// the entities MUST be in increasing state number
@@ -197,6 +199,10 @@ typedef struct client_s {
 #ifdef LEGACY_PROTOCOL
 	qboolean		compat;
 #endif
+
+	int	owner; // If not -1 this client is splitscreen with owner
+	int local_clients[MAX_SPLITVIEW-1]; // If any are not -1 this client is splitscreen main client,
+										// local_clients are there splitscreen players.
 } client_t;
 
 //=============================================================================

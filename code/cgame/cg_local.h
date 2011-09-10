@@ -278,6 +278,8 @@ typedef struct localEntity_s {
 	leBounceSoundType_t	leBounceSoundType;
 
 	refEntity_t		refEntity;		
+
+	int				localClients; // 0 means all, else check if localClients & (1<<lc)
 } localEntity_t;
 
 //======================================================================
@@ -451,11 +453,109 @@ typedef struct {
 
 #define MAX_PREDICTED_EVENTS	16
  
+// ZTM: data that use to be in cg_t but is needed for each local client
+typedef struct {
+
+	int			clientNum;
+
+	// prediction state
+	qboolean	hyperspace;				// true if prediction has hit a trigger_teleport
+	playerState_t	predictedPlayerState;
+	centity_t		predictedPlayerEntity;
+	qboolean	validPPS;				// clear until the first call to CG_PredictPlayerState
+	int			predictedErrorTime;
+	vec3_t		predictedError;
+
+	int			eventSequence;
+	int			predictableEvents[MAX_PREDICTED_EVENTS];
+
+	float		stepChange;				// for stair up smoothing
+	int			stepTime;
+
+	float		duckChange;				// for duck viewheight smoothing
+	int			duckTime;
+
+	float		landChange;				// for landing hard
+	int			landTime;
+
+	// input state sent to server
+	int			weaponSelect;
+
+
+	// centerprinting
+	int			centerPrintTime;
+#ifndef MISSIONPACK
+	int			centerPrintCharWidth;
+#endif
+	int			centerPrintY;
+	char		centerPrint[1024];
+	int			centerPrintLines;
+
+	// low ammo warning state
+	int			lowAmmoWarning;		// 1 = low, 2 = empty
+
+	// crosshair client ID
+	int			crosshairClientNum;
+	int			crosshairClientTime;
+
+	// powerup active flashing
+	int			powerupActive;
+	int			powerupTime;
+
+	// attacking player
+	int			attackerTime;
+	int			voiceTime;
+
+	// reward medals
+	int			rewardStack;
+	int			rewardTime;
+	int			rewardCount[MAX_REWARDSTACK];
+	qhandle_t	rewardShader[MAX_REWARDSTACK];
+	qhandle_t	rewardSound[MAX_REWARDSTACK];
+
+	// zoom key
+	qboolean	zoomed;
+	int			zoomTime;
+	float		zoomSensitivity;
+
+	int			itemPickup;
+	int			itemPickupTime;
+	int			itemPickupBlendTime;	// the pulse around the crosshair is timed seperately
+
+	int			weaponSelectTime;
+	int			weaponAnimation;
+	int			weaponAnimationTime;
+
+	// blend blobs
+	float		damageTime;
+	float		damageX, damageY, damageValue;
+
+	// status bar head
+	float		headYaw;
+	float		headEndPitch;
+	float		headEndYaw;
+	int			headEndTime;
+	float		headStartPitch;
+	float		headStartYaw;
+	int			headStartTime;
+
+	// view movement
+	float		v_dmg_time;
+	float		v_dmg_pitch;
+	float		v_dmg_roll;
+
+	vec3_t		kick_angles;	// weapon kicks
+	vec3_t		kick_origin;
+
+	//qboolean cameraMode;		// if rendering from a loaded camera
+
+	char		killerName[MAX_NAME_LENGTH];
+
+} cglc_t;
+ 
 typedef struct {
 	int			clientFrame;		// incremented each frame
 
-	int			clientNum;
-	
 	qboolean	demoPlayback;
 	qboolean	levelShot;			// taking a level menu screenshot
 	int			deferredPlayerLoading;
@@ -490,29 +590,6 @@ typedef struct {
 
 	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
 
-	// prediction state
-	qboolean	hyperspace;				// true if prediction has hit a trigger_teleport
-	playerState_t	predictedPlayerState;
-	centity_t		predictedPlayerEntity;
-	qboolean	validPPS;				// clear until the first call to CG_PredictPlayerState
-	int			predictedErrorTime;
-	vec3_t		predictedError;
-
-	int			eventSequence;
-	int			predictableEvents[MAX_PREDICTED_EVENTS];
-
-	float		stepChange;				// for stair up smoothing
-	int			stepTime;
-
-	float		duckChange;				// for duck viewheight smoothing
-	int			duckTime;
-
-	float		landChange;				// for landing hard
-	int			landTime;
-
-	// input state sent to server
-	int			weaponSelect;
-
 	// auto rotating items
 	vec3_t		autoAngles;
 	vec3_t		autoAxis[3];
@@ -523,10 +600,9 @@ typedef struct {
 	refdef_t	refdef;
 	vec3_t		refdefViewAngles;		// will be converted to refdef.viewaxis
 
-	// zoom key
-	qboolean	zoomed;
-	int			zoomTime;
-	float		zoomSensitivity;
+	int			numViewports;
+	int			viewport;
+	qboolean	singleCamera; // Rending multiple clients using one viewport
 
 	// information screen text during loading
 	char		infoScreenText[MAX_STRING_CHARS];
@@ -540,7 +616,6 @@ typedef struct {
 	qboolean	showScores;
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
-	char		killerName[MAX_NAME_LENGTH];
 	char			spectatorList[MAX_STRING_CHARS];		// list of names
 	int				spectatorLen;												// length of list
 	float			spectatorWidth;											// width in device units
@@ -549,40 +624,6 @@ typedef struct {
 	int				spectatorPaintX2;										// current paint x
 	int				spectatorOffset;										// current offset from start
 	int				spectatorPaintLen; 									// current offset from start
-
-#ifdef MISSIONPACK
-	// skull trails
-	skulltrail_t	skulltrails[MAX_CLIENTS];
-#endif
-
-	// centerprinting
-	int			centerPrintTime;
-	int			centerPrintCharWidth;
-	int			centerPrintY;
-	char		centerPrint[1024];
-	int			centerPrintLines;
-
-	// low ammo warning state
-	int			lowAmmoWarning;		// 1 = low, 2 = empty
-
-	// crosshair client ID
-	int			crosshairClientNum;
-	int			crosshairClientTime;
-
-	// powerup active flashing
-	int			powerupActive;
-	int			powerupTime;
-
-	// attacking player
-	int			attackerTime;
-	int			voiceTime;
-
-	// reward medals
-	int			rewardStack;
-	int			rewardTime;
-	int			rewardCount[MAX_REWARDSTACK];
-	qhandle_t	rewardShader[MAX_REWARDSTACK];
-	qhandle_t	rewardSound[MAX_REWARDSTACK];
 
 	// sound buffer mainly for announcer sounds
 	int			soundBufferIn;
@@ -601,45 +642,27 @@ typedef struct {
 
 	//==========================
 
-	int			itemPickup;
-	int			itemPickupTime;
-	int			itemPickupBlendTime;	// the pulse around the crosshair is timed seperately
-
-	int			weaponSelectTime;
-	int			weaponAnimation;
-	int			weaponAnimationTime;
-
-	// blend blobs
-	float		damageTime;
-	float		damageX, damageY, damageValue;
-
-	// status bar head
-	float		headYaw;
-	float		headEndPitch;
-	float		headEndYaw;
-	int			headEndTime;
-	float		headStartPitch;
-	float		headStartYaw;
-	int			headStartTime;
-
-	// view movement
-	float		v_dmg_time;
-	float		v_dmg_pitch;
-	float		v_dmg_roll;
+#ifdef MISSIONPACK
+	// skull trails
+	skulltrail_t	skulltrails[MAX_CLIENTS];
+#endif
 
 	// temp working variables for player view
 	float		bobfracsin;
 	int			bobcycle;
 	float		xyspeed;
-	int     nextOrbitTime;
-
-	//qboolean cameraMode;		// if rendering from a loaded camera
-
+	int     	nextOrbitTime;
 
 	// development tool
 	refEntity_t		testModelEntity;
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
+
+	// Local client data, from events and such
+	cglc_t			*cur_lc;	// Current local client data we are working with
+	playerState_t	*cur_ps; // Like cur_lc, but for player state
+	int				cur_localClientNum;
+	cglc_t			localClients[MAX_SPLITVIEW];
 
 } cg_t;
 
@@ -1123,14 +1146,15 @@ extern	vmCvar_t		cg_viewsize;
 extern	vmCvar_t		cg_tracerChance;
 extern	vmCvar_t		cg_tracerWidth;
 extern	vmCvar_t		cg_tracerLength;
-extern	vmCvar_t		cg_autoswitch;
+extern	vmCvar_t		cg_autoswitch[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_ignore;
 extern	vmCvar_t		cg_simpleItems;
 extern	vmCvar_t		cg_fov;
 extern	vmCvar_t		cg_zoomFov;
-extern	vmCvar_t		cg_thirdPersonRange;
-extern	vmCvar_t		cg_thirdPersonAngle;
-extern	vmCvar_t		cg_thirdPerson;
+extern	vmCvar_t		cg_thirdPersonRange[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPersonAngle[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_thirdPerson[MAX_SPLITVIEW];
+extern	vmCvar_t		cg_splitviewVertical;
 extern	vmCvar_t		cg_lagometer;
 extern	vmCvar_t		cg_drawAttacker;
 extern	vmCvar_t		cg_synchronousClients;
@@ -1214,8 +1238,16 @@ void CG_TestModelNextFrame_f (void);
 void CG_TestModelPrevFrame_f (void);
 void CG_TestModelNextSkin_f (void);
 void CG_TestModelPrevSkin_f (void);
+void CG_ZoomUp( int localClient );
+void CG_ZoomDown( int localClient );
 void CG_ZoomDown_f( void );
 void CG_ZoomUp_f( void );
+void CG_2ZoomDown_f( void );
+void CG_2ZoomUp_f( void );
+void CG_3ZoomDown_f( void );
+void CG_3ZoomUp_f( void );
+void CG_4ZoomDown_f( void );
+void CG_4ZoomUp_f( void );
 void CG_AddBufferedSound( sfxHandle_t sfx);
 
 void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demoPlayback );
@@ -1345,6 +1377,18 @@ void CG_NextWeapon_f( void );
 void CG_PrevWeapon_f( void );
 void CG_Weapon_f( void );
 
+void CG_2NextWeapon_f( void );
+void CG_2PrevWeapon_f( void );
+void CG_2Weapon_f( void );
+
+void CG_3NextWeapon_f( void );
+void CG_3PrevWeapon_f( void );
+void CG_3Weapon_f( void );
+
+void CG_4NextWeapon_f( void );
+void CG_4PrevWeapon_f( void );
+void CG_4Weapon_f( void );
+
 void CG_RegisterWeapon( int weaponNum );
 void CG_RegisterItemVisuals( int itemNum );
 
@@ -1418,6 +1462,7 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 // cg_snapshot.c
 //
 void CG_ProcessSnapshots( void );
+int CG_LocalClient( int clientNum );
 
 //
 // cg_info.c
@@ -1453,7 +1498,7 @@ void CG_PlayBufferedVoiceChats( void );
 //
 // cg_playerstate.c
 //
-void CG_Respawn( void );
+void CG_Respawn( int clientNum );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
 
@@ -1545,7 +1590,7 @@ void		trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin );
 
 // respatialize recalculates the volumes of sound as they should be heard by the
 // given entityNum and position
-void		trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater );
+void		trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, int listener );
 sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed );		// returns buzz if not found
 void		trap_S_StartBackgroundTrack( const char *intro, const char *loop );	// empty name stops music
 void	trap_S_StopBackgroundTrack( void );
@@ -1610,10 +1655,10 @@ qboolean	trap_GetServerCommand( int serverCommandNumber );
 // a lagged connection
 int			trap_GetCurrentCmdNumber( void );	
 
-qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd );
+qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
 
 // used for the weapon select and zoom
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale );
+void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum );
 
 // aids for VM testing
 void		testPrintInt( char *string, int i );

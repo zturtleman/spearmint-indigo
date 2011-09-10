@@ -31,6 +31,43 @@ Adjusted for resolution and screen aspect ratio
 ================
 */
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
+	int viewXBias = 0;
+
+	if (cg.numViewports != 1 && cg.snap) {
+		qboolean right = qfalse;
+		qboolean down = qfalse;
+
+		if (cg.numViewports == 2) {
+			if (cg.viewport == 1) {
+				down = qtrue;
+			}
+		}
+		else if (cg.numViewports == 3 && cg.viewport == 2) {
+			down = qtrue;
+		}
+		else if (cg.numViewports <= 4) {
+			if (cg.viewport == 1 || cg.viewport == 3) {
+				right = qtrue;
+			}
+			if (cg.viewport == 2 || cg.viewport == 3) {
+				down = qtrue;
+			}
+		}
+
+		if (cg.viewport != 0 && (cg.numViewports == 2 || cg.numViewports == 3) && cg_splitviewVertical.integer) {
+			right = !right;
+			down = !down;
+		}
+
+		if (right) {
+			viewXBias = 2;
+			*x += SCREEN_WIDTH;
+		}
+		if (down) {
+			*y += SCREEN_HEIGHT;
+		}
+	}
+
 #if 0
 	// adjust for wide screens
 	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
@@ -42,6 +79,12 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	*y *= cgs.screenYScale;
 	*w *= cgs.screenXScale;
 	*h *= cgs.screenYScale;
+
+	// Center HUD
+	*x += cgs.screenXBias;
+
+	// Offset for widescreen
+	*x += cgs.screenXBias*(viewXBias);
 }
 
 /*
@@ -295,8 +338,7 @@ void CG_TileClear( void ) {
 	w = cgs.glconfig.vidWidth;
 	h = cgs.glconfig.vidHeight;
 
-	if ( cg.refdef.x == 0 && cg.refdef.y == 0 && 
-		cg.refdef.width == w && cg.refdef.height == h ) {
+	if (cg.cur_ps->pm_type == PM_INTERMISSION || cg_viewsize.integer >= 100 || cg.viewport != 0) {
 		return;		// full screen rendering
 	}
 
@@ -426,8 +468,8 @@ CG_ColorForHealth
 */
 void CG_ColorForHealth( vec4_t hcolor ) {
 
-	CG_GetColorForHealth( cg.snap->ps.stats[STAT_HEALTH], 
-		cg.snap->ps.stats[STAT_ARMOR], hcolor );
+	CG_GetColorForHealth( cg.cur_ps->stats[STAT_HEALTH], 
+		cg.cur_ps->stats[STAT_ARMOR], hcolor );
 }
 
 

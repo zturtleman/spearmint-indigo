@@ -67,6 +67,8 @@ typedef struct {
 	playerInfo_t		playerinfo;
 	int					current_fx;
 	char				playerModel[MAX_QPATH];
+	int					localClient;
+	char				bannerString[32];
 } playersettings_t;
 
 static playersettings_t	s_playersettings;
@@ -235,7 +237,7 @@ static void PlayerSettings_DrawPlayer( void *self ) {
 	vec3_t			viewangles;
 	char			buf[MAX_QPATH];
 
-	trap_Cvar_VariableStringBuffer( "model", buf, sizeof( buf ) );
+	trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(s_playersettings.localClient, "model"), buf, sizeof( buf ) );
 	if ( strcmp( buf, s_playersettings.playerModel ) != 0 ) {
 		UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, buf );
 		strcpy( s_playersettings.playerModel, buf );
@@ -258,13 +260,15 @@ PlayerSettings_SaveChanges
 */
 static void PlayerSettings_SaveChanges( void ) {
 	// name
-	trap_Cvar_Set( "name", s_playersettings.name.field.buffer );
+	trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "name"), s_playersettings.name.field.buffer );
 
 	// handicap
-	trap_Cvar_SetValue( "handicap", 100 - s_playersettings.handicap.curvalue * 5 );
+	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+			100 - s_playersettings.handicap.curvalue * 5 );
 
 	// effects color
-	trap_Cvar_SetValue( "color1", uitogamecode[s_playersettings.effects.curvalue] );
+	trap_Cvar_SetValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1"),
+			uitogamecode[s_playersettings.effects.curvalue] );
 }
 
 
@@ -292,10 +296,11 @@ static void PlayerSettings_SetMenuItems( void ) {
 	int		h;
 
 	// name
-	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString("name"), sizeof(s_playersettings.name.field.buffer) );
+	Q_strncpyz( s_playersettings.name.field.buffer, UI_Cvar_VariableString(
+			Com_LocalClientCvarName(s_playersettings.localClient, "name")), sizeof(s_playersettings.name.field.buffer) );
 
 	// effects color
-	c = trap_Cvar_VariableValue( "color1" ) - 1;
+	c = trap_Cvar_VariableValue( Com_LocalClientCvarName(s_playersettings.localClient, "color1") ) - 1;
 	if( c < 0 || c > 6 ) {
 		c = 6;
 	}
@@ -308,11 +313,12 @@ static void PlayerSettings_SetMenuItems( void ) {
 	viewangles[PITCH] = 0;
 	viewangles[ROLL]  = 0;
 
-	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo, UI_Cvar_VariableString( "model" ) );
+	UI_PlayerInfo_SetModel( &s_playersettings.playerinfo,
+			UI_Cvar_VariableString( Com_LocalClientCvarName(s_playersettings.localClient, "model") ) );
 	UI_PlayerInfo_SetInfo( &s_playersettings.playerinfo, LEGS_IDLE, TORSO_STAND, viewangles, vec3_origin, WP_MACHINEGUN, qfalse );
 
 	// handicap
-	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue("handicap") );
+	h = Com_Clamp( 5, 100, trap_Cvar_VariableValue(Com_LocalClientCvarName(s_playersettings.localClient, "handicap")) );
 	s_playersettings.handicap.curvalue = 20 - h / 5;
 }
 
@@ -329,12 +335,13 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_HANDICAP:
-		trap_Cvar_Set( "handicap", va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
+		trap_Cvar_Set( Com_LocalClientCvarName(s_playersettings.localClient, "handicap"),
+				va( "%i", 100 - 25 * s_playersettings.handicap.curvalue ) );
 		break;
 
 	case ID_MODEL:
 		PlayerSettings_SaveChanges();
-		UI_PlayerModelMenu();
+		UI_PlayerModelMenu(s_playersettings.localClient);
 		break;
 
 	case ID_BACK:
@@ -350,10 +357,14 @@ static void PlayerSettings_MenuEvent( void* ptr, int event ) {
 PlayerSettings_MenuInit
 =================
 */
-static void PlayerSettings_MenuInit( void ) {
+static void PlayerSettings_MenuInit( int localClient )
+{
 	int		y;
 
 	memset(&s_playersettings,0,sizeof(playersettings_t));
+
+	s_playersettings.localClient = localClient;
+	Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localClient+1);
 
 	PlayerSettings_Cache();
 
@@ -361,10 +372,14 @@ static void PlayerSettings_MenuInit( void ) {
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;
 
+#if 1 // ZTM: Q3's BTEXT doesn't have number sadly.
+	s_playersettings.banner.generic.type  = MTYPE_PTEXT;
+#else
 	s_playersettings.banner.generic.type  = MTYPE_BTEXT;
+#endif
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
-	s_playersettings.banner.string        = "PLAYER SETTINGS";
+	s_playersettings.banner.string = s_playersettings.bannerString;
 	s_playersettings.banner.color         = color_white;
 	s_playersettings.banner.style         = UI_CENTER;
 
@@ -507,7 +522,7 @@ void PlayerSettings_Cache( void ) {
 UI_PlayerSettingsMenu
 =================
 */
-void UI_PlayerSettingsMenu( void ) {
-	PlayerSettings_MenuInit();
+void UI_PlayerSettingsMenu( int localClient ) {
+	PlayerSettings_MenuInit(localClient);
 	UI_PushMenu( &s_playersettings.menu );
 }

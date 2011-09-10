@@ -55,7 +55,7 @@ typedef struct {
 	menutext_s		banner;
 	menubitmap_s	framel;
 	menubitmap_s	framer;
-	menutext_s		setupplayer;
+	menutext_s		setupplayers;
 	menutext_s		setupcontrols;
 	menutext_s		setupsystem;
 	menutext_s		game;
@@ -106,11 +106,11 @@ static void UI_SetupMenu_Event( void *ptr, int event ) {
 
 	switch( ((menucommon_s*)ptr)->id ) {
 	case ID_CUSTOMIZEPLAYER:
-		UI_PlayerSettingsMenu();
+		UI_SelectPlayerMenu(UI_PlayerSettingsMenu, "PLAYER SETTINGS");
 		break;
 
 	case ID_CUSTOMIZECONTROLS:
-		UI_ControlsMenu();
+		UI_SelectPlayerMenu(UI_ControlsMenu, "CONTROLS");
 		break;
 
 	case ID_SYSTEMCONFIG:
@@ -178,15 +178,15 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.framer.height  					= 334;
 
 	y = 134;
-	setupMenuInfo.setupplayer.generic.type			= MTYPE_PTEXT;
-	setupMenuInfo.setupplayer.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	setupMenuInfo.setupplayer.generic.x				= 320;
-	setupMenuInfo.setupplayer.generic.y				= y;
-	setupMenuInfo.setupplayer.generic.id			= ID_CUSTOMIZEPLAYER;
-	setupMenuInfo.setupplayer.generic.callback		= UI_SetupMenu_Event; 
-	setupMenuInfo.setupplayer.string				= "PLAYER";
-	setupMenuInfo.setupplayer.color					= color_red;
-	setupMenuInfo.setupplayer.style					= UI_CENTER;
+	setupMenuInfo.setupplayers.generic.type			= MTYPE_PTEXT;
+	setupMenuInfo.setupplayers.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+	setupMenuInfo.setupplayers.generic.x				= 320;
+	setupMenuInfo.setupplayers.generic.y				= y;
+	setupMenuInfo.setupplayers.generic.id			= ID_CUSTOMIZEPLAYER;
+	setupMenuInfo.setupplayers.generic.callback		= UI_SetupMenu_Event; 
+	setupMenuInfo.setupplayers.string				= "PLAYERS";
+	setupMenuInfo.setupplayers.color					= color_red;
+	setupMenuInfo.setupplayers.style					= UI_CENTER;
 
 	y += SETUP_MENU_VERTICAL_SPACING;
 	setupMenuInfo.setupcontrols.generic.type		= MTYPE_PTEXT;
@@ -272,7 +272,7 @@ static void UI_SetupMenu_Init( void ) {
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.banner );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framel );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.framer );
-	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupplayer );
+	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupplayers );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupcontrols );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupsystem );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.game );

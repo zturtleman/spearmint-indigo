@@ -455,7 +455,7 @@ static void UI_SPLevelMenu_PlayerEvent( void* ptr, int notification ) {
 		return;
 	}
 
-	UI_PlayerSettingsMenu();
+	UI_PlayerSettingsMenu(0);
 }
 
 

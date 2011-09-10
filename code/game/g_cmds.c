@@ -510,6 +510,9 @@ void SetTeam( gentity_t *ent, char *s ) {
 	} else if ( !Q_stricmp( s, "spectator" ) || !Q_stricmp( s, "s" ) ) {
 		team = TEAM_SPECTATOR;
 		specState = SPECTATOR_FREE;
+	} else if ( !Q_stricmp( s, "hide" ) || !Q_stricmp( s, "h" ) ) {
+		team = TEAM_SPECTATOR;
+		specState = SPECTATOR_LOCAL_HIDE;
 	} else if ( g_gametype.integer >= GT_TEAM ) {
 		// if running a team game, assign player to one of the teams
 		specState = SPECTATOR_NOT;
@@ -870,6 +873,12 @@ void G_Say( gentity_t *ent, gentity_t *target, int mode, const char *chatText ) 
 	// send it to all the apropriate clients
 	for (j = 0; j < level.maxclients; j++) {
 		other = &g_entities[j];
+
+		// Don't send to extra local clients, would be printed multiple times.
+		if (other->r.owner != -1) {
+			continue;
+		}
+
 		G_SayTo( ent, other, mode, color, name, text );
 	}
 }
@@ -1583,15 +1592,37 @@ ClientCommand
 */
 void ClientCommand( int clientNum ) {
 	gentity_t *ent;
-	char	cmd[MAX_TOKEN_CHARS];
+	char	*cmd;
+	char	buf[MAX_TOKEN_CHARS];
 
 	ent = g_entities + clientNum;
 	if ( !ent->client ) {
 		return;		// not fully in game yet
 	}
 
+	trap_Argv( 0, buf, sizeof( buf ) );
 
-	trap_Argv( 0, cmd, sizeof( cmd ) );
+	cmd = &buf[0];
+
+	// Commands for extra local clients.
+	// 2team, 2give, 2teamtask, ...
+	if (cmd[0] >= '2' && cmd[0] <= '0'+MAX_SPLITVIEW) {
+		int lc;
+
+		lc = cmd[0]-'2';
+
+		cmd++;
+
+		if (ent->r.local_clients[lc] == -1) {
+			//G_Printf("Local client %d not connected.\n", lc+1);
+			return;
+		}
+
+		ent = g_entities + ent->r.local_clients[lc];
+		if ( !ent->client ) {
+			return;		// not fully in game yet
+		}
+	}
 
 	if (Q_stricmp (cmd, "say") == 0) {
 		Cmd_Say_f (ent, SAY_ALL, qfalse);
@@ -1683,5 +1714,5 @@ void ClientCommand( int clientNum ) {
 	else if (Q_stricmp (cmd, "stats") == 0)
 		Cmd_Stats_f( ent );
 	else
-		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", cmd ) );
+		trap_SendServerCommand( clientNum, va("print \"unknown cmd %s\n\"", buf ) );
 }

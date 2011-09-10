@@ -92,14 +92,14 @@ cvar_t	*m_forward;
 cvar_t	*m_side;
 cvar_t	*m_filter;
 
-cvar_t	*j_pitch;
-cvar_t	*j_yaw;
-cvar_t	*j_forward;
-cvar_t	*j_side;
-cvar_t	*j_pitch_axis;
-cvar_t	*j_yaw_axis;
-cvar_t	*j_forward_axis;
-cvar_t	*j_side_axis;
+cvar_t	*j_pitch[MAX_SPLITVIEW];
+cvar_t	*j_yaw[MAX_SPLITVIEW];
+cvar_t	*j_forward[MAX_SPLITVIEW];
+cvar_t	*j_side[MAX_SPLITVIEW];
+cvar_t	*j_pitch_axis[MAX_SPLITVIEW];
+cvar_t	*j_yaw_axis[MAX_SPLITVIEW];
+cvar_t	*j_forward_axis[MAX_SPLITVIEW];
+cvar_t	*j_side_axis[MAX_SPLITVIEW];
 
 cvar_t	*cl_activeAction;
 
@@ -168,11 +168,11 @@ void CL_UpdateMumble(void)
 		return;
 
 	// !!! FIXME: not sure if this is even close to correct.
-	AngleVectors( cl.snap.ps.viewangles, forward, NULL, up);
+	AngleVectors( cl.snap.pss[0].viewangles, forward, NULL, up);
 
-	pos[0] = cl.snap.ps.origin[0] * scale;
-	pos[1] = cl.snap.ps.origin[2] * scale;
-	pos[2] = cl.snap.ps.origin[1] * scale;
+	pos[0] = cl.snap.pss[0].origin[0] * scale;
+	pos[1] = cl.snap.pss[0].origin[2] * scale;
+	pos[2] = cl.snap.pss[0].origin[1] * scale;
 
 	tmp = forward[1];
 	forward[1] = forward[2];
@@ -1569,6 +1569,90 @@ void CL_ForwardToServer_f( void ) {
 
 /*
 ==================
+CL_2DropOut_f
+==================
+*/
+void CL_2DropOut_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand("dropout2", qfalse);
+}
+
+/*
+==================
+CL_3DropOut_f
+==================
+*/
+void CL_3DropOut_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand("dropout3", qfalse);
+}
+
+/*
+==================
+CL_4DropOut_f
+==================
+*/
+void CL_4DropOut_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand("dropout4", qfalse);
+}
+
+/*
+==================
+CL_2DropIn_f
+==================
+*/
+void CL_2DropIn_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand(va("dropin2 \"%s\"", Cvar_InfoString( CVAR_USERINFO2 )), qfalse);
+}
+
+/*
+==================
+CL_3DropIn_f
+==================
+*/
+void CL_3DropIn_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand(va("dropin3 \"%s\"", Cvar_InfoString( CVAR_USERINFO3 )), qfalse);
+}
+
+/*
+==================
+CL_4DropIn_f
+==================
+*/
+void CL_4DropIn_f( void ) {
+	if ( clc.state != CA_ACTIVE || clc.demoplaying ) {
+		Com_Printf ("Not connected to a server.\n");
+		return;
+	}
+
+	CL_AddReliableCommand(va("dropin4 \"%s\"", Cvar_InfoString( CVAR_USERINFO4 )), qfalse);
+}
+
+/*
+==================
 CL_Disconnect_f
 ==================
 */
@@ -2199,6 +2283,10 @@ Resend a connect message if the last one has timed out
 */
 void CL_CheckForResend( void ) {
 	int		port, i;
+	int		size, j;
+	const int cvarflag[MAX_SPLITVIEW] = {CVAR_USERINFO, CVAR_USERINFO2, CVAR_USERINFO3, CVAR_USERINFO4};
+	int		localClients;
+	int		protocol;
 	char	info[MAX_INFO_STRING];
 	char	data[MAX_INFO_STRING];
 
@@ -2234,36 +2322,66 @@ void CL_CheckForResend( void ) {
 		// sending back the challenge
 		port = Cvar_VariableValue ("net_qport");
 
-		Q_strncpyz( info, Cvar_InfoString( CVAR_USERINFO ), sizeof( info ) );
-		
 #ifdef LEGACY_PROTOCOL
 		if(com_legacyprotocol->integer == com_protocol->integer)
 			clc.compat = qtrue;
 
 		if(clc.compat)
-			Info_SetValueForKey(info, "protocol", va("%i", com_legacyprotocol->integer));
+			protocol = com_legacyprotocol->integer;
 		else
 #endif
-			Info_SetValueForKey(info, "protocol", va("%i", com_protocol->integer));
-		Info_SetValueForKey( info, "qport", va("%i", port ) );
-		Info_SetValueForKey( info, "challenge", va("%i", clc.challenge ) );
+			protocol = com_protocol->integer;
 		
 		strcpy(data, "connect ");
-    // TTimo adding " " around the userinfo string to avoid truncated userinfo on the server
-    //   (Com_TokenizeString tokenizes around spaces)
-    data[8] = '"';
+		size = 8;
 
-		for(i=0;i<strlen(info);i++) {
-			data[9+i] = info[i];	// + (clc.challenge)&0x3;
+		// Check how many local client user wants
+		localClients = Com_Clamp(1, (1<<MAX_SPLITVIEW)-1, Cvar_VariableIntegerValue("cl_localClients"));
+
+		// Reset cl_localClients (set before each join)
+		Cvar_Set("cl_localClients", "1");
+
+		for (i = 0; i < MAX_SPLITVIEW; i++) {
+			if (!(localClients & (1<<(i)))) {
+				// Dummy string.
+				data[size] = '"'; size++;
+				data[size] = '"'; size++;
+
+				// Add space between info strings.
+				if (i != MAX_SPLITVIEW-1) {
+					data[size] = ' '; size++;
+				}
+				continue;
+			}
+
+			Q_strncpyz( info, Cvar_InfoString( cvarflag[i] ), sizeof( info ) );
+
+			// ZTM: FIXME: Do we need to set these for more than the first client?
+			Info_SetValueForKey( info, "protocol", va("%i", protocol ) );
+			Info_SetValueForKey( info, "qport", va("%i", port ) );
+			Info_SetValueForKey( info, "challenge", va("%i", clc.challenge ) );
+
+			// TTimo adding " " around the userinfo string to avoid truncated userinfo on the server
+			//   (Com_TokenizeString tokenizes around spaces)
+			data[size] = '"'; size++;
+			for(j = 0; j < strlen(info); j++) {
+				data[size+j] = info[j];	// + (clc.challenge)&0x3;
+			}
+			size += j;
+			data[size] = '"'; size++;
+
+			// Add space between info strings.
+			if (i != MAX_SPLITVIEW-1) {
+				data[size] = ' '; size++;
+			}
 		}
-    data[9+i] = '"';
-		data[10+i] = 0;
+		data[size] = 0;
 
-    // NOTE TTimo don't forget to set the right data length!
-		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) &data[0], i+10 );
+		// NOTE TTimo don't forget to set the right data length!
+		NET_OutOfBandData( NS_CLIENT, clc.serverAddress, (byte *) &data[0], size );
 		// the most current userinfo has been sent, so watch for any
 		// newer changes to userinfo variables
-		cvar_modifiedFlags &= ~CVAR_USERINFO;
+		cvar_modifiedFlags &= ~CVAR_USERINFO_ALL;
 		break;
 
 	default:
@@ -2806,6 +2924,21 @@ void CL_CheckUserinfo( void ) {
 		cvar_modifiedFlags &= ~CVAR_USERINFO;
 		CL_AddReliableCommand(va("userinfo \"%s\"", Cvar_InfoString( CVAR_USERINFO ) ), qfalse);
 	}
+	if(cvar_modifiedFlags & CVAR_USERINFO2)
+	{
+		cvar_modifiedFlags &= ~CVAR_USERINFO2;
+		CL_AddReliableCommand(va("userinfo2 \"%s\"", Cvar_InfoString( CVAR_USERINFO2 ) ), qfalse);
+	}
+	if(cvar_modifiedFlags & CVAR_USERINFO3)
+	{
+		cvar_modifiedFlags &= ~CVAR_USERINFO3;
+		CL_AddReliableCommand(va("userinfo3 \"%s\"", Cvar_InfoString( CVAR_USERINFO3 ) ), qfalse);
+	}
+	if(cvar_modifiedFlags & CVAR_USERINFO4)
+	{
+		cvar_modifiedFlags &= ~CVAR_USERINFO4;
+		CL_AddReliableCommand(va("userinfo4 \"%s\"", Cvar_InfoString( CVAR_USERINFO4 ) ), qfalse);
+	}
 }
 
 /*
@@ -3315,6 +3448,8 @@ CL_Init
 ====================
 */
 void CL_Init( void ) {
+	int		i;
+
 	Com_Printf( "----- Client Initialization -----\n" );
 
 	Con_Init ();
@@ -3357,14 +3492,16 @@ void CL_Init( void ) {
 
 	rconAddress = Cvar_Get ("rconAddress", "", 0);
 
-	cl_yawspeed = Cvar_Get ("cl_yawspeed", "140", CVAR_ARCHIVE);
-	cl_pitchspeed = Cvar_Get ("cl_pitchspeed", "140", CVAR_ARCHIVE);
-	cl_anglespeedkey = Cvar_Get ("cl_anglespeedkey", "1.5", 0);
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		cl_yawspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_yawspeed"), "140", CVAR_ARCHIVE);
+		cl_pitchspeed[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_pitchspeed"), "140", CVAR_ARCHIVE);
+		cl_anglespeedkey[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_anglespeedkey"), "1.5", 0);
+		cl_run[i] = Cvar_Get (Com_LocalClientCvarName(i, "cl_run"), "1", CVAR_ARCHIVE);
+	}
 
 	cl_maxpackets = Cvar_Get ("cl_maxpackets", "30", CVAR_ARCHIVE );
 	cl_packetdup = Cvar_Get ("cl_packetdup", "1", CVAR_ARCHIVE );
 
-	cl_run = Cvar_Get ("cl_run", "1", CVAR_ARCHIVE);
 	cl_sensitivity = Cvar_Get ("sensitivity", "5", CVAR_ARCHIVE);
 	cl_mouseAccel = Cvar_Get ("cl_mouseAccel", "0", CVAR_ARCHIVE);
 	cl_freelook = Cvar_Get( "cl_freelook", "1", CVAR_ARCHIVE );
@@ -3396,7 +3533,9 @@ void CL_Init( void ) {
 
 	// init autoswitch so the ui will have it correctly even
 	// if the cgame hasn't been started
-	Cvar_Get ("cg_autoswitch", "1", CVAR_ARCHIVE);
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		Cvar_Get (Com_LocalClientCvarName(i, "cg_autoswitch"), "1", CVAR_ARCHIVE);
+	}
 
 	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
 	m_yaw = Cvar_Get ("m_yaw", "0.022", CVAR_ARCHIVE);
@@ -3409,14 +3548,16 @@ void CL_Init( void ) {
 	m_filter = Cvar_Get ("m_filter", "0", CVAR_ARCHIVE);
 #endif
 
-	j_pitch =        Cvar_Get ("j_pitch",        "0.022", CVAR_ARCHIVE);
-	j_yaw =          Cvar_Get ("j_yaw",          "-0.022", CVAR_ARCHIVE);
-	j_forward =      Cvar_Get ("j_forward",      "-0.25", CVAR_ARCHIVE);
-	j_side =         Cvar_Get ("j_side",         "0.25", CVAR_ARCHIVE);
-	j_pitch_axis =   Cvar_Get ("j_pitch_axis",   "3", CVAR_ARCHIVE);
-	j_yaw_axis =     Cvar_Get ("j_yaw_axis",     "4", CVAR_ARCHIVE);
-	j_forward_axis = Cvar_Get ("j_forward_axis", "1", CVAR_ARCHIVE);
-	j_side_axis =    Cvar_Get ("j_side_axis",    "0", CVAR_ARCHIVE);
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		j_pitch[i] =        Cvar_Get (Com_LocalClientCvarName(i, "j_pitch"),        "0.022", CVAR_ARCHIVE);
+		j_yaw[i] =          Cvar_Get (Com_LocalClientCvarName(i, "j_yaw"),          "-0.022", CVAR_ARCHIVE);
+		j_forward[i] =      Cvar_Get (Com_LocalClientCvarName(i, "j_forward"),      "-0.25", CVAR_ARCHIVE);
+		j_side[i] =         Cvar_Get (Com_LocalClientCvarName(i, "j_side"),         "0.25", CVAR_ARCHIVE);
+		j_pitch_axis[i] =   Cvar_Get (Com_LocalClientCvarName(i, "j_pitch_axis"),   "3", CVAR_ARCHIVE);
+		j_yaw_axis[i] =     Cvar_Get (Com_LocalClientCvarName(i, "j_yaw_axis"),     "4", CVAR_ARCHIVE);
+		j_forward_axis[i] = Cvar_Get (Com_LocalClientCvarName(i, "j_forward_axis"), "1", CVAR_ARCHIVE);
+		j_side_axis[i] =    Cvar_Get (Com_LocalClientCvarName(i, "j_side_axis"),    "0", CVAR_ARCHIVE);
+	}
 
 	cl_motdString = Cvar_Get( "cl_motdString", "", CVAR_ROM );
 
@@ -3429,10 +3570,18 @@ void CL_Init( void ) {
 	// ~ and `, as keys and characters
 	cl_consoleKeys = Cvar_Get( "cl_consoleKeys", "~ ` 0x7e 0x60", CVAR_ARCHIVE);
 
+	// select which local client (using bits) should join a server on connect
+	Cvar_Get ("cl_localClients", "1", 0 );
+
 	// userinfo
+	Cvar_Get ("rate", "25000", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+	Cvar_Get ("snaps", "20", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+	Cvar_Get ("password", "", CVAR_USERINFO_ALL);
+	Cvar_Get ("cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
+
+	// Main local client userinfo
 	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("rate", "25000", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("snaps", "20", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("team_model", "james", CVAR_USERINFO | CVAR_ARCHIVE );
@@ -3444,10 +3593,42 @@ void CL_Init( void ) {
 	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE );
 	Cvar_Get ("teamtask", "0", CVAR_USERINFO );
 	Cvar_Get ("sex", "male", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO | CVAR_ARCHIVE );
 
-	Cvar_Get ("password", "", CVAR_USERINFO);
-	Cvar_Get ("cg_predictItems", "1", CVAR_USERINFO | CVAR_ARCHIVE );
+	// Second local client userinfo
+	Cvar_Get ("2name", "UnnamedPlayer2", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2model", "grunt", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2headmodel", "grunt", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2team_model", "james", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2team_headmodel", "*james", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2color1", "4", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2color2", "5", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2handicap", "100", CVAR_USERINFO2 | CVAR_ARCHIVE );
+	Cvar_Get ("2teamtask", "0", CVAR_USERINFO2 );
+	Cvar_Get ("2sex", "male", CVAR_USERINFO2 | CVAR_ARCHIVE );
+
+	// Third local client userinfo
+	Cvar_Get ("3name", "UnnamedPlayer3", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3model", "crash", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3headmodel", "crash", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3team_model", "janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3team_headmodel", "*janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3color1", "4", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3color2", "5", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3handicap", "100", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3teamtask", "0", CVAR_USERINFO3 );
+	Cvar_Get ("3sex", "male", CVAR_USERINFO3 | CVAR_ARCHIVE );
+
+	// Fourth local client userinfo
+	Cvar_Get ("4name", "UnnamedPlayer4", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4model", "visor", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4headmodel", "visor", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4team_model", "janet", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4team_headmodel", "*janet", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4color1", "4", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4color2", "5", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4handicap", "100", CVAR_USERINFO4 | CVAR_ARCHIVE );
+	Cvar_Get ("4teamtask", "0", CVAR_USERINFO4 );
+	Cvar_Get ("4sex", "male", CVAR_USERINFO4 | CVAR_ARCHIVE );
 
 #ifdef USE_MUMBLE
 	cl_useMumble = Cvar_Get ("cl_useMumble", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -3490,6 +3671,12 @@ void CL_Init( void ) {
 	// register our commands
 	//
 	Cmd_AddCommand ("cmd", CL_ForwardToServer_f);
+	Cmd_AddCommand ("2dropout", CL_2DropOut_f);
+	Cmd_AddCommand ("3dropout", CL_3DropOut_f);
+	Cmd_AddCommand ("4dropout", CL_4DropOut_f);
+	Cmd_AddCommand ("2dropin", CL_2DropIn_f);
+	Cmd_AddCommand ("3dropin", CL_3DropIn_f);
+	Cmd_AddCommand ("4dropin", CL_4DropIn_f);
 	Cmd_AddCommand ("configstrings", CL_Configstrings_f);
 	Cmd_AddCommand ("clientinfo", CL_Clientinfo_f);
 	Cmd_AddCommand ("snd_restart", CL_Snd_Restart_f);
@@ -3561,6 +3748,12 @@ void CL_Shutdown(char *finalmsg, qboolean disconnect, qboolean quit)
 	CL_Snd_Shutdown();
 
 	Cmd_RemoveCommand ("cmd");
+	Cmd_RemoveCommand ("2dropout");
+	Cmd_RemoveCommand ("3dropout");
+	Cmd_RemoveCommand ("4dropout");
+	Cmd_RemoveCommand ("2dropin");
+	Cmd_RemoveCommand ("3dropin");
+	Cmd_RemoveCommand ("4dropin");
 	Cmd_RemoveCommand ("configstrings");
 	Cmd_RemoveCommand ("clientinfo");
 	Cmd_RemoveCommand ("snd_restart");

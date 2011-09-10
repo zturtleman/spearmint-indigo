@@ -2700,6 +2700,18 @@ void Menu_HandleKey(menuDef_t *menu, int key, qboolean down) {
 		case K_JOY2:
 		case K_JOY3:
 		case K_JOY4:
+		case K_2JOY1:
+		case K_2JOY2:
+		case K_2JOY3:
+		case K_2JOY4:
+		case K_3JOY1:
+		case K_3JOY2:
+		case K_3JOY3:
+		case K_3JOY4:
+		case K_4JOY1:
+		case K_4JOY2:
+		case K_4JOY3:
+		case K_4JOY4:
 		case K_AUX1:
 		case K_AUX2:
 		case K_AUX3:
