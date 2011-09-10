@@ -492,10 +492,6 @@ typedef struct {
 	qboolean	wasPressed;		// set when down, not cleared when up
 } kbutton_t;
 
-#ifdef USE_VOIP
-extern 	kbutton_t 	in_voiprecord;
-#endif
-
 void CL_InitInput(void);
 void CL_ShutdownInput(void);
 void CL_SendCmd (void);
