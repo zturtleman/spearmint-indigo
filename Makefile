@@ -9,12 +9,12 @@ CLIENTBIN=ioq3ztm
 SERVERBIN=ioq3ztm-server
 
 BASEGAME=baseq3
-BASEGAME_FLAGS =
+BASEGAME_FLAGS=
 
 MISSIONPACK=missionpack
 MISSIONPACK_FLAGS= -DMISSIONPACK
 
-# Add "-DNAME" to define NAME in engine and game/cgame/ui.
+# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
 BUILD_DEFINES =
 
 # You can disable building basegame or missionpack by setting the following to 0
