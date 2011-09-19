@@ -1331,7 +1331,7 @@ long FS_FOpenFileReadDir(const char *filename, searchpath_t *search, fileHandle_
 			if(!FS_IsExt(filename, ".cfg", len) &&		// for config files
 			   !FS_IsExt(filename, ".menu", len) &&		// menu files
 			   !FS_IsExt(filename, ".game", len) &&		// menu files
-			   !FS_IsExt(filename, ".cfg", len) &&		// for journal files
+			   !FS_IsExt(filename, ".dat", len) &&		// for journal files
 			   !FS_IsDemoExt(filename, len))			// demos
 			{
 				*file = 0;
@@ -1443,7 +1443,7 @@ vmInterpret_t FS_FindVM(void **startSearch, char *found, int foundlen, const cha
 	if(enableDll)
 		Com_sprintf(dllName, sizeof(dllName), "%s" ARCH_STRING DLL_EXT, name);
 		
-	Com_sprintf(qvmName, sizeof(dllName), "vm/%s.qvm", name);
+	Com_sprintf(qvmName, sizeof(qvmName), "vm/%s.qvm", name);
 
 	lastSearch = *startSearch;
 	if(*startSearch == NULL)
@@ -2881,7 +2881,7 @@ void FS_Path_f( void ) {
 				}
 			}
 		} else {
-			Com_Printf ("%s/%s\n", s->dir->path, s->dir->gamedir );
+			Com_Printf ("%s%c%s\n", s->dir->path, PATH_SEP, s->dir->gamedir );
 		}
 	}
 
