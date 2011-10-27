@@ -5,7 +5,7 @@
 #
 
 # ioquake3 svn version that this is based on
-IOQ3_REVISION = 2175
+IOQ3_REVISION = 2188
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -420,20 +420,20 @@ ifeq ($(PLATFORM),darwin)
   BASE_CFLAGS = -Wall -Wimplicit -Wstrict-prototypes
 
   ifeq ($(ARCH),ppc)
-    BASE_CFLAGS += -faltivec
+    BASE_CFLAGS += -arch ppc -faltivec -mmacosx-version-min=10.2
     OPTIMIZEVM += -O3
   endif
   ifeq ($(ARCH),ppc64)
-    BASE_CFLAGS += -faltivec
+    BASE_CFLAGS += -arch ppc64 -faltivec -mmacosx-version-min=10.2
   endif
   ifeq ($(ARCH),i386)
     OPTIMIZEVM += -march=prescott -mfpmath=sse
     # x86 vm will crash without -mstackrealign since MMX instructions will be
     # used no matter what and they corrupt the frame pointer in VM calls
-    BASE_CFLAGS += -m32 -mstackrealign
+    BASE_CFLAGS += -arch i386 -m32 -mstackrealign
   endif
   ifeq ($(ARCH),x86_64)
-    OPTIMIZEVM += -mfpmath=sse
+    OPTIMIZEVM += -arch x86_64 -mfpmath=sse
   endif
 
   BASE_CFLAGS += -fno-strict-aliasing -DMACOS_X -fno-common -pipe
@@ -473,7 +473,7 @@ ifeq ($(PLATFORM),darwin)
 
   SHLIBEXT=dylib
   SHLIBCFLAGS=-fPIC -fno-common
-  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS)
+  SHLIBLDFLAGS=-dynamiclib $(LDFLAGS) -Wl,-U,_com_altivec
 
   NOTSHLIBCFLAGS=-mdynamic-no-pic
 
@@ -961,6 +961,10 @@ ifeq ($(USE_INTERNAL_JPEG),1)
   BASE_CFLAGS += -I$(JPDIR)
 else
   RENDERER_LIBS += -ljpeg
+endif
+
+ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
+  BASE_CFLAGS += -Qunused-arguments
 endif
 
 ifdef DEFAULT_BASEDIR
