@@ -4,32 +4,6 @@
 # GNU Make required
 #
 
-VERSION=1.36
-CLIENTBIN=ioq3ztm
-SERVERBIN=ioq3ztm-server
-
-BASEGAME=baseq3
-BASEGAME_FLAGS=
-
-MISSIONPACK=missionpack
-MISSIONPACK_FLAGS= -DMISSIONPACK
-
-# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
-BUILD_DEFINES =
-
-# You can disable building basegame or missionpack by setting the following to 0
-ifndef BUILD_BASEGAME
-  BUILD_BASEGAME =
-endif
-ifndef BUILD_MISSIONPACK
-  BUILD_MISSIONPACK = 0
-endif
-
-ifndef COPYDIR
-COPYDIR="/usr/local/games/ioq3ztm"
-endif
-
-
 # ioquake3 svn version that this is based on
 IOQ3_REVISION = 2175
 
@@ -69,6 +43,12 @@ ifndef BUILD_GAME_SO
 endif
 ifndef BUILD_GAME_QVM
   BUILD_GAME_QVM   =
+endif
+ifndef BUILD_BASEGAME
+  BUILD_BASEGAME =
+endif
+ifndef BUILD_MISSIONPACK
+  BUILD_MISSIONPACK=
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
@@ -115,6 +95,43 @@ else
   endif
 endif
 export CROSS_COMPILING
+
+ifndef VERSION
+VERSION=1.36
+endif
+
+ifndef CLIENTBIN
+CLIENTBIN=ioq3ztm
+endif
+
+ifndef SERVERBIN
+SERVERBIN=ioq3ztm-server
+endif
+
+ifndef BASEGAME
+BASEGAME=baseq3
+endif
+
+ifndef BASEGAME_CFLAGS
+BASEGAME_CFLAGS=
+endif
+
+ifndef MISSIONPACK
+MISSIONPACK=missionpack
+endif
+
+ifndef MISSIONPACK_CFLAGS
+MISSIONPACK_CFLAGS=-DMISSIONPACK
+endif
+
+# Add "-DEXAMPLE" to define EXAMPLE in engine and game/cgame/ui.
+ifndef BUILD_DEFINES
+BUILD_DEFINES =
+endif
+
+ifndef COPYDIR
+COPYDIR="/usr/local/games/ioq3ztm"
+endif
 
 ifndef COPYBINDIR
 COPYBINDIR=$(COPYDIR)
@@ -273,6 +290,7 @@ ifneq ($(BUILD_FINAL),1)
 	  VERSION:=$(VERSION)_IOQ3r$(IOQ3_REVISION)
 	endif
 endif
+
 
 #############################################################################
 # SETUP AND BUILD -- LINUX
@@ -1007,49 +1025,49 @@ endif
 
 define DO_SHLIB_CC
 $(echo_cmd) "SHLIB_CC $<"
-$(Q)$(CC) $(BASEGAME_FLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) $(BASEGAME_FLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_CGAME_CC
 $(echo_cmd) "CGAME_CC $<"
-$(Q)$(CC) $(BASEGAME_FLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_UI_CC
 $(echo_cmd) "UI_CC $<"
-$(Q)$(CC) $(BASEGAME_FLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_SHLIB_CC_MISSIONPACK
 $(echo_cmd) "SHLIB_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_FLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_GAME_CC_MISSIONPACK
 $(echo_cmd) "GAME_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_FLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_CGAME_CC_MISSIONPACK
 $(echo_cmd) "CGAME_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_FLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DCGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
 define DO_UI_CC_MISSIONPACK
 $(echo_cmd) "UI_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_FLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DUI $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1090,7 +1108,7 @@ release:
 # an informational message, then start building
 targets: makedirs
 	@echo ""
-	@echo "Building ioq3ztm in $(B):"
+	@echo "Building $(CLIENTBIN) in $(B):"
 	@echo "  IOQ3_REVISION: $(IOQ3_REVISION)"
 	@echo "  PLATFORM: $(PLATFORM)"
 	@echo "  ARCH: $(ARCH)"
@@ -1164,7 +1182,6 @@ ifneq ($(BUILD_BASEGAME),0)
 	@if [ ! -d $(B)/$(BASEGAME)/qcommon ];then $(MKDIR) $(B)/$(BASEGAME)/qcommon;fi
 	@if [ ! -d $(B)/$(BASEGAME)/vm ];then $(MKDIR) $(B)/$(BASEGAME)/vm;fi
 endif
-
 	@if [ ! -d $(B)/$(MISSIONPACK) ];then $(MKDIR) $(B)/$(MISSIONPACK);fi
 ifneq ($(BUILD_MISSIONPACK),0)
 	@if [ ! -d $(B)/$(MISSIONPACK)/cgame ];then $(MKDIR) $(B)/$(MISSIONPACK)/cgame;fi
@@ -1304,42 +1321,42 @@ $(Q3LCC): $(Q3LCCOBJ) $(Q3RCC) $(Q3CPP)
 
 define DO_Q3LCC
 $(echo_cmd) "Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_FLAGS) $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC
 $(echo_cmd) "CGAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
 $(echo_cmd) "UI_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_FLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_Q3LCC_MISSIONPACK
 $(echo_cmd) "Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_CGAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "CGAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DCGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_GAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "GAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC_MISSIONPACK
 $(echo_cmd) "UI_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_FLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DUI $(BUILD_DEFINES) -o $@ $<
 endef
 
 
