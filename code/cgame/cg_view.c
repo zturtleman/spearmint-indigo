@@ -176,14 +176,88 @@ static void CG_AddTestModel (void) {
 =================
 CG_CalcVrect
 
-Sets the coordinates of the rendered window
+Sets the coordinates of the viewport and rendered window
 =================
 */
 static void CG_CalcVrect (void) {
 	int		size;
-	int		width, height;
+	float		viewWidth, viewHeight;
+	float		viewX, viewY;
 
-	// the intermission should allways be full screen
+	// Viewport size
+	viewX = viewY = 0;
+	viewWidth = cgs.glconfig.vidWidth;
+	viewHeight = cgs.glconfig.vidHeight;
+
+	// Splitscreen viewports
+	if (cg.numViewports == 2) {
+		if (cg_splitviewVertical.integer) {
+			viewWidth *= 0.5f;
+
+			if (cg.viewport == 1) {
+				viewX += viewWidth;
+			}
+		} else {
+			viewHeight *= 0.5f;
+
+			if (cg.viewport == 1) {
+				viewY += viewHeight;
+			}
+		}
+	} else if (cg.numViewports == 3) {
+		if (cg_splitviewVertical.integer) {
+			if (cg.viewport == 2) {
+				viewWidth *= 0.5f;
+				viewX += viewWidth;
+			} else {
+				viewWidth *= 0.5f;
+				viewHeight *= 0.5f;
+
+				if (cg.viewport == 1) {
+					viewY += viewHeight;
+				}
+			}
+		} else {
+			if (cg.viewport == 2) {
+				viewHeight *= 0.5f;
+				viewY += viewHeight;
+			} else {
+				viewWidth *= 0.5f;
+				viewHeight *= 0.5f;
+
+				if (cg.viewport == 1) {
+					viewX += viewWidth;
+				}
+			}
+		}
+	} else if (cg.numViewports > 1 && cg.numViewports <= 4) {
+		viewWidth *= 0.5f;
+		viewHeight *= 0.5f;
+
+		if (cg.viewport == 1 || cg.viewport == 3) {
+			viewX += viewWidth;
+		}
+
+		if (cg.viewport == 2 || cg.viewport == 3) {
+			viewY += viewHeight;
+		}
+	}
+
+	// Viewport scale and offset
+	if ( viewWidth * 480 > viewHeight * 640 ) {
+		cgs.screenXScale = viewWidth * (1.0/640.0);
+		cgs.screenYScale = viewHeight * (1.0/480.0);
+		// wide screen
+		cgs.screenXBias = 0.5 * ( viewWidth - ( viewHeight * (640.0/480.0) ) );
+		cgs.screenXScale = cgs.screenYScale;
+	} else {
+		cgs.screenXScale = viewWidth * (1.0/640.0);
+		cgs.screenYScale = viewHeight * (1.0/480.0);
+		// no wide screen
+		cgs.screenXBias = 0;
+	}
+
+	// the intermission should always be full screen
 	if ( cg.cur_ps->pm_type == PM_INTERMISSION ) {
 		size = 100;
 	} else {
@@ -199,84 +273,15 @@ static void CG_CalcVrect (void) {
 		}
 	}
 
-	cg.refdef.width = cgs.glconfig.vidWidth*size/100;
+	// Rendered window for drawing world
+	cg.refdef.width = viewWidth*size/100;
 	cg.refdef.width &= ~1;
 
-	cg.refdef.height = cgs.glconfig.vidHeight*size/100;
+	cg.refdef.height = viewHeight*size/100;
 	cg.refdef.height &= ~1;
 
-	cg.refdef.x = (cgs.glconfig.vidWidth - cg.refdef.width)/2;
-	cg.refdef.y = (cgs.glconfig.vidHeight - cg.refdef.height)/2;
-
-	// Setup splitscreen viewports
-	if (cg.numViewports == 2) {
-		if (cg_splitviewVertical.integer) {
-			cg.refdef.width *= 0.5f;
-
-			if (cg.viewport == 1) {
-				cg.refdef.x += cg.refdef.width;
-			}
-		} else {
-			cg.refdef.height *= 0.5f;
-
-			if (cg.viewport == 1) {
-				cg.refdef.y += cg.refdef.height;
-			}
-		}
-	} else if (cg.numViewports == 3) {
-		if (cg_splitviewVertical.integer) {
-			if (cg.viewport == 2) {
-				cg.refdef.width *= 0.5f;
-				cg.refdef.x += cg.refdef.width;
-			} else {
-				cg.refdef.width *= 0.5f;
-				cg.refdef.height *= 0.5f;
-
-				if (cg.viewport == 1) {
-					cg.refdef.y += cg.refdef.height;
-				}
-			}
-		} else {
-			if (cg.viewport == 2) {
-				cg.refdef.height *= 0.5f;
-				cg.refdef.y += cg.refdef.height;
-			} else {
-				cg.refdef.width *= 0.5f;
-				cg.refdef.height *= 0.5f;
-
-				if (cg.viewport == 1) {
-					cg.refdef.x += cg.refdef.width;
-				}
-			}
-		}
-	} else if (cg.numViewports > 1 && cg.numViewports <= 4) {
-		cg.refdef.width *= 0.5f;
-		cg.refdef.height *= 0.5f;
-
-		if (cg.viewport == 1 || cg.viewport == 3) {
-			cg.refdef.x += cg.refdef.width;
-		}
-
-		if (cg.viewport == 2 || cg.viewport == 3) {
-			cg.refdef.y += cg.refdef.height;
-		}
-	}
-
-	height = cg.refdef.height * 100.0/size;
-	width = cg.refdef.width * 100.0/size;
-
-	if ( width * 480 > height * 640 ) {
-		cgs.screenXScale = width * (1.0/640.0);
-		cgs.screenYScale = height * (1.0/480.0);
-		// wide screen
-		cgs.screenXBias = 0.5 * ( width - ( height * (640.0/480.0) ) );
-		cgs.screenXScale = cgs.screenYScale;
-	} else {
-		cgs.screenXScale = width * (1.0/640.0);
-		cgs.screenYScale = height * (1.0/480.0);
-		// no wide screen
-		cgs.screenXBias = 0;
-	}
+	cg.refdef.x = viewX + (viewWidth - cg.refdef.width)/2;
+	cg.refdef.y = viewY + (viewHeight - cg.refdef.height)/2;
 }
 
 //==============================================================================
