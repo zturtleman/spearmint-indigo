@@ -371,6 +371,12 @@ extern void UI_ControlsMenu( int localClient );
 extern void Controls_Cache( void );
 
 //
+// ui_joystick.c
+//
+void UI_JoystickMenu( int localClient );
+void UI_Joystick_Cache( void );
+
+//
 // ui_demo2.c
 //
 extern void UI_DemosMenu( void );

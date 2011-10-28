@@ -117,7 +117,7 @@ typedef struct
 #define ID_ALWAYSRUN	36
 #define ID_AUTOSWITCH	37
 #define ID_MOUSESPEED	38
-#define ID_JOYENABLE	39
+#define ID_SELECTJOY	39
 #define ID_JOYTHRESHOLD	40
 #define ID_SMOOTHMOUSE	41
 
@@ -204,7 +204,7 @@ typedef struct
 	menuaction_s		chat2;
 	menuaction_s		chat3;
 	menuaction_s		chat4;
-	menuradiobutton_s	joyenable;
+	menutext_s			selectjoy;
 	menuslider_s		joythreshold;
 	int					section;
 	qboolean			waitingforkey;
@@ -408,10 +408,6 @@ static configcvar_t g_configcvars[] =
 	{"3cg_autoswitch",	0,					0},
 	{"4cg_autoswitch",	0,					0},
 	{"sensitivity",		0,					0},
-	{"in_joystick",		0,					0},
-	{"2in_joystick",	0,					0},
-	{"3in_joystick",	0,					0},
-	{"4in_joystick",	0,					0},
 	{"joy_threshold",	0,					0},
 	{"2joy_threshold",	0,					0},
 	{"3joy_threshold",	0,					0},
@@ -464,7 +460,7 @@ static menucommon_s *g_looking_controls[] = {
 	(menucommon_s *)&s_controls.freelook,
 	(menucommon_s *)&s_controls.centerview,
 	(menucommon_s *)&s_controls.zoomview,
-	(menucommon_s *)&s_controls.joyenable,
+	(menucommon_s *)&s_controls.selectjoy,
 	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
@@ -493,7 +489,7 @@ static menucommon_s *g_looking_mini_controls[] = {
 	(menucommon_s *)&s_controls.lookdown,
 	(menucommon_s *)&s_controls.centerview,
 	(menucommon_s *)&s_controls.zoomview,
-	(menucommon_s *)&s_controls.joyenable,
+	(menucommon_s *)&s_controls.selectjoy,
 	(menucommon_s *)&s_controls.joythreshold,
 	NULL,
 };
@@ -908,6 +904,46 @@ static void Controls_DrawKeyBinding( void *self )
 
 /*
 =================
+Controls_DrawSmallText
+=================
+*/
+static void Controls_DrawSmallText( void *self )
+{
+	menutext_s *text;
+	int x, y;
+	qboolean c;
+
+	text = (menutext_s*) self;
+
+	c = (Menu_ItemAtCursor( text->generic.parent ) == text);
+
+	x =	text->generic.x;
+	y = text->generic.y;
+
+	if (c)
+	{
+		UI_FillRect( text->generic.left, text->generic.top, text->generic.right-text->generic.left+1, text->generic.bottom-text->generic.top+1, listbar_color ); 
+
+		UI_DrawString( x - SMALLCHAR_WIDTH, y, text->string, UI_RIGHT|UI_SMALLFONT, text_color_highlight );
+
+		UI_DrawString(SCREEN_WIDTH * 0.50, SCREEN_HEIGHT * 0.80, "CLICK to change", UI_SMALLFONT|UI_CENTER, colorWhite );
+	}
+	else
+	{
+		if (text->generic.flags & QMF_GRAYED)
+		{
+			UI_DrawString( x - SMALLCHAR_WIDTH, y, text->string, UI_RIGHT|UI_SMALLFONT, text_color_disabled );
+		}
+		else
+		{
+			UI_DrawString( x - SMALLCHAR_WIDTH, y, text->string, UI_RIGHT|UI_SMALLFONT, text_color_normal );
+		}
+	}
+}
+
+
+/*
+=================
 Controls_StatusBar
 =================
 */
@@ -1005,7 +1041,6 @@ static void Controls_GetConfig( void )
 
 	s_controls.alwaysrun.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
 	s_controls.autoswitch.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
-	s_controls.joyenable.curvalue    = UI_ClampCvar( 0, 1, Controls_GetCvarValue( "in_joystick" ) );
 	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) ) );
 }
 
@@ -1044,8 +1079,6 @@ static void Controls_SetConfig( void )
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ), s_controls.joythreshold.curvalue );
-
-		trap_Cmd_ExecuteText( EXEC_APPEND, "in_restart\n" );
 		return;
 	}
 
@@ -1058,10 +1091,8 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
-	trap_Cvar_SetValue( "in_joystick", s_controls.joyenable.curvalue );
 	trap_Cvar_SetValue( "joy_threshold", s_controls.joythreshold.curvalue );
 	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
-	trap_Cmd_ExecuteText( EXEC_APPEND, "in_restart\n" );
 }
 
 /*
@@ -1090,6 +1121,8 @@ static void Controls_SetDefaults( void )
 	if (s_controls.localClient != 0) {
 		s_controls.alwaysrun.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) );
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
+		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
+		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
 		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) );
 		return;
 	}
@@ -1099,7 +1132,8 @@ static void Controls_SetDefaults( void )
 	s_controls.alwaysrun.curvalue    = Controls_GetCvarDefault( "cl_run" );
 	s_controls.autoswitch.curvalue   = Controls_GetCvarDefault( "cg_autoswitch" );
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
-	s_controls.joyenable.curvalue    = Controls_GetCvarDefault( "in_joystick" );
+	trap_Cvar_SetValue("in_joystick", 0);
+	trap_Cvar_SetValue("in_joystickNo", 0);
 	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "joy_threshold" );
 	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 }
@@ -1335,13 +1369,19 @@ static void Controls_MenuEvent( void* ptr, int event )
 		case ID_SMOOTHMOUSE:
 		case ID_ALWAYSRUN:
 		case ID_AUTOSWITCH:
-		case ID_JOYENABLE:
 		case ID_JOYTHRESHOLD:
 			if (event == QM_ACTIVATED)
 			{
 				s_controls.changesmade = qtrue;
 			}
 			break;		
+
+		case ID_SELECTJOY:
+			if (event == QM_ACTIVATED)
+			{
+				UI_JoystickMenu(s_controls.localClient);
+			}
+			break;
 	}
 }
 
@@ -1775,13 +1815,15 @@ static void Controls_MenuInit( int localClient )
 	s_controls.chat4.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.chat4.generic.id        = ID_CHAT4;
 
-	s_controls.joyenable.generic.type      = MTYPE_RADIOBUTTON;
-	s_controls.joyenable.generic.flags	   = QMF_SMALLFONT;
-	s_controls.joyenable.generic.x	       = SCREEN_WIDTH/2;
-	s_controls.joyenable.generic.name	   = "joystick";
-	s_controls.joyenable.generic.id        = ID_JOYENABLE;
-	s_controls.joyenable.generic.callback  = Controls_MenuEvent;
-	s_controls.joyenable.generic.statusbar = Controls_StatusBar;
+	s_controls.selectjoy.generic.type		= MTYPE_PTEXT;
+	s_controls.selectjoy.generic.flags		= QMF_RIGHT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+	s_controls.selectjoy.generic.x			= SCREEN_WIDTH/2;
+	s_controls.selectjoy.generic.id			= ID_SELECTJOY;
+	s_controls.selectjoy.generic.callback	= Controls_MenuEvent;
+	s_controls.selectjoy.generic.ownerdraw	= Controls_DrawSmallText;
+	s_controls.selectjoy.string				= "select joystick...";
+	s_controls.selectjoy.color				= text_color_normal;
+	s_controls.selectjoy.style				= UI_RIGHT|UI_SMALLFONT;
 
 	s_controls.joythreshold.generic.type	  = MTYPE_SLIDER;
 	s_controls.joythreshold.generic.x		  = SCREEN_WIDTH/2;
@@ -1821,7 +1863,7 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.freelook );
 	Menu_AddItem( &s_controls.menu, &s_controls.centerview );
 	Menu_AddItem( &s_controls.menu, &s_controls.zoomview );
-	Menu_AddItem( &s_controls.menu, &s_controls.joyenable );
+	Menu_AddItem( &s_controls.menu, &s_controls.selectjoy );
 	Menu_AddItem( &s_controls.menu, &s_controls.joythreshold );
 
 	Menu_AddItem( &s_controls.menu, &s_controls.alwaysrun );

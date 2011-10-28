@@ -946,6 +946,7 @@ void UI_Cache_f( void ) {
 	PlayerModel_Cache();
 	PlayerSettings_Cache();
 	Controls_Cache();
+	UI_Joystick_Cache();
 	Demos_Cache();
 	UI_CinematicsMenu_Cache();
 	Preferences_Cache();
