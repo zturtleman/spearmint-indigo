@@ -262,8 +262,8 @@ static void CG_CalcVrect (void) {
 		}
 	}
 
-	height = cg.refdef.height * 100/size;
-	width = cg.refdef.width * 100/size;
+	height = cg.refdef.height * 100.0/size;
+	width = cg.refdef.width * 100.0/size;
 
 	if ( width * 480 > height * 640 ) {
 		cgs.screenXScale = width * (1.0/640.0);
