@@ -408,10 +408,10 @@ static configcvar_t g_configcvars[] =
 	{"3cg_autoswitch",	0,					0},
 	{"4cg_autoswitch",	0,					0},
 	{"sensitivity",		0,					0},
-	{"joy_threshold",	0,					0},
-	{"2joy_threshold",	0,					0},
-	{"3joy_threshold",	0,					0},
-	{"4joy_threshold",	0,					0},
+	{"in_joystickThreshold",	0,			0},
+	{"2in_joystickThreshold",	0,			0},
+	{"3in_joystickThreshold",	0,			0},
+	{"4in_joystickThreshold",	0,			0},
 	{"m_filter",		0,					0},
 	{"cl_freelook",		0,					0},
 	{NULL,				0,					0}
@@ -1041,7 +1041,7 @@ static void Controls_GetConfig( void )
 
 	s_controls.alwaysrun.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ) ) );
 	s_controls.autoswitch.curvalue = UI_ClampCvar( 0, 1, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) ) );
-	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) ) );
+	s_controls.joythreshold.curvalue = UI_ClampCvar( 0.05f, 0.75f, Controls_GetCvarValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) ) );
 }
 
 /*
@@ -1078,7 +1078,7 @@ static void Controls_SetConfig( void )
 	if (s_controls.localClient != 0) {
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cl_run" ), s_controls.alwaysrun.curvalue );
 		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ), s_controls.autoswitch.curvalue );
-		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ), s_controls.joythreshold.curvalue );
+		trap_Cvar_SetValue( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ), s_controls.joythreshold.curvalue );
 		return;
 	}
 
@@ -1091,7 +1091,7 @@ static void Controls_SetConfig( void )
 	trap_Cvar_SetValue( "cl_run", s_controls.alwaysrun.curvalue );
 	trap_Cvar_SetValue( "cg_autoswitch", s_controls.autoswitch.curvalue );
 	trap_Cvar_SetValue( "sensitivity", s_controls.sensitivity.curvalue );
-	trap_Cvar_SetValue( "joy_threshold", s_controls.joythreshold.curvalue );
+	trap_Cvar_SetValue( "in_joystickThreshold", s_controls.joythreshold.curvalue );
 	trap_Cvar_SetValue( "cl_freelook", s_controls.freelook.curvalue );
 }
 
@@ -1123,7 +1123,7 @@ static void Controls_SetDefaults( void )
 		s_controls.autoswitch.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "cg_autoswitch" ) );
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystick"), 0);
 		trap_Cvar_SetValue(Com_LocalClientCvarName(s_controls.localClient, "in_joystickNo"), 0);
-		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "joy_threshold" ) );
+		s_controls.joythreshold.curvalue = Controls_GetCvarDefault( Com_LocalClientCvarName(s_controls.localClient, "in_joystickThreshold" ) );
 		return;
 	}
 
@@ -1134,7 +1134,7 @@ static void Controls_SetDefaults( void )
 	s_controls.sensitivity.curvalue  = Controls_GetCvarDefault( "sensitivity" );
 	trap_Cvar_SetValue("in_joystick", 0);
 	trap_Cvar_SetValue("in_joystickNo", 0);
-	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "joy_threshold" );
+	s_controls.joythreshold.curvalue = Controls_GetCvarDefault( "in_joystickThreshold" );
 	s_controls.freelook.curvalue     = Controls_GetCvarDefault( "cl_freelook" );
 }
 

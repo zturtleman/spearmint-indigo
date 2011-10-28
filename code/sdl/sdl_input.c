@@ -1143,7 +1143,7 @@ void IN_Init( void )
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
 		in_joystick[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystick"), "0", CVAR_ARCHIVE|CVAR_LATCH );
 		in_joystickDebug[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickDebug"), "0", CVAR_TEMP );
-		in_joystickThreshold[i] = Cvar_Get( Com_LocalClientCvarName(i, "joy_threshold"), "0.15", CVAR_ARCHIVE );
+		in_joystickThreshold[i] = Cvar_Get( Com_LocalClientCvarName(i, "in_joystickThreshold"), "0.15", CVAR_ARCHIVE );
 	}
 
 #ifdef MACOS_X_ACCELERATION_HACK
