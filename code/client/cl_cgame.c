@@ -737,6 +737,7 @@ void CL_InitCGame( void ) {
 	const char			*mapname;
 	int					t1, t2;
 	vmInterpret_t		interpret;
+	int					v;
 
 	t1 = Sys_Milliseconds();
 
@@ -761,6 +762,26 @@ void CL_InitCGame( void ) {
 	if ( !cgvm ) {
 		Com_Error( ERR_DROP, "VM_Create on cgame failed" );
 	}
+
+	// sanity check
+	// Note: Need to pass extra vars for legacy cgvm (which call CG_INIT here...), otherwise it will error...
+	v = VM_Call( cgvm, CG_GETAPIVERSION, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	if (v != CG_API_VERSION) {
+		// "CGame API version 0" is a legacy quake3 cgvm which actually has CG_INIT=0
+		// instead of CG_GETAPIVERSION=0 (which means CG_INIT was just called...).
+		if (v == 0) {
+			// Call legacy CG_SHUTDOWN to clean up this mess.
+			VM_Call( cgvm, 1 );
+		}
+
+		// Free cgvm now, so CG_SHUTDOWN doesn't get called later.
+		VM_Free( cgvm );
+		cgvm = NULL;
+
+		Com_Error(ERR_DROP, "CGame is version %d, expected %d", v, CG_API_VERSION );
+		return;
+	}
+
 	clc.state = CA_LOADING;
 
 	// init for this gamestate
