@@ -873,15 +873,8 @@ static void SV_InitGameVM( qboolean restart ) {
 	}
 	
 	// sanity check
-	v = VM_Call( gvm, GAME_GETAPIVERSION );
+	v = VM_SafeCall( gvm, GAME_GETAPIVERSION );
 	if (v != GAME_API_VERSION) {
-		// "Game API version 0" is a legacy quake3 gvm which actually has GAME_INIT=0
-		// instead of GAME_GETAPIVERSION=0 (which means GAME_INIT just called...).
-		if (v == 0) {
-			// Call legacy GAME_SHUTDOWN to clean up this mess.
-			VM_Call( gvm, 1 );
-		}
-
 		// Free gvm now, so GAME_SHUTDOWN doesn't get called later.
 		VM_Free( gvm );
 		gvm = NULL;

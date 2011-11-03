@@ -764,16 +764,8 @@ void CL_InitCGame( void ) {
 	}
 
 	// sanity check
-	// Note: Need to pass extra vars for legacy cgvm (which call CG_INIT here...), otherwise it will error...
-	v = VM_Call( cgvm, CG_GETAPIVERSION, clc.serverMessageSequence, clc.lastExecutedServerCommand, clc.clientNum );
+	v = VM_SafeCall( cgvm, CG_GETAPIVERSION );
 	if (v != CG_API_VERSION) {
-		// "CGame API version 0" is a legacy quake3 cgvm which actually has CG_INIT=0
-		// instead of CG_GETAPIVERSION=0 (which means CG_INIT was just called...).
-		if (v == 0) {
-			// Call legacy CG_SHUTDOWN to clean up this mess.
-			VM_Call( cgvm, 1 );
-		}
-
 		// Free cgvm now, so CG_SHUTDOWN doesn't get called later.
 		VM_Free( cgvm );
 		cgvm = NULL;
