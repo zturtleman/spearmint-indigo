@@ -771,7 +771,6 @@ void CL_InitCGame( void ) {
 		cgvm = NULL;
 
 		Com_Error(ERR_DROP, "CGame is version %d, expected %d", v, CG_API_VERSION );
-		return;
 	}
 
 	clc.state = CA_LOADING;

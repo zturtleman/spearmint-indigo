@@ -875,7 +875,7 @@ intptr_t QDECL VM_Call( vm_t *vm, int callnum, ... )
 vm_t *safeVM = NULL;
 
 intptr_t VM_APISafeSystemCalls( intptr_t *args ) {
-	Com_Error(ERR_FATAL, "%s vm tried to make an unsafe syscall, it's may be an incompatible q3 vm", safeVM ? safeVM->name : "unknown");
+	Com_Error(ERR_FATAL, "%s vm tried to make an unsafe syscall, it may be an incompatible quake3 vm", safeVM ? safeVM->name : "unknown");
 	return 0;
 }
 
