@@ -574,8 +574,6 @@ static void _S_AL_SanitiseVector( vec3_t v, int line )
 }
 
 
-#define AL_THIRD_PERSON_THRESHOLD_SQ (48.0f*48.0f)
-
 /*
 =================
 S_AL_Gain
@@ -629,36 +627,6 @@ static void S_AL_ScaleGain(src_t *chksrc, vec3_t origin)
 		chksrc->scaleGain = chksrc->curGain;
 		S_AL_Gain(chksrc->alSource, chksrc->scaleGain);
 	}
-}
-
-/*
-=================
-S_AL_HearingThroughEntity
-=================
-*/
-static qboolean S_AL_HearingThroughEntity( int entityNum )
-{
-	float	distanceSq;
-
-	if( clc.clientNum == entityNum )
-	{
-		// FIXME: <tim@ngus.net> 28/02/06 This is an outrageous hack to detect
-		// whether or not the player is rendering in third person or not. We can't
-		// ask the renderer because the renderer has no notion of entities and we
-		// can't ask cgame since that would involve changing the API and hence mod
-		// compatibility. I don't think there is any way around this, but I'll leave
-		// the FIXME just in case anyone has a bright idea.
-		distanceSq = DistanceSquared(
-				entityList[ entityNum ].origin,
-				lastListenerOrigin );
-
-		if( distanceSq > AL_THIRD_PERSON_THRESHOLD_SQ )
-			return qfalse; //we're the player, but third person
-		else
-			return qtrue;  //we're the player
-	}
-	else
-		return qfalse; //not the player
 }
 
 /*
@@ -1201,7 +1169,7 @@ static void S_AL_StartSound( vec3_t origin, int entnum, int entchannel, sfxHandl
 		if(S_AL_CheckInput(entnum, sfx))
 			return;
 
-		if(S_AL_HearingThroughEntity(entnum))
+		if(S_HearingThroughEntity(entnum))
 		{
 			S_AL_StartLocalSound(sfx, entchannel);
 			return;
@@ -1313,7 +1281,7 @@ static void S_AL_SrcLoop( alSrcPriority_t priority, sfxHandle_t sfx,
 	curSource->entity = entityNum;
 	curSource->isLooping = qtrue;
 
-	if( S_AL_HearingThroughEntity( entityNum ) )
+	if( S_HearingThroughEntity( entityNum ) )
 	{
 		curSource->local = qtrue;
 
@@ -2136,16 +2104,10 @@ S_AL_Respatialize
 =================
 */
 static
-void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, int listener )
+void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson )
 {
 	float		orientation[6];
 	vec3_t	sorigin;
-
-	if (listener != 0)
-	{
-		// ZTM: FIXME: Support multiple listeners!
-		return;
-	}
 
 	VectorCopy( origin, sorigin );
 	S_AL_SanitiseVector( sorigin );
@@ -2153,6 +2115,14 @@ void S_AL_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int 
 	S_AL_SanitiseVector( axis[ 0 ] );
 	S_AL_SanitiseVector( axis[ 1 ] );
 	S_AL_SanitiseVector( axis[ 2 ] );
+
+	S_UpdateListener(entityNum, origin, axis, inwater, firstPerson);
+
+	if (clc.clientNum != entityNum)
+	{
+		// ZTM: FIXME: Support multiple listeners!
+		return;
+	}
 
 	orientation[0] = axis[0][0]; orientation[1] = axis[0][1]; orientation[2] = axis[0][2];
 	orientation[3] = axis[2][0]; orientation[4] = axis[2][1]; orientation[5] = axis[2][2];
@@ -2223,6 +2193,8 @@ void S_AL_Update( void )
 	s_musicVolume->modified = qfalse;
 	s_alMinDistance->modified = qfalse;
 	s_alRolloff->modified = qfalse;
+
+	S_ListenersEndFrame();
 }
 
 /*
@@ -2396,6 +2368,8 @@ qboolean S_AL_Init( soundInterface_t *si )
 	if( !si ) {
 		return qfalse;
 	}
+
+	S_ListenersInit();
 
 	for (i = 0; i < MAX_RAW_STREAMS; i++) {
 		streamSourceHandles[i] = -1;
