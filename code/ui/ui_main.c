@@ -110,8 +110,8 @@ static char* netnames[] = {
 static char quake3worldMessage[] = "Visit www.quake3world.com - News, Community, Events, Files";
 #endif
 
-static int gamecodetoui[] = {4,2,3,0,5,1,6};
-static int uitogamecode[] = {4,6,2,3,1,5,7};
+static int gamecodetoui[NUM_COLOR_EFFECTS] = {4,2,3,0,5,1,6};
+static int uitogamecode[NUM_COLOR_EFFECTS] = {4,6,2,3,1,5,7};
 
 
 static void UI_StartServerRefresh(qboolean full);
@@ -1187,8 +1187,10 @@ static void UI_DrawTeamMember(rectDef_t *rect, float scale, vec4_t color, qboole
 }
 
 static void UI_DrawEffects(rectDef_t *rect, float scale, vec4_t color) {
+	float xOffset = 128.0f / (NUM_COLOR_EFFECTS + 1);
+
 	UI_DrawHandlePic( rect->x, rect->y - 14, 128, 8, uiInfo.uiDC.Assets.fxBasePic );
-	UI_DrawHandlePic( rect->x + uiInfo.effectsColor * 16 + 8, rect->y - 16, 16, 12, uiInfo.uiDC.Assets.fxPic[uiInfo.effectsColor] );
+	UI_DrawHandlePic( rect->x + uiInfo.effectsColor * xOffset + xOffset * 0.5f, rect->y - 16, 16, 12, uiInfo.uiDC.Assets.fxPic[uiInfo.effectsColor] );
 }
 
 static void UI_DrawMapPreview(rectDef_t *rect, float scale, vec4_t color, qboolean net) {
@@ -2285,10 +2287,10 @@ static qboolean UI_Effects_HandleKey(int flags, float *special, int key) {
 	    uiInfo.effectsColor++;
 		}
 
-    if( uiInfo.effectsColor > 6 ) {
+    if( uiInfo.effectsColor > NUM_COLOR_EFFECTS-1 ) {
 	  	uiInfo.effectsColor = 0;
 		} else if (uiInfo.effectsColor < 0) {
-	  	uiInfo.effectsColor = 6;
+	  	uiInfo.effectsColor = NUM_COLOR_EFFECTS-1;
 		}
 
 	  trap_Cvar_SetValue( "color1", uitogamecode[uiInfo.effectsColor] );

@@ -89,6 +89,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define ART_FX_WHITE		"menu/art/fx_white"
 #define ART_FX_YELLOW		"menu/art/fx_yel"
 
+#define NUM_COLOR_EFFECTS 7
+
 #define ASSET_GRADIENTBAR "ui/assets/gradientbar2.tga"
 #define ASSET_SCROLLBAR             "ui/assets/scrollbar.tga"
 #define ASSET_SCROLLBAR_ARROWDOWN   "ui/assets/scrollbar_arrow_dwn_a.tga"
@@ -304,9 +306,9 @@ typedef struct {
   qboolean fontRegistered;
 
   // player settings
-	qhandle_t fxBasePic;
-  qhandle_t fxPic[7];
-	qhandle_t	crosshairShader[NUM_CROSSHAIRS];
+  qhandle_t fxBasePic;
+  qhandle_t fxPic[NUM_COLOR_EFFECTS];
+  qhandle_t crosshairShader[NUM_CROSSHAIRS];
 
 } cachedAssets_t;
 
