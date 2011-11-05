@@ -39,11 +39,7 @@ typedef unsigned int glIndex_t;
 // parallel on a dual cpu machine
 #define	SMP_FRAMES		2
 
-// 14 bits
-// can't be increased without changing bit packing for drawsurfs
-// see QSORT_SHADERNUM_SHIFT
-#define SHADERNUM_BITS	14
-#define MAX_SHADERS		(1<<SHADERNUM_BITS)
+#define	MAX_SHADERS				16384
 
 //#define MAX_SHADER_STATES 2048
 #define MAX_STATES_PER_SHADER 32
@@ -538,6 +534,7 @@ typedef enum {
 
 typedef struct drawSurf_s {
 	unsigned			sort;			// bit combination for fast compares
+	unsigned			shaderIndex;
 	surfaceType_t		*surface;		// any of surface*_t
 } drawSurf_t;
 
@@ -833,11 +830,18 @@ the bits are allocated as follows:
 2-6   : fog index
 7-16  : entity index
 17-30 : sorted shader index
+
+	ZTM - increased entity bits (for splitscreen), made room by only storing shader sort order (not sorted shader index).
+0-1   : dlightmap index (2 bits)
+2-6   : fog index (5 bits)
+7-18  : entity index (12 bits)
+19-23 : sorted order value (5 bits)
 */
-#define	QSORT_FOGNUM_SHIFT	2
+
+#define	QSORT_FOGNUM_SHIFT		2
 #define	QSORT_ENTITYNUM_SHIFT	7
-#define	QSORT_SHADERNUM_SHIFT	(QSORT_ENTITYNUM_SHIFT+GENTITYNUM_BITS)
-#if (QSORT_SHADERNUM_SHIFT+SHADERNUM_BITS) > 32
+#define	QSORT_ORDER_SHIFT		(QSORT_ENTITYNUM_SHIFT+ENTITYNUM_BITS)
+#if (QSORT_ORDER_SHIFT+5) > 32 // sort order is 5 bit
 	#error "Need to update sorting, too many bits."
 #endif
 
@@ -1164,8 +1168,10 @@ void R_AddLightningBoltSurfaces( trRefEntity_t *e );
 
 void R_AddPolygonSurfaces( void );
 
-void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
-					 int *fogNum, int *dlightMap );
+void R_ComposeSort( drawSurf_t *drawSurf, shader_t *shader, int sortOrder,
+					 int shiftedEntityNum, int fogIndex, int dlightMap );
+void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
+					 int *entityNum, int *fogNum, int *dlightMap );
 
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap );
 

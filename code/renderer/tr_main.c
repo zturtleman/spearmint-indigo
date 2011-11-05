@@ -857,6 +857,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	shader_t *shader;
 	int		fogNum;
 	int dlighted;
+	int sortOrder;
 	vec4_t clip, eye;
 	int i;
 	unsigned int pointOr = 0;
@@ -868,7 +869,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 
 	R_RotateForViewer();
 
-	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted );
+	R_DecomposeSort( drawSurf, &shader, &sortOrder, &entityNum, &fogNum, &dlighted );
 	RB_BeginSurface( shader, fogNum );
 	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 
@@ -1112,10 +1113,23 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
 	// the sort data is packed into a single 32 bit value so it can be
 	// compared quickly during the qsorting process
-	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT) 
-		| tr.shiftedEntityNum | ( fogIndex << QSORT_FOGNUM_SHIFT ) | (int)dlightMap;
+	R_ComposeSort(&tr.refdef.drawSurfs[index], shader, shader->sort,
+					tr.shiftedEntityNum, fogIndex, dlightMap);
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
+}
+
+/*
+=================
+R_ComposeSort
+=================
+*/
+void R_ComposeSort( drawSurf_t *drawSurf, shader_t *shader, int sortOrder,
+					 int shiftedEntityNum, int fogIndex, int dlightMap ) {
+	drawSurf->shaderIndex = shader->index;
+
+	drawSurf->sort = (sortOrder << QSORT_ORDER_SHIFT) 
+		| shiftedEntityNum | ( fogIndex << QSORT_FOGNUM_SHIFT ) | (int)dlightMap;
 }
 
 /*
@@ -1123,12 +1137,14 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 R_DecomposeSort
 =================
 */
-void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
-					 int *fogNum, int *dlightMap ) {
-	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
-	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
-	*entityNum = ( sort >> QSORT_ENTITYNUM_SHIFT ) & (MAX_GENTITIES-1);
-	*dlightMap = sort & 3;
+void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
+					 int *entityNum, int *fogNum, int *dlightMap ) {
+	*shader = tr.shaders[ drawSurf->shaderIndex ];
+
+	*sortOrder = ( drawSurf->sort >> QSORT_ORDER_SHIFT ) & 31;
+	*entityNum = ( drawSurf->sort >> QSORT_ENTITYNUM_SHIFT ) & MAX_ENTITIES;
+	*fogNum = ( drawSurf->sort >> QSORT_FOGNUM_SHIFT ) & 31;
+	*dlightMap = drawSurf->sort & 3;
 }
 
 /*
@@ -1141,6 +1157,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				fogNum;
 	int				entityNum;
 	int				dlighted;
+	int				sortOrder;
 	int				i;
 
 	// it is possible for some views to not have any surfaces
@@ -1163,15 +1180,19 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
-		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted );
+		R_DecomposeSort( (drawSurfs+i), &shader, &sortOrder, &entityNum, &fogNum, &dlighted );
 
-		if ( shader->sort > SS_PORTAL ) {
+		if ( sortOrder > SS_PORTAL ) {
 			break;
 		}
 
 		// no shader should ever have this sort type
-		if ( shader->sort == SS_BAD ) {
-			ri.Error (ERR_DROP, "Shader '%s'with sort == SS_BAD", shader->name );
+		if ( sortOrder == SS_BAD ) {
+			if ( shader->sort == SS_BAD ) {
+				ri.Error (ERR_DROP, "Shader '%s' with sort == SS_BAD", shader->name );
+			} else {
+				ri.Error (ERR_DROP, "Surface with shader '%s' has sort == SS_BAD", shader->name );
+			}
 		}
 
 		// if the mirror was completely clipped away, we may need to check another surface
