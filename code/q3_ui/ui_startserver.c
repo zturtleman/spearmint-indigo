@@ -833,6 +833,12 @@ static void ServerOptions_Start( void ) {
 	// set player's team
 	if( dedicated == 0 && s_serveroptions.gametype >= GT_TEAM ) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va( "wait 5; team %s\n", playerTeam_list[s_serveroptions.playerTeam[0].curvalue] ) );
+
+		for (n = 1; n < MAX_SPLITVIEW; ++n) {
+			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
+				trap_Cmd_ExecuteText( EXEC_APPEND, va( "%s %s\n", Com_LocalClientCvarName(n, "team"), playerTeam_list[s_serveroptions.playerTeam[n].curvalue] ) );
+			}
+		}
 	}
 }
 
@@ -1106,9 +1112,6 @@ static void ServerOptions_InitBotNames( void ) {
 
 	start = count = MAX_SPLITVIEW;	// skip the first few slots, reserved for humans
 
-#ifdef TA_SP
-	if (s_serveroptions.gametype != GT_SINGLE_PLAYER) {
-#endif
 	// get info for this map
 	arenaInfo = UI_GetArenaInfoByMap( s_serveroptions.mapnamebuffer );
 
