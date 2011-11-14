@@ -250,11 +250,14 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	// save the userinfo
 	Q_strncpyz( newcl->userinfo, userinfo, sizeof(newcl->userinfo) );
 
-	newcl->owner = newcl->gentity->r.owner = owner - svs.clients;
-	owner->local_clients[lc-1] = owner->gentity->r.local_clients[lc-1] = clientNum;
+	newcl->mainClient = owner;
+	owner->localClients[lc-1] = newcl;
+	newcl->gentity->r.mainClientNum = owner - svs.clients;
+	owner->gentity->r.localClientNums[lc-1] = clientNum;
 
 	for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-		newcl->local_clients[i] = newcl->gentity->r.local_clients[i] = -1;
+		newcl->localClients[i] = NULL;
+		newcl->gentity->r.localClientNums[i] = -1;
 	}
 
 	// get the game a chance to reject this connection or modify the userinfo
@@ -527,9 +530,14 @@ gotnewcl:
 	ent = SV_GentityNum( clientNum );
 	newcl->gentity = ent;
 
-	newcl->owner = newcl->gentity->r.owner = -1;
+	// Not an extra splitscreen client.
+	newcl->mainClient = NULL;
+	newcl->gentity->r.mainClientNum = -1;
+
+	// No extra splitscreen clients.
 	for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-		newcl->local_clients[i] = newcl->gentity->r.local_clients[i] = -1;
+		newcl->localClients[i] = NULL;
+		newcl->gentity->r.localClientNums[i] = -1;
 	}
 
 	// save the challenge
@@ -637,10 +645,10 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	const qboolean isBot = drop->netchan.remoteAddress.type == NA_BOT;
 
 	// Kick client's extra local clients
-	if (drop->owner == -1) {
+	if (!drop->mainClient) {
 		for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-			if (drop->local_clients[i] != -1) {
-				SV_DropClient( &svs.clients[drop->local_clients[i]], reason );
+			if (drop->localClients[i]) {
+				SV_DropClient( drop->localClients[i], reason );
 			}
 		}
 	}
@@ -674,16 +682,16 @@ void SV_DropClient( client_t *drop, const char *reason ) {
 	VM_Call( gvm, GAME_CLIENT_DISCONNECT, drop - svs.clients );
 
 	// Check if client is a extra local client
-	if (drop->owner != -1) {
-		client_t *cl = svs.clients + drop->owner;
+	if (drop->mainClient) {
+		client_t *cl = drop->mainClient;
 		int clientNum = drop - svs.clients;
 
 		for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-			if (cl->local_clients[i] == clientNum) {
-				cl->local_clients[i] = -1;
+			if (cl->localClients[i] == drop) {
+				cl->localClients[i] = NULL;
 			}
-			if (cl->gentity && cl->gentity->r.local_clients[i] == clientNum) {
-				cl->gentity->r.local_clients[i] = -1;
+			if (cl->gentity && cl->gentity->r.localClientNums[i] == clientNum) {
+				cl->gentity->r.localClientNums[i] = -1;
 			}
 		}
 	} else {
@@ -751,11 +759,11 @@ static void SV_SendClientGameState( client_t *client ) {
 	client->gamestateMessageNum = client->netchan.outgoingSequence;
 
 	for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-		if (client->local_clients[i] == -1) {
+		if (!client->localClients[i]) {
 			continue;
 		}
 
-		lc = &svs.clients[client->local_clients[i]];
+		lc = client->localClients[i];
 
 		Com_DPrintf ("SV_SendClientGameState() for %s\n", lc->name);
 		Com_DPrintf( "Going from CS_CONNECTED to CS_PRIMED for %s\n", lc->name );
@@ -842,7 +850,7 @@ void SV_ClientEnterWorld( client_t *client, usercmd_t *cmd ) {
 
 	// Set local client indexes (must be done after game resets ent->r).
 	for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-		client->gentity->r.local_clients[i] = client->local_clients[i];
+		client->gentity->r.localClientNums[i] = client->localClients[i] ? client->localClients[i] - svs.clients : -1;
 	}
 
 	client->deltaMessage = -1;
@@ -1400,12 +1408,12 @@ static void SV_VerifyPaks_f( client_t *cl ) {
 
 			// Copy pure info to extra local clients
 			for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-				if (cl->local_clients[i] == -1) {
+				if (!cl->localClients[i]) {
 					continue;
 				}
 
-				svs.clients[cl->local_clients[i]].gotCP = qtrue;
-				svs.clients[cl->local_clients[i]].pureAuthentic = 1;
+				cl->localClients[i]->gotCP = qtrue;
+				cl->localClients[i]->pureAuthentic = 1;
 			}
 		} 
 		else {
@@ -1552,11 +1560,11 @@ SV_UpdateUserinfo2_f
 static void SV_UpdateUserinfo2_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[0] == -1) {
+	lc = cl->localClients[0];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[0]];
 
 	Q_strncpyz( lc->userinfo, Cmd_Argv(1), sizeof(lc->userinfo) );
 
@@ -1573,11 +1581,11 @@ SV_UpdateUserinfo3_f
 static void SV_UpdateUserinfo3_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[1] == -1) {
+	lc = cl->localClients[1];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[1]];
 
 	Q_strncpyz( lc->userinfo, Cmd_Argv(1), sizeof(lc->userinfo) );
 
@@ -1594,11 +1602,11 @@ SV_UpdateUserinfo4_f
 static void SV_UpdateUserinfo4_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[2] == -1) {
+	lc = cl->localClients[2];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[2]];
 
 	Q_strncpyz( lc->userinfo, Cmd_Argv(1), sizeof(lc->userinfo) );
 
@@ -1615,11 +1623,11 @@ SV_DropOut2_f
 void SV_DropOut2_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[0] == -1) {
+	lc = cl->localClients[0];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[0]];
 
 	SV_DropClient(lc, "dropped out");
 }
@@ -1632,11 +1640,11 @@ SV_DropOut3_f
 void SV_DropOut3_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[1] == -1) {
+	lc = cl->localClients[1];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[1]];
 
 	SV_DropClient(lc, "dropped out");
 }
@@ -1649,11 +1657,11 @@ SV_DropOut4_f
 void SV_DropOut4_f( client_t *cl ) {
 	client_t *lc;
 
-	if (cl->local_clients[2] == -1) {
+	lc = cl->localClients[2];
+
+	if (!lc) {
 		return;
 	}
-
-	lc = &svs.clients[cl->local_clients[2]];
 
 	SV_DropClient(lc, "dropped out");
 }
@@ -1664,7 +1672,7 @@ SV_DropIn2_f
 ==================
 */
 void SV_DropIn2_f( client_t *cl ) {
-	if (cl->local_clients[0] != -1) {
+	if (cl->localClients[0]) {
 		return;
 	}
 
@@ -1677,7 +1685,7 @@ SV_DropIn3_f
 ==================
 */
 void SV_DropIn3_f( client_t *cl ) {
-	if (cl->local_clients[1] != -1) {
+	if (cl->localClients[1]) {
 		return;
 	}
 
@@ -1690,7 +1698,7 @@ SV_DropIn3_f
 ==================
 */
 void SV_DropIn4_f( client_t *cl ) {
-	if (cl->local_clients[2] != -1) {
+	if (cl->localClients[2]) {
 		return;
 	}
 
@@ -2223,11 +2231,11 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 				if (localClient < 0 || localClient >= MAX_SPLITVIEW-1) {
 					Com_DPrintf( S_COLOR_YELLOW "WARNING: localClient byte out of range for client %i\n", (int) (cl - svs.clients) );
 					break;
-				} else if (cl->local_clients[localClient] == -1) {
+				} else if (!cl->localClients[localClient]) {
 					Com_DPrintf( S_COLOR_YELLOW "WARNING: localClient move for non-existant local client %d from client %i\n", localClient, (int) (cl - svs.clients) );
 					break;
 				} else {
-					SV_UserMove( &svs.clients[cl->local_clients[localClient]], msg, (c == clc_moveLocal), cl );
+					SV_UserMove( cl->localClients[localClient], msg, (c == clc_moveLocal), cl );
 				}
 			}
 		}

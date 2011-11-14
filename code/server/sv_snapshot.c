@@ -528,11 +528,11 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 
 	// Add splitscreen clients
 	for (i = 1; i < MAX_SPLITVIEW; i++) {
-		if (client->local_clients[i-1] == -1) {
+		if (!client->localClients[i-1]) {
 			frame->lcIndex[i] = -1;
 			continue;
 		}
-		ps = SV_GameClientNum( client->local_clients[i-1] );
+		ps = SV_GameClientNum( client->localClients[i-1] - svs.clients );
 		frame->pss[frame->numPSs] = *ps;
 		frame->lcIndex[i] = frame->numPSs;
 		frame->numPSs++;
@@ -550,7 +550,7 @@ static void SV_BuildClientSnapshot( client_t *client ) {
 		}
 
 		for (k = 1; k < MAX_SPLITVIEW; k++) {
-			if (client->local_clients[k-1] == i) {
+			if (client->localClients[k-1] == i) {
 				break;
 			}
 		}
@@ -714,7 +714,7 @@ void SV_SendClientSnapshot( client_t *client ) {
 	msg_t		msg;
 
 	// Splitscreen clients are sent with main client.
-	if (client->owner != -1) {
+	if (client->mainClient) {
 		return;
 	}
 
