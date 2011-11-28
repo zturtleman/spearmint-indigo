@@ -5,7 +5,7 @@
 #
 
 # ioquake3 svn version that this is based on
-IOQ3_REVISION = 2198
+IOQ3_REVISION = 2202
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
