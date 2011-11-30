@@ -3793,7 +3793,7 @@ int BotModelMinsMaxs(int modelindex, int eType, int contents, vec3_t mins, vec3_
 		if ( eType && ent->s.eType != eType) {
 			continue;
 		}
-		if ( contents && ent->r.contents != contents) {
+		if ( contents && ent->s.contents != contents) {
 			continue;
 		}
 		if (ent->s.modelindex == modelindex) {

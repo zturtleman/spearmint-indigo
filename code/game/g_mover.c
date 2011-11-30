@@ -913,7 +913,7 @@ void Think_SpawnNewDoorTrigger( gentity_t *ent ) {
 	VectorCopy (mins, other->r.mins);
 	VectorCopy (maxs, other->r.maxs);
 	other->parent = ent;
-	other->r.contents = CONTENTS_TRIGGER;
+	other->s.contents = CONTENTS_TRIGGER;
 	other->touch = Touch_DoorTrigger;
 	// remember the thinnest axis
 	other->count = best;
@@ -1075,7 +1075,7 @@ void SpawnPlatTrigger( gentity_t *ent ) {
 	trigger = G_Spawn();
 	trigger->classname = "plat_trigger";
 	trigger->touch = Touch_PlatCenterTrigger;
-	trigger->r.contents = CONTENTS_TRIGGER;
+	trigger->s.contents = CONTENTS_TRIGGER;
 	trigger->parent = ent;
 	
 	tmin[0] = ent->pos1[0] + ent->r.mins[0] + 33;

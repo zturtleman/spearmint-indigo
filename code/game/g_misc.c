@@ -361,7 +361,7 @@ void DropPortalDestination( gentity_t *player ) {
 	ent->classname = "hi_portal destination";
 	ent->s.pos.trType = TR_STATIONARY;
 
-	ent->r.contents = CONTENTS_CORPSE;
+	ent->s.contents = CONTENTS_CORPSE;
 	ent->takedamage = qtrue;
 	ent->health = 200;
 	ent->die = PortalDie;
@@ -454,7 +454,7 @@ void DropPortalSource( gentity_t *player ) {
 	ent->classname = "hi_portal source";
 	ent->s.pos.trType = TR_STATIONARY;
 
-	ent->r.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
+	ent->s.contents = CONTENTS_CORPSE | CONTENTS_TRIGGER;
 	ent->takedamage = qtrue;
 	ent->health = 200;
 	ent->die = PortalDie;

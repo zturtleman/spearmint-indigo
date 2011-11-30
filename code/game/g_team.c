@@ -1314,7 +1314,7 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 	ent->flags = FL_NO_KNOCKBACK;
 
 	if( g_gametype.integer == GT_OBELISK ) {
-		ent->r.contents = CONTENTS_SOLID;
+		ent->s.contents = CONTENTS_SOLID;
 		ent->takedamage = qtrue;
 		ent->health = g_obeliskHealth.integer;
 		ent->die = ObeliskDie;
@@ -1323,7 +1323,7 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 		ent->nextthink = level.time + g_obeliskRegenPeriod.integer * 1000;
 	}
 	if( g_gametype.integer == GT_HARVESTER ) {
-		ent->r.contents = CONTENTS_TRIGGER;
+		ent->s.contents = CONTENTS_TRIGGER;
 		ent->touch = ObeliskTouch;
 	}
 

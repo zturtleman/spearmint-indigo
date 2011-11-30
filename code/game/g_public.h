@@ -66,8 +66,6 @@ typedef struct {
 	qboolean	bmodel;				// if false, assume an explicit mins / maxs bounding box
 									// only set by trap_SetBrushModel
 	vec3_t		mins, maxs;
-	int			contents;			// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
-									// a non-solid entity should set to 0
 
 	vec3_t		absmin, absmax;		// derived from mins/maxs and origin + rotation
 

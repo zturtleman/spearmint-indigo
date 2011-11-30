@@ -1162,6 +1162,7 @@ typedef struct playerState_s {
 	vec3_t		grapplePoint;	// location of grapple to pull towards if PMF_GRAPPLE_PULL
 
 	int			eFlags;			// copied to entityState_t->eFlags
+	int			contents;		// copied to entityState_t->contents
 
 	int			eventSequence;	// pmove generated events
 	int			events[MAX_PS_EVENTS];
@@ -1300,6 +1301,9 @@ typedef struct entityState_s {
 	int		modelindex2;
 	int		clientNum;		// 0 to (MAX_CLIENTS - 1), for players and corpses
 	int		frame;
+
+	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
+							// a non-solid entity should set to 0
 
 	int		solid;			// for client side prediction, trap_linkentity sets this properly
 

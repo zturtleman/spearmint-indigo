@@ -1501,7 +1501,7 @@ int BotAIStartFrame(int time) {
 			}
 #ifdef MISSIONPACK
 			// never link prox mine triggers
-			if (ent->r.contents == CONTENTS_TRIGGER) {
+			if (ent->s.contents == CONTENTS_TRIGGER) {
 				if (ent->touch == ProximityMine_Trigger) {
 					trap_BotLibUpdateEntity(i, NULL);
 					continue;

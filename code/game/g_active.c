@@ -265,7 +265,7 @@ void	G_TouchTriggers( gentity_t *ent ) {
 		if ( !hit->touch && !ent->touch ) {
 			continue;
 		}
-		if ( !( hit->r.contents & CONTENTS_TRIGGER ) ) {
+		if ( !( hit->s.contents & CONTENTS_TRIGGER ) ) {
 			continue;
 		}
 

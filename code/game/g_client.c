@@ -479,7 +479,7 @@ void CopyToBodyQue( gentity_t *ent ) {
 	VectorCopy (ent->r.absmax, body->r.absmax);
 
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;
-	body->r.contents = CONTENTS_CORPSE;
+	body->s.contents = CONTENTS_CORPSE;
 	body->r.ownerNum = ent->s.number;
 
 	body->nextthink = level.time + 5000;
@@ -1163,13 +1163,13 @@ void ClientSpawn(gentity_t *ent) {
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
+	client->ps.contents = CONTENTS_BODY;
 
 	ent->s.groundEntityNum = ENTITYNUM_NONE;
 	ent->client = &level.clients[index];
 	ent->takedamage = qtrue;
 	ent->inuse = qtrue;
 	ent->classname = "player";
-	ent->r.contents = CONTENTS_BODY;
 	ent->clipmask = MASK_PLAYERSOLID;
 	ent->die = player_die;
 	ent->waterlevel = 0;

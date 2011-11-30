@@ -39,11 +39,11 @@ clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
 	}
 	if ( ent->r.svFlags & SVF_CAPSULE ) {
 		// create a temp capsule from bounding box sizes
-		return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qtrue );
+		return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qtrue, ent->s.contents );
 	}
 
 	// create a temp tree from bounding box sizes
-	return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qfalse );
+	return CM_TempBoxModel( ent->r.mins, ent->r.maxs, qfalse, ent->s.contents );
 }
 
 
@@ -222,7 +222,7 @@ void SV_LinkEntity( sharedEntity_t *gEnt ) {
 	// encode the size into the entityState_t for client prediction
 	if ( gEnt->r.bmodel ) {
 		gEnt->s.solid = SOLID_BMODEL;		// a solid_box will never create this value
-	} else if ( gEnt->r.contents & ( CONTENTS_SOLID | CONTENTS_BODY ) ) {
+	} else if ( gEnt->s.contents & ( CONTENTS_SOLID | CONTENTS_BODY ) ) {
 		// assume that x/y are equal and symetric
 		i = gEnt->r.maxs[0];
 		if (i<1)
@@ -473,7 +473,7 @@ void SV_ClipToEntity( trace_t *trace, const vec3_t start, const vec3_t mins, con
 
 	// if it doesn't have any brushes of a type we
 	// are looking for, ignore it
-	if ( ! ( contentmask & touch->r.contents ) ) {
+	if ( ! ( contentmask & touch->s.contents ) ) {
 		trace->fraction = 1.0;
 		return;
 	}
@@ -545,7 +545,7 @@ static void SV_ClipMoveToEntities( moveclip_t *clip ) {
 
 		// if it doesn't have any brushes of a type we
 		// are looking for, ignore it
-		if ( ! ( clip->contentmask & touch->r.contents ) ) {
+		if ( ! ( clip->contentmask & touch->s.contents ) ) {
 			continue;
 		}
 

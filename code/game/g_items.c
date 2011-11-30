@@ -368,7 +368,7 @@ void RespawnItem( gentity_t *ent ) {
 			;
 	}
 
-	ent->r.contents = CONTENTS_TRIGGER;
+	ent->s.contents = CONTENTS_TRIGGER;
 	ent->s.eFlags &= ~EF_NODRAW;
 	ent->r.svFlags &= ~SVF_NOCLIENT;
 	trap_LinkEntity (ent);
@@ -506,7 +506,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	if ( ent->wait == -1 ) {
 		ent->r.svFlags |= SVF_NOCLIENT;
 		ent->s.eFlags |= EF_NODRAW;
-		ent->r.contents = 0;
+		ent->s.contents = 0;
 		ent->unlinkAfterEvent = qtrue;
 		return;
 	}
@@ -534,7 +534,7 @@ void Touch_Item (gentity_t *ent, gentity_t *other, trace_t *trace) {
 	// to be placed on movers.
 	ent->r.svFlags |= SVF_NOCLIENT;
 	ent->s.eFlags |= EF_NODRAW;
-	ent->r.contents = 0;
+	ent->s.contents = 0;
 
 	// ZOID
 	// A negative respawn times means to never respawn this item (but don't 
@@ -573,7 +573,7 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 	dropped->item = item;
 	VectorSet (dropped->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS);
 	VectorSet (dropped->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS);
-	dropped->r.contents = CONTENTS_TRIGGER;
+	dropped->s.contents = CONTENTS_TRIGGER;
 
 	dropped->touch = Touch_Item;
 
@@ -658,7 +658,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
 	ent->s.modelindex2 = 0; // zero indicates this isn't a dropped item
 
-	ent->r.contents = CONTENTS_TRIGGER;
+	ent->s.contents = CONTENTS_TRIGGER;
 	ent->touch = Touch_Item;
 	// useing an item causes it to respawn
 	ent->use = Use_Item;
@@ -685,7 +685,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	// team slaves and targeted items aren't present at start
 	if ( ( ent->flags & FL_TEAMSLAVE ) || ent->targetname ) {
 		ent->s.eFlags |= EF_NODRAW;
-		ent->r.contents = 0;
+		ent->s.contents = 0;
 		return;
 	}
 
@@ -695,7 +695,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 
 		respawn = 45 + crandom() * 15;
 		ent->s.eFlags |= EF_NODRAW;
-		ent->r.contents = 0;
+		ent->s.contents = 0;
 		ent->nextthink = level.time + respawn * 1000;
 		ent->think = RespawnItem;
 		return;

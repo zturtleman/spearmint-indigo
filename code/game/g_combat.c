@@ -200,7 +200,7 @@ void TossClientPersistantPowerups( gentity_t *ent ) {
 
 	powerup->r.svFlags &= ~SVF_NOCLIENT;
 	powerup->s.eFlags &= ~EF_NODRAW;
-	powerup->r.contents = CONTENTS_TRIGGER;
+	powerup->s.contents = CONTENTS_TRIGGER;
 	trap_LinkEntity( powerup );
 
 	ent->client->ps.stats[STAT_PERSISTANT_POWERUP] = 0;
@@ -256,7 +256,8 @@ void GibEntity( gentity_t *self, int killer ) {
 	G_AddEvent( self, EV_GIB_PLAYER, killer );
 	self->takedamage = qfalse;
 	self->s.eType = ET_INVISIBLE;
-	self->r.contents = 0;
+	self->client->ps.contents = 0;
+	self->s.contents = 0;
 }
 
 /*
@@ -591,7 +592,7 @@ void player_die( gentity_t *self, gentity_t *inflictor, gentity_t *attacker, int
 
 	self->s.weapon = WP_NONE;
 	self->s.powerups = 0;
-	self->r.contents = CONTENTS_CORPSE;
+	self->client->ps.contents = self->s.contents = CONTENTS_CORPSE;
 
 	self->s.angles[0] = 0;
 	self->s.angles[2] = 0;

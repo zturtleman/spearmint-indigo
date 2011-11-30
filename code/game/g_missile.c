@@ -189,7 +189,7 @@ static void ProximityMine_Activate( gentity_t *ent ) {
 	G_SetOrigin( trigger, ent->s.pos.trBase );
 
 	trigger->parent = ent;
-	trigger->r.contents = CONTENTS_TRIGGER;
+	trigger->s.contents = CONTENTS_TRIGGER;
 	trigger->touch = ProximityMine_Trigger;
 
 	trap_LinkEntity (trigger);

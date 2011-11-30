@@ -1525,6 +1525,9 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 		}
 	}
 
+	s->solid = 0; // ZTM: FIXME
+
+	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
 }
@@ -1605,6 +1608,9 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		}
 	}
 
+	s->solid = 0; // ZTM: FIXME
+
+	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
 }

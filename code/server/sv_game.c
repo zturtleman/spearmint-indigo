@@ -129,7 +129,7 @@ void SV_SetBrushModel( sharedEntity_t *ent, const char *name ) {
 	VectorCopy (maxs, ent->r.maxs);
 	ent->r.bmodel = qtrue;
 
-	ent->r.contents = -1;		// we don't know exactly what is in the brushes
+	ent->s.contents = -1;		// we don't know exactly what is in the brushes
 
 	SV_LinkEntity( ent );		// FIXME: remove
 }
