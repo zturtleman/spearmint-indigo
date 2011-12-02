@@ -723,6 +723,7 @@ void SendPendingPredictableEvents( playerState_t *ps ) {
 		t->s.eType = ET_EVENTS + event;
 		t->s.eFlags |= EF_PLAYER_EVENT;
 		t->s.otherEntityNum = ps->clientNum;
+		t->s.contents = 0;
 		// send to everyone except the client who generated the event
 		t->r.svFlags |= SVF_NOTSINGLECLIENT;
 		t->r.singleClient = ps->clientNum;
