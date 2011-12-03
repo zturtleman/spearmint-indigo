@@ -1525,11 +1525,18 @@ void BG_PlayerStateToEntityState( playerState_t *ps, entityState_t *s, qboolean 
 		}
 	}
 
-	s->solid = 0; // ZTM: FIXME
-
 	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
+
+	s->bmodel = qfalse;
+
+	VectorCopy( ps->mins, s->mins );
+	VectorCopy( ps->maxs, s->maxs );
+	if ( snap ) {
+		SnapVector( s->mins );
+		SnapVector( s->maxs );
+	}
 }
 
 /*
@@ -1608,9 +1615,16 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		}
 	}
 
-	s->solid = 0; // ZTM: FIXME
-
 	s->contents = ps->contents;
 	s->loopSound = ps->loopSound;
 	s->generic1 = ps->generic1;
+
+	s->bmodel = qfalse;
+
+	VectorCopy( ps->mins, s->mins );
+	VectorCopy( ps->maxs, s->maxs );
+	if ( snap ) {
+		SnapVector( s->mins );
+		SnapVector( s->maxs );
+	}
 }

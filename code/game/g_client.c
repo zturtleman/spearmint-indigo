@@ -473,8 +473,8 @@ void CopyToBodyQue( gentity_t *ent ) {
 	}
 
 	body->r.svFlags = ent->r.svFlags;
-	VectorCopy (ent->r.mins, body->r.mins);
-	VectorCopy (ent->r.maxs, body->r.maxs);
+	VectorCopy (ent->s.mins, body->s.mins);
+	VectorCopy (ent->s.maxs, body->s.maxs);
 	VectorCopy (ent->r.absmin, body->r.absmin);
 	VectorCopy (ent->r.absmax, body->r.absmax);
 
@@ -1176,8 +1176,8 @@ void ClientSpawn(gentity_t *ent) {
 	ent->watertype = 0;
 	ent->flags = 0;
 	
-	VectorCopy (playerMins, ent->r.mins);
-	VectorCopy (playerMaxs, ent->r.maxs);
+	VectorCopy (playerMins, client->ps.mins);
+	VectorCopy (playerMaxs, client->ps.maxs);
 
 	client->ps.clientNum = index;
 

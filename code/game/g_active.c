@@ -256,8 +256,8 @@ void	G_TouchTriggers( gentity_t *ent ) {
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	// can't use ent->absmin, because that has a one unit pad
-	VectorAdd( ent->client->ps.origin, ent->r.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->r.maxs, maxs );
+	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
 
 	for ( i=0 ; i<num ; i++ ) {
 		hit = &g_entities[touch[i]];
@@ -873,11 +873,11 @@ void ClientThink_real( gentity_t *ent ) {
 			vec3_t maxs = { 42, 42, 42 };
 			vec3_t oldmins, oldmaxs;
 
-			VectorCopy (ent->r.mins, oldmins);
-			VectorCopy (ent->r.maxs, oldmaxs);
+			VectorCopy (ent->s.mins, oldmins);
+			VectorCopy (ent->s.maxs, oldmaxs);
 			// expand
-			VectorCopy (mins, ent->r.mins);
-			VectorCopy (maxs, ent->r.maxs);
+			VectorCopy (mins, ent->s.mins);
+			VectorCopy (maxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 			// check if this would get anyone stuck in this player
 			if ( !StuckInOtherClient(ent) ) {
@@ -885,8 +885,8 @@ void ClientThink_real( gentity_t *ent ) {
 				client->ps.pm_flags |= PMF_INVULEXPAND;
 			}
 			// set back
-			VectorCopy (oldmins, ent->r.mins);
-			VectorCopy (oldmaxs, ent->r.maxs);
+			VectorCopy (oldmins, ent->s.mins);
+			VectorCopy (oldmaxs, ent->s.maxs);
 			trap_LinkEntity(ent);
 		}
 	}
@@ -949,9 +949,6 @@ void ClientThink_real( gentity_t *ent ) {
 
 	// use the snapped origin for linking so it matches client predicted versions
 	VectorCopy( ent->s.pos.trBase, ent->r.currentOrigin );
-
-	VectorCopy (pm.mins, ent->r.mins);
-	VectorCopy (pm.maxs, ent->r.maxs);
 
 	ent->waterlevel = pm.waterlevel;
 	ent->watertype = pm.watertype;

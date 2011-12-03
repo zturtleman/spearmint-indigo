@@ -855,7 +855,13 @@ netField_t	entityStateFields[] =
 { NETF(origin[1]), 0 },
 { NETF(origin[2]), 0 },
 { NETF(contents), 32 },
-{ NETF(solid), 24 },
+{ NETF(bmodel), 1 },
+{ NETF(mins[0]), 0 },
+{ NETF(mins[1]), 0 },
+{ NETF(mins[2]), 0 },
+{ NETF(maxs[0]), 0 },
+{ NETF(maxs[1]), 0 },
+{ NETF(maxs[2]), 0 },
 { NETF(powerups), MAX_POWERUPS },
 { NETF(modelindex), 8 },
 { NETF(otherEntityNum2), GENTITYNUM_BITS },
@@ -1193,7 +1199,13 @@ netField_t	playerStateFields[] =
 { PSF(grapplePoint[1]), 0 },
 { PSF(grapplePoint[2]), 0 },
 { PSF(jumppad_ent), 10 },
-{ PSF(loopSound), 16 }
+{ PSF(loopSound), 16 },
+{ PSF(mins[0]), 0 },
+{ PSF(mins[1]), 0 },
+{ PSF(mins[2]), 0 },
+{ PSF(maxs[0]), 0 },
+{ PSF(maxs[1]), 0 },
+{ PSF(maxs[2]), 0 }
 };
 
 /*

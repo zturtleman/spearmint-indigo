@@ -1307,8 +1307,8 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 	VectorCopy( origin, ent->s.pos.trBase );
 	VectorCopy( origin, ent->r.currentOrigin );
 
-	VectorSet( ent->r.mins, -15, -15, 0 );
-	VectorSet( ent->r.maxs, 15, 15, 87 );
+	VectorSet( ent->s.mins, -15, -15, 0 );
+	VectorSet( ent->s.maxs, 15, 15, 87 );
 
 	ent->s.eType = ET_GENERAL;
 	ent->flags = FL_NO_KNOCKBACK;
@@ -1337,7 +1337,7 @@ gentity_t *SpawnObelisk( vec3_t origin, int team, int spawnflags) {
 
 		// drop to floor
 		VectorSet( dest, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2] - 4096 );
-		trap_Trace( &tr, ent->s.origin, ent->r.mins, ent->r.maxs, dest, ent->s.number, MASK_SOLID );
+		trap_Trace( &tr, ent->s.origin, ent->s.mins, ent->s.maxs, dest, ent->s.number, MASK_SOLID );
 		if ( tr.startsolid ) {
 			ent->s.origin[2] -= 1;
 			G_Printf( "SpawnObelisk: %s startsolid at %s\n", ent->classname, vtos(ent->s.origin) );

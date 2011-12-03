@@ -206,8 +206,8 @@ The portal surface nearest this entity will show a view from the targeted misc_p
 This must be within 64 world units of the surface!
 */
 void SP_misc_portal_surface(gentity_t *ent) {
-	VectorClear( ent->r.mins );
-	VectorClear( ent->r.maxs );
+	VectorClear( ent->s.mins );
+	VectorClear( ent->s.maxs );
 	trap_LinkEntity (ent);
 
 	ent->r.svFlags = SVF_PORTAL;
@@ -228,8 +228,8 @@ The target for a misc_portal_director.  You can set either angles or target anot
 void SP_misc_portal_camera(gentity_t *ent) {
 	float	roll;
 
-	VectorClear( ent->r.mins );
-	VectorClear( ent->r.maxs );
+	VectorClear( ent->s.mins );
+	VectorClear( ent->s.maxs );
 	trap_LinkEntity (ent);
 
 	G_SpawnFloat( "roll", "0", &roll );
@@ -355,8 +355,8 @@ void DropPortalDestination( gentity_t *player ) {
 	VectorCopy( player->s.pos.trBase, snapped );
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
-	VectorCopy( player->r.mins, ent->r.mins );
-	VectorCopy( player->r.maxs, ent->r.maxs );
+	VectorCopy( player->s.mins, ent->s.mins );
+	VectorCopy( player->s.maxs, ent->s.maxs );
 
 	ent->classname = "hi_portal destination";
 	ent->s.pos.trType = TR_STATIONARY;
@@ -448,8 +448,8 @@ void DropPortalSource( gentity_t *player ) {
 	VectorCopy( player->s.pos.trBase, snapped );
 	SnapVector( snapped );
 	G_SetOrigin( ent, snapped );
-	VectorCopy( player->r.mins, ent->r.mins );
-	VectorCopy( player->r.maxs, ent->r.maxs );
+	VectorCopy( player->s.mins, ent->s.mins );
+	VectorCopy( player->s.maxs, ent->s.maxs );
 
 	ent->classname = "hi_portal source";
 	ent->s.pos.trType = TR_STATIONARY;

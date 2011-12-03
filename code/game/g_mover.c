@@ -60,9 +60,9 @@ gentity_t	*G_TestEntityPosition( gentity_t *ent ) {
 		mask = MASK_SOLID;
 	}
 	if ( ent->client ) {
-		trap_Trace( &tr, ent->client->ps.origin, ent->r.mins, ent->r.maxs, ent->client->ps.origin, ent->s.number, mask );
+		trap_Trace( &tr, ent->client->ps.origin, ent->s.mins, ent->s.maxs, ent->client->ps.origin, ent->s.number, mask );
 	} else {
-		trap_Trace( &tr, ent->s.pos.trBase, ent->r.mins, ent->r.maxs, ent->s.pos.trBase, ent->s.number, mask );
+		trap_Trace( &tr, ent->s.pos.trBase, ent->s.mins, ent->s.maxs, ent->s.pos.trBase, ent->s.number, mask );
 	}
 	
 	if (tr.startsolid)
@@ -281,7 +281,7 @@ qboolean G_MoverPush( gentity_t *pusher, vec3_t move, vec3_t amove, gentity_t **
 		|| amove[0] || amove[1] || amove[2] ) {
 		float		radius;
 
-		radius = RadiusFromBounds( pusher->r.mins, pusher->r.maxs );
+		radius = RadiusFromBounds( pusher->s.mins, pusher->s.maxs );
 		for ( i = 0 ; i < 3 ; i++ ) {
 			mins[i] = pusher->r.currentOrigin[i] + move[i] - radius;
 			maxs[i] = pusher->r.currentOrigin[i] + move[i] + radius;
@@ -910,8 +910,8 @@ void Think_SpawnNewDoorTrigger( gentity_t *ent ) {
 	// create a trigger with this size
 	other = G_Spawn ();
 	other->classname = "door_trigger";
-	VectorCopy (mins, other->r.mins);
-	VectorCopy (maxs, other->r.maxs);
+	VectorCopy (mins, other->s.mins);
+	VectorCopy (maxs, other->s.maxs);
 	other->parent = ent;
 	other->s.contents = CONTENTS_TRIGGER;
 	other->touch = Touch_DoorTrigger;
@@ -978,7 +978,7 @@ void SP_func_door (gentity_t *ent) {
 	abs_movedir[0] = fabs(ent->movedir[0]);
 	abs_movedir[1] = fabs(ent->movedir[1]);
 	abs_movedir[2] = fabs(ent->movedir[2]);
-	VectorSubtract( ent->r.maxs, ent->r.mins, size );
+	VectorSubtract( ent->s.maxs, ent->s.mins, size );
 	distance = DotProduct( abs_movedir, size ) - lip;
 	VectorMA( ent->pos1, distance, ent->movedir, ent->pos2 );
 
@@ -1078,25 +1078,25 @@ void SpawnPlatTrigger( gentity_t *ent ) {
 	trigger->s.contents = CONTENTS_TRIGGER;
 	trigger->parent = ent;
 	
-	tmin[0] = ent->pos1[0] + ent->r.mins[0] + 33;
-	tmin[1] = ent->pos1[1] + ent->r.mins[1] + 33;
-	tmin[2] = ent->pos1[2] + ent->r.mins[2];
+	tmin[0] = ent->pos1[0] + ent->s.mins[0] + 33;
+	tmin[1] = ent->pos1[1] + ent->s.mins[1] + 33;
+	tmin[2] = ent->pos1[2] + ent->s.mins[2];
 
-	tmax[0] = ent->pos1[0] + ent->r.maxs[0] - 33;
-	tmax[1] = ent->pos1[1] + ent->r.maxs[1] - 33;
-	tmax[2] = ent->pos1[2] + ent->r.maxs[2] + 8;
+	tmax[0] = ent->pos1[0] + ent->s.maxs[0] - 33;
+	tmax[1] = ent->pos1[1] + ent->s.maxs[1] - 33;
+	tmax[2] = ent->pos1[2] + ent->s.maxs[2] + 8;
 
 	if ( tmax[0] <= tmin[0] ) {
-		tmin[0] = ent->pos1[0] + (ent->r.mins[0] + ent->r.maxs[0]) *0.5;
+		tmin[0] = ent->pos1[0] + (ent->s.mins[0] + ent->s.maxs[0]) *0.5;
 		tmax[0] = tmin[0] + 1;
 	}
 	if ( tmax[1] <= tmin[1] ) {
-		tmin[1] = ent->pos1[1] + (ent->r.mins[1] + ent->r.maxs[1]) *0.5;
+		tmin[1] = ent->pos1[1] + (ent->s.mins[1] + ent->s.maxs[1]) *0.5;
 		tmax[1] = tmin[1] + 1;
 	}
 	
-	VectorCopy (tmin, trigger->r.mins);
-	VectorCopy (tmax, trigger->r.maxs);
+	VectorCopy (tmin, trigger->s.mins);
+	VectorCopy (tmax, trigger->s.maxs);
 
 	trap_LinkEntity (trigger);
 }
@@ -1132,7 +1132,7 @@ void SP_func_plat (gentity_t *ent) {
 	trap_SetBrushModel( ent, ent->model );
 
 	if ( !G_SpawnFloat( "height", "0", &height ) ) {
-		height = (ent->r.maxs[2] - ent->r.mins[2]) - lip;
+		height = (ent->s.maxs[2] - ent->s.mins[2]) - lip;
 	}
 
 	// pos1 is the rest (bottom) position, pos2 is the top
@@ -1224,7 +1224,7 @@ void SP_func_button( gentity_t *ent ) {
 	abs_movedir[0] = fabs(ent->movedir[0]);
 	abs_movedir[1] = fabs(ent->movedir[1]);
 	abs_movedir[2] = fabs(ent->movedir[2]);
-	VectorSubtract( ent->r.maxs, ent->r.mins, size );
+	VectorSubtract( ent->s.maxs, ent->s.mins, size );
 	distance = abs_movedir[0] * size[0] + abs_movedir[1] * size[1] + abs_movedir[2] * size[2] - lip;
 	VectorMA (ent->pos1, distance, ent->movedir, ent->pos2);
 
@@ -1608,7 +1608,7 @@ void SP_func_pendulum(gentity_t *ent) {
 	trap_SetBrushModel( ent, ent->model );
 
 	// find pendulum length
-	length = fabs( ent->r.mins[2] );
+	length = fabs( ent->s.mins[2] );
 	if ( length < 8 ) {
 		length = 8;
 	}

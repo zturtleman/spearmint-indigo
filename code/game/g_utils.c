@@ -528,8 +528,8 @@ void G_KillBox (gentity_t *ent) {
 	gentity_t	*hit;
 	vec3_t		mins, maxs;
 
-	VectorAdd( ent->client->ps.origin, ent->r.mins, mins );
-	VectorAdd( ent->client->ps.origin, ent->r.maxs, maxs );
+	VectorAdd( ent->client->ps.origin, ent->s.mins, mins );
+	VectorAdd( ent->client->ps.origin, ent->s.maxs, maxs );
 	num = trap_EntitiesInBox( mins, maxs, touch, MAX_GENTITIES );
 
 	for (i=0 ; i<num ; i++) {

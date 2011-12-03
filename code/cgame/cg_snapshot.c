@@ -73,57 +73,6 @@ static void CG_TransitionEntity( centity_t *cent ) {
 
 
 /*
-===============
-CG_SetPlayerSolid
-
-Client side prediction of player solid.
-Must set for local client perdiction to work correctly
-and so local clients can be found by CG_ScanForCrosshairEntity
-===============
-*/
-void CG_SetPlayerSolid(playerState_t *ps, entityState_t *s
-#ifdef TA_PLAYERSYS
-					, bg_playercfg_t *playercfg
-#endif
-					)
-{
-	if (ps->stats[STAT_HEALTH] > 0 && !(ps->pm_flags & PM_DEAD)
-		&& ps->persistant[PERS_TEAM] != TEAM_SPECTATOR
-#ifdef TURTLEARENA // POWERS
-		&& !ps->powerups[PW_FLASHING]
-#endif
-		)
-	{
-		int i, j, k;
-
-		// assume that x/y are equal and symetric
-		i = 15;
-		if (i<1)
-			i = 1;
-		if (i>255)
-			i = 255;
-
-		// z is not symetric
-		j = 24;
-		if (j<1)
-			j = 1;
-		if (j>255)
-			j = 255;
-
-		// and z maxs can be negative...
-		k = 32+32;
-		if (k<1)
-			k = 1;
-		if (k>255)
-			k = 255;
-
-		s->solid = (k<<16) | (j<<8) | i;
-	} else {
-		s->solid = 0;
-	}
-}
-
-/*
 ==================
 CG_SetInitialSnapshot
 
@@ -150,7 +99,6 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	for (i = 0; i < cg.snap->numPSs; i++) {
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
-		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState);
 	}
 
 	// sort out solid entities
@@ -217,7 +165,6 @@ static void CG_TransitionSnapshot( void ) {
 
 	for (i = 0; i < cg.snap->numPSs; i++) {
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
-		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState);
 		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qfalse;
 	}
 
@@ -281,7 +228,6 @@ static void CG_SetNextSnap( snapshot_t *snap ) {
 
 	for (i = 0; i < cg.snap->numPSs; i++) {
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState, qfalse );
-		CG_SetPlayerSolid(&cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].nextState);
 		cg_entities[ cg.snap->pss[i].clientNum ].interpolate = qtrue;
 	}
 

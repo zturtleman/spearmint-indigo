@@ -3798,9 +3798,9 @@ int BotModelMinsMaxs(int modelindex, int eType, int contents, vec3_t mins, vec3_
 		}
 		if (ent->s.modelindex == modelindex) {
 			if (mins)
-				VectorAdd(ent->r.currentOrigin, ent->r.mins, mins);
+				VectorAdd(ent->r.currentOrigin, ent->s.mins, mins);
 			if (maxs)
-				VectorAdd(ent->r.currentOrigin, ent->r.maxs, maxs);
+				VectorAdd(ent->r.currentOrigin, ent->s.maxs, maxs);
 			return i;
 		}
 	}

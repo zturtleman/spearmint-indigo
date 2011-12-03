@@ -1008,7 +1008,7 @@ PM_CheckStuck
 void PM_CheckStuck(void) {
 	trace_t trace;
 
-	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask);
 	if (trace.allsolid) {
 		//int shit = qtrue;
 	}
@@ -1036,13 +1036,13 @@ static int PM_CorrectAllSolid( trace_t *trace ) {
 				point[0] += (float) i;
 				point[1] += (float) j;
 				point[2] += (float) k;
-				pm->trace (trace, point, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+				pm->trace (trace, point, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
 				if ( !trace->allsolid ) {
 					point[0] = pm->ps->origin[0];
 					point[1] = pm->ps->origin[1];
 					point[2] = pm->ps->origin[2] - 0.25;
 
-					pm->trace (trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+					pm->trace (trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
 					pml.groundTrace = *trace;
 					return qtrue;
 				}
@@ -1080,7 +1080,7 @@ static void PM_GroundTraceMissed( void ) {
 		VectorCopy( pm->ps->origin, point );
 		point[2] -= 64;
 
-		pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+		pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
 		if ( trace.fraction == 1.0 ) {
 			if ( pm->cmd.forwardmove >= 0 ) {
 				PM_ForceLegsAnim( LEGS_JUMP );
@@ -1111,7 +1111,7 @@ static void PM_GroundTrace( void ) {
 	point[1] = pm->ps->origin[1];
 	point[2] = pm->ps->origin[2] - 0.25;
 
-	pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, point, pm->ps->clientNum, pm->tracemask);
+	pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, point, pm->ps->clientNum, pm->tracemask);
 	pml.groundTrace = trace;
 
 	// do something corrective if the trace starts in a solid...
@@ -1252,12 +1252,12 @@ static void PM_CheckDuck (void)
 	if ( pm->ps->powerups[PW_INVULNERABILITY] ) {
 		if ( pm->ps->pm_flags & PMF_INVULEXPAND ) {
 			// invulnerability sphere has a 42 units radius
-			VectorSet( pm->mins, -42, -42, -42 );
-			VectorSet( pm->maxs, 42, 42, 42 );
+			VectorSet( pm->ps->mins, -42, -42, -42 );
+			VectorSet( pm->ps->maxs, 42, 42, 42 );
 		}
 		else {
-			VectorSet( pm->mins, -15, -15, MINS_Z );
-			VectorSet( pm->maxs, 15, 15, 16 );
+			VectorSet( pm->ps->mins, -15, -15, MINS_Z );
+			VectorSet( pm->ps->maxs, 15, 15, 16 );
 		}
 		pm->ps->pm_flags |= PMF_DUCKED;
 		pm->ps->viewheight = CROUCH_VIEWHEIGHT;
@@ -1265,17 +1265,17 @@ static void PM_CheckDuck (void)
 	}
 	pm->ps->pm_flags &= ~PMF_INVULEXPAND;
 
-	pm->mins[0] = -15;
-	pm->mins[1] = -15;
+	pm->ps->mins[0] = -15;
+	pm->ps->mins[1] = -15;
 
-	pm->maxs[0] = 15;
-	pm->maxs[1] = 15;
+	pm->ps->maxs[0] = 15;
+	pm->ps->maxs[1] = 15;
 
-	pm->mins[2] = MINS_Z;
+	pm->ps->mins[2] = MINS_Z;
 
 	if (pm->ps->pm_type == PM_DEAD)
 	{
-		pm->maxs[2] = -8;
+		pm->ps->maxs[2] = -8;
 		pm->ps->viewheight = DEAD_VIEWHEIGHT;
 		return;
 	}
@@ -1289,8 +1289,8 @@ static void PM_CheckDuck (void)
 		if (pm->ps->pm_flags & PMF_DUCKED)
 		{
 			// try to stand up
-			pm->maxs[2] = 32;
-			pm->trace (&trace, pm->ps->origin, pm->mins, pm->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
+			pm->ps->maxs[2] = 32;
+			pm->trace (&trace, pm->ps->origin, pm->ps->mins, pm->ps->maxs, pm->ps->origin, pm->ps->clientNum, pm->tracemask );
 			if (!trace.allsolid)
 				pm->ps->pm_flags &= ~PMF_DUCKED;
 		}
@@ -1298,12 +1298,12 @@ static void PM_CheckDuck (void)
 
 	if (pm->ps->pm_flags & PMF_DUCKED)
 	{
-		pm->maxs[2] = 16;
+		pm->ps->maxs[2] = 16;
 		pm->ps->viewheight = CROUCH_VIEWHEIGHT;
 	}
 	else
 	{
-		pm->maxs[2] = 32;
+		pm->ps->maxs[2] = 32;
 		pm->ps->viewheight = DEFAULT_VIEWHEIGHT;
 	}
 }

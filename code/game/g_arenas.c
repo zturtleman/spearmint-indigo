@@ -170,8 +170,8 @@ static gentity_t *SpawnModelOnVictoryPad( gentity_t *pad, vec3_t offset, gentity
 	}
 	body->s.event = 0;
 	body->r.svFlags = ent->r.svFlags;
-	VectorCopy (ent->r.mins, body->r.mins);
-	VectorCopy (ent->r.maxs, body->r.maxs);
+	VectorCopy (ent->s.mins, body->s.mins);
+	VectorCopy (ent->s.maxs, body->s.maxs);
 	VectorCopy (ent->r.absmin, body->r.absmin);
 	VectorCopy (ent->r.absmax, body->r.absmax);
 	body->clipmask = CONTENTS_SOLID | CONTENTS_PLAYERCLIP;

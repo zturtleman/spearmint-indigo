@@ -1146,6 +1146,8 @@ typedef struct playerState_s {
 	int			delta_angles[3];	// add to command angles to get view direction
 									// changed by spawns, rotating objects, and teleporters
 
+	vec3_t		mins, maxs;		// bounding box size
+
 	int			groundEntityNum;// ENTITYNUM_NONE = in air
 
 	int			legsTimer;		// don't change low priority animations until this runs out
@@ -1245,9 +1247,6 @@ typedef struct usercmd_s {
 
 //===================================================================
 
-// if entityState->solid == SOLID_BMODEL, modelindex is an inline model number
-#define	SOLID_BMODEL	0xffffff
-
 typedef enum {
 	TR_STATIONARY,
 	TR_INTERPOLATE,				// non-parametric, but interpolate between snapshots
@@ -1305,7 +1304,11 @@ typedef struct entityState_s {
 	int		contents;		// CONTENTS_TRIGGER, CONTENTS_SOLID, CONTENTS_BODY, etc
 							// a non-solid entity should set to 0
 
-	int		solid;			// for client side prediction, trap_linkentity sets this properly
+	qboolean	bmodel;		// if true, modelindex is an inline model number
+							// if false, assume an explicit mins / maxs bounding box
+							// only set by trap_SetBrushModel
+
+	vec3_t		mins, maxs;	// bounding box size
 
 	int		event;			// impulse events -- muzzle flashes, footsteps, etc
 	int		eventParm;

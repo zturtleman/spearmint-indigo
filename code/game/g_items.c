@@ -571,8 +571,8 @@ gentity_t *LaunchItem( gitem_t *item, vec3_t origin, vec3_t velocity ) {
 
 	dropped->classname = item->classname;
 	dropped->item = item;
-	VectorSet (dropped->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS);
-	VectorSet (dropped->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS);
+	VectorSet (dropped->s.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS);
+	VectorSet (dropped->s.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS);
 	dropped->s.contents = CONTENTS_TRIGGER;
 
 	dropped->touch = Touch_Item;
@@ -651,8 +651,8 @@ void FinishSpawningItem( gentity_t *ent ) {
 	trace_t		tr;
 	vec3_t		dest;
 
-	VectorSet( ent->r.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
-	VectorSet( ent->r.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
+	VectorSet( ent->s.mins, -ITEM_RADIUS, -ITEM_RADIUS, -ITEM_RADIUS );
+	VectorSet( ent->s.maxs, ITEM_RADIUS, ITEM_RADIUS, ITEM_RADIUS );
 
 	ent->s.eType = ET_ITEM;
 	ent->s.modelindex = ent->item - bg_itemlist;		// store item number in modelindex
@@ -669,7 +669,7 @@ void FinishSpawningItem( gentity_t *ent ) {
 	} else {
 		// drop to floor
 		VectorSet( dest, ent->s.origin[0], ent->s.origin[1], ent->s.origin[2] - 4096 );
-		trap_Trace( &tr, ent->s.origin, ent->r.mins, ent->r.maxs, dest, ent->s.number, MASK_SOLID );
+		trap_Trace( &tr, ent->s.origin, ent->s.mins, ent->s.maxs, dest, ent->s.number, MASK_SOLID );
 		if ( tr.startsolid ) {
 			G_Printf ("FinishSpawningItem: %s startsolid at %s\n", ent->classname, vtos(ent->s.origin));
 			G_FreeEntity( ent );
@@ -976,7 +976,7 @@ void G_RunItem( gentity_t *ent ) {
 	} else {
 		mask = MASK_PLAYERSOLID & ~CONTENTS_BODY;//MASK_SOLID;
 	}
-	trap_Trace( &tr, ent->r.currentOrigin, ent->r.mins, ent->r.maxs, origin, 
+	trap_Trace( &tr, ent->r.currentOrigin, ent->s.mins, ent->s.maxs, origin, 
 		ent->r.ownerNum, mask );
 
 	VectorCopy( tr.endpos, ent->r.currentOrigin );
