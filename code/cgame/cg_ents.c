@@ -784,7 +784,7 @@ static void CG_CalcEntityLerpPositions( centity_t *cent ) {
 		}
 	}
 
-	if ( i != MAX_SPLITVIEW ) {
+	if ( i == MAX_SPLITVIEW ) {
 		CG_AdjustPositionForMover( cent->lerpOrigin, cent->currentState.groundEntityNum, 
 		cg.snap->serverTime, cg.time, cent->lerpOrigin );
 	}
