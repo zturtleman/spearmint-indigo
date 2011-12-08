@@ -273,7 +273,7 @@ void UI_LoadBots( void ) {
 		strcat(filename, dirptr);
 		UI_LoadBotsFromFile(filename);
 	}
-	trap_Print( va( "%i bots parsed\n", ui_numBots ) );
+	Com_DPrintf("%i bots parsed\n", ui_numBots);
 }
 
 

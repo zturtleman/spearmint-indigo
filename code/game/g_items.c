@@ -850,7 +850,7 @@ void SaveRegisteredItems( void ) {
 	}
 	string[ bg_numItems ] = 0;
 
-	G_Printf( "%i items registered\n", count );
+	G_DPrintf( "%i items registered\n", count );
 	trap_SetConfigstring(CS_ITEMS, string);
 }
 

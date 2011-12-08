@@ -846,7 +846,7 @@ void UI_ParseMenu(const char *menuFile) {
 	int handle;
 	pc_token_t token;
 
-	Com_Printf("Parsing menu file:%s\n", menuFile);
+	Com_DPrintf("Parsing menu file:%s\n", menuFile);
 
 	handle = trap_PC_LoadSource(menuFile);
 	if (!handle) {
@@ -958,7 +958,7 @@ void UI_LoadMenus(const char *menuFile, qboolean reset) {
 		}
 	}
 
-	Com_Printf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
+	Com_DPrintf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
 
 	trap_PC_FreeSource( handle );
 }
@@ -4545,7 +4545,7 @@ static qboolean Team_Parse(char **p) {
 				}
 			}
 
-      Com_Printf("Loaded team %s with team icon %s.\n", uiInfo.teamList[uiInfo.teamCount].teamName, tempStr);
+      Com_DPrintf("Loaded team %s with team icon %s.\n", uiInfo.teamList[uiInfo.teamCount].teamName, tempStr);
       if (uiInfo.teamCount < MAX_TEAMS) {
         uiInfo.teamCount++;
       } else {
@@ -4600,7 +4600,7 @@ static qboolean Character_Parse(char **p) {
         uiInfo.characterList[uiInfo.characterCount].base = String_Alloc(va("%s",tempStr));
 	  }
 
-      Com_Printf("Loaded %s character %s.\n", uiInfo.characterList[uiInfo.characterCount].base, uiInfo.characterList[uiInfo.characterCount].name);
+      Com_DPrintf("Loaded %s character %s.\n", uiInfo.characterList[uiInfo.characterCount].base, uiInfo.characterList[uiInfo.characterCount].name);
       if (uiInfo.characterCount < MAX_HEADS) {
         uiInfo.characterCount++;
       } else {
@@ -4644,7 +4644,7 @@ static qboolean Alias_Parse(char **p) {
         return qfalse;
       }
     
-      Com_Printf("Loaded character alias %s using character ai %s.\n", uiInfo.aliasList[uiInfo.aliasCount].name, uiInfo.aliasList[uiInfo.aliasCount].ai);
+      Com_DPrintf("Loaded character alias %s using character ai %s.\n", uiInfo.aliasList[uiInfo.aliasCount].name, uiInfo.aliasList[uiInfo.aliasCount].ai);
       if (uiInfo.aliasCount < MAX_ALIASES) {
         uiInfo.aliasCount++;
       } else {

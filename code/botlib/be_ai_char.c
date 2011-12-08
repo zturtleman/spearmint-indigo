@@ -402,7 +402,7 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 		cachedhandle = BotFindCachedCharacter(charfile, skill);
 		if (cachedhandle)
 		{
-			botimport.Print(PRT_MESSAGE, "loaded cached skill %f from %s\n", skill, charfile);
+			botimport.Print(PRT_DEVELOPER, "loaded cached skill %f from %s\n", skill, charfile);
 			return cachedhandle;
 		} //end if
 	} //end else
@@ -414,12 +414,9 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 	{
 		botcharacters[handle] = ch;
 		//
-		botimport.Print(PRT_MESSAGE, "loaded skill %d from %s\n", intskill, charfile);
+		botimport.Print(PRT_DEVELOPER, "loaded skill %d from %s\n", intskill, charfile);
 #ifdef DEBUG
-		if (botDeveloper)
-		{
-			botimport.Print(PRT_MESSAGE, "skill %d loaded in %d msec from %s\n", intskill, Sys_MilliSeconds() - starttime, charfile);
-		} //end if
+		botimport.Print(PRT_DEVELOPER, "skill %d loaded in %d msec from %s\n", intskill, Sys_MilliSeconds() - starttime, charfile);
 #endif //DEBUG
 		return handle;
 	} //end if
@@ -451,7 +448,7 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 		cachedhandle = BotFindCachedCharacter(charfile, -1);
 		if (cachedhandle)
 		{
-			botimport.Print(PRT_MESSAGE, "loaded cached skill %f from %s\n", botcharacters[cachedhandle]->skill, charfile);
+			botimport.Print(PRT_DEVELOPER, "loaded cached skill %f from %s\n", botcharacters[cachedhandle]->skill, charfile);
 			return cachedhandle;
 		} //end if
 	} //end if
@@ -581,7 +578,7 @@ int BotLoadCharacter(char *charfile, float skill)
 	handle = BotFindCachedCharacter(charfile, skill);
 	if (handle)
 	{
-		botimport.Print(PRT_MESSAGE, "loaded cached skill %f from %s\n", skill, charfile);
+		botimport.Print(PRT_DEVELOPER, "loaded cached skill %f from %s\n", skill, charfile);
 		return handle;
 	} //end if
 	if (skill < 4.0)

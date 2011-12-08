@@ -238,6 +238,21 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 }
 
 
+void QDECL G_DPrintf( const char *fmt, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	if (!trap_Cvar_VariableIntegerValue("developer")) {
+		return;
+	}
+
+	va_start (argptr, fmt);
+	Q_vsnprintf (text, sizeof(text), fmt, argptr);
+	va_end (argptr);
+
+	trap_Printf( text );
+}
+
 void QDECL G_Printf( const char *fmt, ... ) {
 	va_list		argptr;
 	char		text[1024];
@@ -313,7 +328,7 @@ void G_FindTeams( void ) {
 		}
 	}
 
-	G_Printf ("%i teams with %i entities\n", c, c2);
+	G_DPrintf ("%i teams with %i entities\n", c, c2);
 }
 
 void G_RemapTeamShaders( void ) {
@@ -408,9 +423,9 @@ G_InitGame
 void G_InitGame( int levelTime, int randomSeed, int restart ) {
 	int					i;
 
-	G_Printf ("------- Game Initialization -------\n");
-	G_Printf ("gamename: %s\n", GAMEVERSION);
-	G_Printf ("gamedate: %s\n", __DATE__);
+	G_DPrintf ("------- Game Initialization -------\n");
+	G_DPrintf ("gamename: %s\n", GAMEVERSION);
+	G_DPrintf ("gamedate: %s\n", __DATE__);
 
 	srand( randomSeed );
 
@@ -494,7 +509,7 @@ void G_InitGame( int levelTime, int randomSeed, int restart ) {
 
 	SaveRegisteredItems();
 
-	G_Printf ("-----------------------------------\n");
+	G_DPrintf ("-----------------------------------\n");
 
 	if( g_gametype.integer == GT_SINGLE_PLAYER || trap_Cvar_VariableIntegerValue( "com_buildScript" ) ) {
 		G_ModelIndex( SP_PODIUM_MODEL );
@@ -518,7 +533,7 @@ G_ShutdownGame
 =================
 */
 void G_ShutdownGame( int restart ) {
-	G_Printf ("==== ShutdownGame ====\n");
+	G_DPrintf ("==== ShutdownGame ====\n");
 
 	if ( level.logFile ) {
 		G_LogPrintf("ShutdownGame:\n" );
@@ -559,6 +574,17 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	va_end (argptr);
 
 	G_Printf ("%s", text);
+}
+
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	G_DPrintf ("%s", text);
 }
 
 /*

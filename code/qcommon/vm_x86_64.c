@@ -974,7 +974,7 @@ void VM_Compile( vm_t *vm, vmHeader_t *header ) {
 #endif
 
 	#ifndef __WIN64__ //timersub and gettimeofday
-		if(vm->compiled)
+		if(vm->compiled && com_developer->integer)
 		{
 			struct timeval tvdone =  {0, 0};
 			struct timeval dur =  {0, 0};

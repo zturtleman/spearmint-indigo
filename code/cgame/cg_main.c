@@ -435,6 +435,23 @@ int CG_LastAttacker( int localClientNum ) {
 	return cg.snap->pss[cg.snap->lcIndex[localClientNum]].persistant[PERS_ATTACKER];
 }
 
+void QDECL CG_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+	char		var[MAX_TOKEN_CHARS];
+
+	trap_Cvar_VariableStringBuffer( "developer", var, sizeof( var ) );
+	if ( !atoi(var) ) {
+		return;
+	}
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	trap_Print( text );
+}
+
 void QDECL CG_Printf( const char *msg, ... ) {
 	va_list		argptr;
 	char		text[1024];
@@ -477,6 +494,17 @@ void QDECL Com_Printf( const char *msg, ... ) {
 	va_end (argptr);
 
 	CG_Printf ("%s", text);
+}
+
+void QDECL Com_DPrintf( const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text, sizeof(text), msg, argptr);
+	va_end (argptr);
+
+	CG_DPrintf ("%s", text);
 }
 
 /*
@@ -1523,8 +1551,7 @@ void CG_LoadMenus(const char *menuFile) {
 		}
 	}
 
-	Com_Printf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
-
+	Com_DPrintf("UI menu load time = %d milli seconds\n", trap_Milliseconds() - start);
 }
 
 

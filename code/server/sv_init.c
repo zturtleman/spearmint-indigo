@@ -409,8 +409,9 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 	// shut down the existing game if it is running
 	SV_ShutdownGameProgs();
 
-	Com_Printf ("------ Server Initialization ------\n");
-	Com_Printf ("Server: %s\n",server);
+	Com_Printf ("Loading level %s...\n", server);
+	Com_DPrintf ("------ Server Initialization ------\n");
+	Com_DPrintf ("Server: %s\n",server);
 
 	// if not running a dedicated server CL_MapLoading will connect the client to the server
 	// also print some status stuff
@@ -619,7 +620,7 @@ void SV_SpawnServer( char *server, qboolean killBots ) {
 
 	Hunk_SetMark();
 
-	Com_Printf ("-----------------------------------\n");
+	Com_DPrintf ("-----------------------------------\n");
 }
 
 /*

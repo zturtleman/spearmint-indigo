@@ -775,6 +775,10 @@ void CL_InitCGame( void ) {
 
 	clc.state = CA_LOADING;
 
+	if (!com_sv_running->integer) {
+		Com_Printf("Loading level %s...\n", mapname);
+	}
+
 	// init for this gamestate
 	// use the lastExecutedServerCommand instead of the serverCommandSequence
 	// otherwise server commands sent just before a gamestate are dropped
@@ -790,7 +794,7 @@ void CL_InitCGame( void ) {
 
 	t2 = Sys_Milliseconds();
 
-	Com_Printf( "CL_InitCGame: %5.2f seconds\n", (t2-t1)/1000.0 );
+	Com_DPrintf( "CL_InitCGame: %5.2f seconds\n", (t2-t1)/1000.0 );
 
 	// have the renderer touch all its images, so they are present
 	// on the card even if the driver does deferred loading
