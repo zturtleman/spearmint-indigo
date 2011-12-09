@@ -909,7 +909,7 @@ temp file loading
 
 */
 
-#if defined(_DEBUG) && !defined(BSPC)
+#if !defined(NDEBUG) && !defined(BSPC)
 	#define ZONE_DEBUG
 #endif
 
@@ -939,7 +939,6 @@ void *Hunk_AllocateTempMemory( int size );
 void Hunk_FreeTempMemory( void *buf );
 int	Hunk_MemoryRemaining( void );
 void Hunk_Log( void);
-void Hunk_Trash( void );
 
 void Com_TouchMemory( void );
 
