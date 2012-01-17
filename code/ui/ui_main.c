@@ -3576,11 +3576,6 @@ qboolean UI_hasSkinForBase(const char *base, const char *team) {
 	if (trap_FS_FOpenFile(test, NULL, FS_READ)) {
 		return qtrue;
 	}
-	Com_sprintf( test, sizeof( test ), "models/players/characters/%s/%s/lower_default.skin", base, team );
-
-	if (trap_FS_FOpenFile(test, NULL, FS_READ)) {
-		return qtrue;
-	}
 	return qfalse;
 }
 
