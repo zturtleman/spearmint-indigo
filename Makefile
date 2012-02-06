@@ -5,7 +5,7 @@
 #
 
 # ioquake3 svn version that this is based on
-IOQ3_REVISION = 2216
+IOQ3_REVISION = 2219
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -1470,9 +1470,16 @@ Q3OBJ = \
   $(B)/client/sdl_input.o \
   $(B)/client/sdl_snd.o \
   \
-  $(B)/client/con_passive.o \
   $(B)/client/con_log.o \
   $(B)/client/sys_main.o
+
+ifeq ($(PLATFORM),mingw32)
+  Q3OBJ += \
+	$(B)/client/con_passive.o
+else
+  Q3OBJ += \
+	$(B)/client/con_tty.o
+endif
 
 Q3ROBJ = \
   $(B)/renderer/tr_animation.o \
