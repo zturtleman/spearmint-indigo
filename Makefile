@@ -5,7 +5,7 @@
 #
 
 # ioquake3 svn version that this is based on
-IOQ3_REVISION = 2219
+IOQ3_REVISION = 2224
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -580,8 +580,10 @@ ifeq ($(PLATFORM),mingw32)
     RENDERER_LIBS += $(WINLIBDIR)/libSDLmain.a
     ifeq ($(ARCH),x64)
       RENDERER_LIBS += $(WINLIBDIR)/libSDL64.dll.a
+      SDLDLL=SDL64.dll
     else
       RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
+      SDLDLL=SDL.dll
     endif
 
     ifeq ($(USE_CODEC_VORBIS),1)
@@ -595,6 +597,7 @@ ifeq ($(PLATFORM),mingw32)
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
+    SDLDLL=SDL.dll
 
     ifeq ($(USE_CODEC_VORBIS),1)
       CLIENT_LIBS += -lvorbisfile -lvorbis -logg
@@ -2522,6 +2525,7 @@ distclean: clean toolsclean
 installer: release
 ifeq ($(PLATFORM),mingw32)
 	@$(MAKE) VERSION=$(VERSION) -C $(NSISDIR) V=$(V) \
+		SDLDLL=$(SDLDLL) \
 		USE_RENDERER_DLOPEN=$(USE_RENDERER_DLOPEN) \
 		USE_OPENAL_DLOPEN=$(USE_OPENAL_DLOPEN) \
 		USE_CURL_DLOPEN=$(USE_CURL_DLOPEN) \
