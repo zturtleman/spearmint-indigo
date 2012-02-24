@@ -175,6 +175,11 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	int			startIndex;
 	intptr_t		denied;
 
+	if ( strlen(userinfo) <= 0 ) {
+		// Ignore dummy userinfo string.
+		return;
+	}
+
 	// Don't allow joining in single player
 	if (sv_gametype->integer == GT_SINGLE_PLAYER
 		|| Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
@@ -214,11 +219,6 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	}
 
 	if (!newcl) {
-		return;
-	}
-
-	if ( strlen(userinfo) <= 0 ) {
-		// Ignore dummy userinfo string.
 		return;
 	}
 
