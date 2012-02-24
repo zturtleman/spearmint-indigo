@@ -3619,8 +3619,8 @@ void CL_Init( void ) {
 
 	// Third local client userinfo
 	Cvar_Get ("3name", "UnnamedPlayer3", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3model", "crash", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3headmodel", "crash", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3model", "major", CVAR_USERINFO3 | CVAR_ARCHIVE );
+	Cvar_Get ("3headmodel", "major", CVAR_USERINFO3 | CVAR_ARCHIVE );
 	Cvar_Get ("3team_model", "janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
 	Cvar_Get ("3team_headmodel", "*janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
 	Cvar_Get ("3color1", "4", CVAR_USERINFO3 | CVAR_ARCHIVE );
