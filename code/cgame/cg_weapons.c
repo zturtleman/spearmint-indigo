@@ -2264,11 +2264,13 @@ static qboolean	CG_CalcMuzzlePoint( int entityNum, vec3_t muzzle ) {
 	vec3_t		forward;
 	centity_t	*cent;
 	int			anim;
+	playerState_t *ps;
 
-	if ( entityNum == cg.cur_ps->clientNum ) {
-		VectorCopy( cg.cur_ps->origin, muzzle );
-		muzzle[2] += cg.cur_ps->viewheight;
-		AngleVectors( cg.cur_ps->viewangles, forward, NULL, NULL );
+	ps = CG_LocalClientPlayerStateForClientNum(entityNum);
+	if ( ps ) {
+		VectorCopy( ps->origin, muzzle );
+		muzzle[2] += ps->viewheight;
+		AngleVectors( ps->viewangles, forward, NULL, NULL );
 		VectorMA( muzzle, 14, forward, muzzle );
 		return qtrue;
 	}

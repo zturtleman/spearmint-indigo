@@ -212,7 +212,7 @@ static void CG_Obituary( entityState_t *ent ) {
 	}
 
 	// check for kill messages from the current clientNum
-	if ( CG_LocalClient(attacker) != -1 ) {
+	if ( CG_LocalClientPlayerStateForClientNum(attacker) ) {
 		char	*s;
 		playerState_t	*ps;
 
