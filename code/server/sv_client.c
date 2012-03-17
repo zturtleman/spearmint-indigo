@@ -182,7 +182,7 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	// Don't allow joining in single player
 	if (sv_gametype->integer == GT_SINGLE_PLAYER
 		|| Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
-		Com_Printf("Additional local clients not allowed in single player mode.\n");
+		SV_SendServerCommand( owner, "print \"Additional local clients not allowed in single player mode.\n\"" );
 		return;
 	}
 
@@ -218,6 +218,7 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	}
 
 	if (!newcl) {
+		SV_SendServerCommand( owner, "print \"Couldn't add local client %d, no free client slots!\n\"", lc+1 );
 		return;
 	}
 
