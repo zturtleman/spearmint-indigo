@@ -54,6 +54,10 @@ ifndef BUILD_FINAL
   BUILD_FINAL      =0
 endif
 
+ifndef USE_FREETYPE
+  USE_FREETYPE     =1
+endif
+
 ifneq ($(PLATFORM),darwin)
   BUILD_CLIENT_SMP = 0
 endif
@@ -197,6 +201,10 @@ ifndef USE_INTERNAL_JPEG
 USE_INTERNAL_JPEG=1
 endif
 
+ifndef USE_INTERNAL_FREETYPE
+USE_INTERNAL_FREETYPE=1
+endif
+
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
@@ -233,6 +241,7 @@ Q3UIDIR=$(MOUNT_DIR)/q3_ui
 JPDIR=$(MOUNT_DIR)/jpeg-8c
 SPEEXDIR=$(MOUNT_DIR)/libspeex
 ZDIR=$(MOUNT_DIR)/zlib
+FTDIR=$(MOUNT_DIR)/freetype-2.4.9
 Q3ASMDIR=$(MOUNT_DIR)/tools/asm
 LBURGDIR=$(MOUNT_DIR)/tools/lcc/lburg
 Q3CPPDIR=$(MOUNT_DIR)/tools/lcc/cpp
@@ -396,6 +405,12 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     CLIENT_CFLAGS += -I$(SDLHDIR)/include
   endif
 
+  ifeq ($(USE_FREETYPE),1)
+        ifneq ($(USE_INTERNAL_FREETYPE), 1)
+                BASE_CFLAGS += $(shell freetype-config --cflags)
+        endif
+  endif
+
   ifeq ($(ARCH),i386)
     # linux32 make ...
     BASE_CFLAGS += -m32
@@ -448,6 +463,12 @@ ifeq ($(PLATFORM),darwin)
     ifneq ($(USE_CURL_DLOPEN),1)
       CLIENT_LIBS += -lcurl
     endif
+  endif
+
+  ifeq ($(USE_FREETYPE),1)
+        ifneq ($(USE_INTERNAL_FREETYPE), 1)
+                BASE_CFLAGS += $(shell freetype-config --cflags)
+        endif
   endif
 
   ifeq ($(USE_CODEC_VORBIS),1)
@@ -538,6 +559,12 @@ ifeq ($(PLATFORM),mingw32)
   CLIENT_LDFLAGS += -mwindows
   CLIENT_LIBS = -lgdi32 -lole32
   RENDERER_LIBS = -lgdi32 -lole32 -lopengl32
+
+  ifeq ($(USE_FREETYPE),1)
+    ifneq ($(USE_INTERNAL_FREETYPE),1)
+      BASE_CFLAGS += -Ifreetype2
+    endif
+  endif
 
   ifeq ($(ARCH),x64)
     WINLIBDIR=$(LIBSDIR)/win64
@@ -858,6 +885,10 @@ endif
 
 TARGETS =
 
+ifeq ($(USE_FREETYPE),1)
+  BASE_CFLAGS += -DBUILD_FREETYPE
+endif
+
 ifndef FULLBINEXT
   FULLBINEXT=.$(ARCH)$(BINEXT)
 endif
@@ -964,6 +995,15 @@ ifeq ($(USE_INTERNAL_JPEG),1)
   BASE_CFLAGS += -I$(JPDIR)
 else
   RENDERER_LIBS += -ljpeg
+endif
+
+ifeq ($(USE_FREETYPE),1)
+ifeq ($(USE_INTERNAL_FREETYPE),1)
+  BASE_CFLAGS += -I$(FTDIR)/include \
+					-DFT2_BUILD_LIBRARY
+else
+  RENDERER_LIBS += -lfreetype
+endif
 endif
 
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
@@ -1573,6 +1613,19 @@ ifneq ($(USE_INTERNAL_JPEG),0)
     $(B)/renderer/jquant1.o \
     $(B)/renderer/jquant2.o \
     $(B)/renderer/jutils.o
+endif
+
+ifeq ($(USE_FREETYPE),1)
+ifneq ($(USE_INTERNAL_FREETYPE),0)
+  Q3ROBJ += \
+    $(B)/renderer/ftinit.o \
+    $(B)/renderer/ftsystem.o \
+    $(B)/renderer/ftbase.o \
+    $(B)/renderer/raster.o \
+    $(B)/renderer/smooth.o \
+    $(B)/renderer/truetype.o \
+    $(B)/renderer/sfnt.o
+endif
 endif
 
 ifeq ($(ARCH),i386)
@@ -2300,6 +2353,21 @@ $(B)/renderer/%.o: $(SDLDIR)/%.c
 	$(DO_REF_CC)
 
 $(B)/renderer/%.o: $(JPDIR)/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/%.o: $(FTDIR)/src/base/%.c
+	$(DO_REF_CC)
+
+$(B)/renderer/raster.o: $(FTDIR)/src/raster/raster.c
+	$(DO_REF_CC)
+
+$(B)/renderer/smooth.o: $(FTDIR)/src/smooth/smooth.c
+	$(DO_REF_CC)
+
+$(B)/renderer/sfnt.o: $(FTDIR)/src/sfnt/sfnt.c
+	$(DO_REF_CC)
+
+$(B)/renderer/truetype.o: $(FTDIR)/src/truetype/truetype.c
 	$(DO_REF_CC)
 
 $(B)/renderer/%.o: $(RDIR)/%.c
