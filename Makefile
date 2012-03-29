@@ -5,7 +5,7 @@
 #
 
 # ioquake3 svn version that this is based on
-IOQ3_REVISION = 2224
+IOQ3_REVISION = 2225
 
 COMPILE_PLATFORM=$(shell uname|sed -e s/_.*//|tr '[:upper:]' '[:lower:]'|sed -e 's/\//_/g')
 
@@ -52,10 +52,6 @@ ifndef BUILD_MISSIONPACK
 endif
 ifndef BUILD_FINAL
   BUILD_FINAL      =0
-endif
-
-ifndef USE_FREETYPE
-  USE_FREETYPE     =1
 endif
 
 ifneq ($(PLATFORM),darwin)
@@ -189,6 +185,10 @@ ifndef USE_VOIP
 USE_VOIP=1
 endif
 
+ifndef USE_FREETYPE
+USE_FREETYPE=1
+endif
+
 ifndef USE_INTERNAL_SPEEX
 USE_INTERNAL_SPEEX=1
 endif
@@ -267,6 +267,7 @@ ifneq ($(BUILD_CLIENT),0)
     OPENAL_LIBS=$(shell pkg-config --silence-errors --libs openal)
     SDL_CFLAGS=$(shell pkg-config --silence-errors --cflags sdl|sed 's/-Dmain=SDL_main//')
     SDL_LIBS=$(shell pkg-config --silence-errors --libs sdl)
+    FREETYPE_CFLAGS=$(shell pkg-config --silence-errors --cflags freetype2)
   endif
   # Use sdl-config if all else fails
   ifeq ($(SDL_CFLAGS),)
@@ -406,9 +407,9 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
   endif
 
   ifeq ($(USE_FREETYPE),1)
-        ifneq ($(USE_INTERNAL_FREETYPE), 1)
-                BASE_CFLAGS += $(shell freetype-config --cflags)
-        endif
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   ifeq ($(ARCH),i386)
@@ -466,9 +467,9 @@ ifeq ($(PLATFORM),darwin)
   endif
 
   ifeq ($(USE_FREETYPE),1)
-        ifneq ($(USE_INTERNAL_FREETYPE), 1)
-                BASE_CFLAGS += $(shell freetype-config --cflags)
-        endif
+    ifneq ($(USE_INTERNAL_FREETYPE), 1)
+      BASE_CFLAGS += $(FREETYPE_CFLAGS)
+    endif
   endif
 
   ifeq ($(USE_CODEC_VORBIS),1)
