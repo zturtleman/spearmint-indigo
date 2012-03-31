@@ -688,6 +688,7 @@ Cmd_Follow_f
 void Cmd_Follow_f( gentity_t *ent ) {
 	int		i;
 	char	arg[MAX_TOKEN_CHARS];
+	int		lc;
 
 	if ( trap_Argc() != 2 ) {
 		if ( ent->client->sess.spectatorState == SPECTATOR_FOLLOW ) {
@@ -710,6 +711,24 @@ void Cmd_Follow_f( gentity_t *ent ) {
 	// can't follow another spectator
 	if ( level.clients[ i ].sess.sessionTeam == TEAM_SPECTATOR ) {
 		return;
+	}
+
+	// don't follow one of their local client
+	if (ent->r.mainClientNum == -1) {
+		for (lc = 0; lc < MAX_SPLITVIEW-1; ++lc) {
+			if (i == ent->r.localClientNums[lc]) {
+				return;
+			}
+		}
+	} else {
+		if (i == ent->r.mainClientNum) {
+			return;
+		}
+		for (lc = 0; lc < MAX_SPLITVIEW-1; ++lc) {
+			if (i == level.gentities[ent->r.mainClientNum].r.localClientNums[lc]) {
+				return;
+			}
+		}
 	}
 
 	// if they are playing a tournement game, count as a loss
@@ -735,6 +754,7 @@ Cmd_FollowCycle_f
 void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 	int		clientnum;
 	int		original;
+	int		lc;
 
 	// if they are playing a tournement game, count as a loss
 	if ( (g_gametype.integer == GT_TOURNAMENT )
@@ -769,6 +789,30 @@ void Cmd_FollowCycle_f( gentity_t *ent, int dir ) {
 		// can't follow another spectator
 		if ( level.clients[ clientnum ].sess.sessionTeam == TEAM_SPECTATOR ) {
 			continue;
+		}
+
+		// don't follow one of their local client
+		if (ent->r.mainClientNum == -1) {
+			for (lc = 0; lc < MAX_SPLITVIEW-1; ++lc) {
+				if (clientnum == ent->r.localClientNums[lc]) {
+					break;
+				}
+			}
+			if (lc != MAX_SPLITVIEW-1) {
+				continue;
+			}
+		} else {
+			if (clientnum == ent->r.mainClientNum) {
+				continue;
+			}
+			for (lc = 0; lc < MAX_SPLITVIEW-1; ++lc) {
+				if (clientnum == level.gentities[ent->r.mainClientNum].r.localClientNums[lc]) {
+					break;
+				}
+			}
+			if (lc != MAX_SPLITVIEW-1) {
+				continue;
+			}
 		}
 
 		// this is good, we can use it
