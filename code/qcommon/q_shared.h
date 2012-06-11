@@ -27,14 +27,14 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 // A user mod should never modify this file
 
 #if 1 // Change these for your standalone game
-  #define PRODUCT_NAME			"ioq3ztm"
+  #define PRODUCT_NAME			"Spearmint"
   #define BASEGAME			"baseq3"
-  #define CLIENT_WINDOW_TITLE     	"ioq3ztm"
-  #define CLIENT_WINDOW_MIN_TITLE 	"ioq3ztm"
-  #define HOMEPATH_NAME_UNIX		".ioq3ztm"
-  #define HOMEPATH_NAME_WIN		"ioq3ztm"
+  #define CLIENT_WINDOW_TITLE     	"Spearmint"
+  #define CLIENT_WINDOW_MIN_TITLE 	"Spearmint"
+  #define HOMEPATH_NAME_UNIX		".spearmint"
+  #define HOMEPATH_NAME_WIN		"Spearmint"
   #define HOMEPATH_NAME_MACOSX		HOMEPATH_NAME_WIN
-  #define GAMENAME_FOR_MASTER		"ioq3ztm"	// must NOT contain whitespace
+  #define GAMENAME_FOR_MASTER		"Spearmint"	// must NOT contain whitespace
 //  #define LEGACY_PROTOCOL	// You probably don't need this for your standalone game
 
   #ifndef PRODUCT_VERSION

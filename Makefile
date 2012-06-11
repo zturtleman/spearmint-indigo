@@ -1,5 +1,5 @@
 #
-# ioq3ztm Makefile
+# Spearmint Makefile
 #
 # GNU Make required
 #
@@ -101,11 +101,11 @@ VERSION=1.36
 endif
 
 ifndef CLIENTBIN
-CLIENTBIN=ioq3ztm
+CLIENTBIN=spearmint
 endif
 
 ifndef SERVERBIN
-SERVERBIN=ioq3ztm-server
+SERVERBIN=spearmint-server
 endif
 
 ifndef BASEGAME
@@ -130,7 +130,7 @@ BUILD_DEFINES =
 endif
 
 ifndef COPYDIR
-COPYDIR="/usr/local/games/ioq3ztm"
+COPYDIR="/usr/local/games/quake3"
 endif
 
 ifndef COPYBINDIR
