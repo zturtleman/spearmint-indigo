@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="quake3" />
+		<Option title="Spearmint" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Release Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/ioq3ztm_release/ioq3ztm.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_release" />
+				<Option output="../../build/spearmint_release/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -51,8 +51,8 @@
 			</Target>
 			<Target title="Debug Win32">
 				<Option platforms="Windows;" />
-				<Option output="../../build/ioq3ztm_debug/ioq3ztm.x86.exe" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_debug" />
+				<Option output="../../build/spearmint_debug/spearmint.x86.exe" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -95,8 +95,8 @@
 			</Target>
 			<Target title="Release Linux i386">
 				<Option platforms="Unix;" />
-				<Option output="../../build/ioq3ztm_release/ioq3ztm.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_release" />
+				<Option output="../../build/spearmint_release/spearmint.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -122,8 +122,8 @@
 			</Target>
 			<Target title="Debug Linux i386">
 				<Option platforms="Unix;" />
-				<Option output="../../build/ioq3ztm_debug/ioq3ztm.i386" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_debug" />
+				<Option output="../../build/spearmint_debug/spearmint.i386" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -150,8 +150,8 @@
 			</Target>
 			<Target title="Release Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/ioq3ztm_release/ioq3ztm.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_release" />
+				<Option output="../../build/spearmint_release/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_release" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
@@ -177,8 +177,8 @@
 			</Target>
 			<Target title="Debug Linux x86_64">
 				<Option platforms="Unix;" />
-				<Option output="../../build/ioq3ztm_debug/ioq3ztm.x86_64" prefix_auto="0" extension_auto="0" />
-				<Option object_output="../../build/ioq3ztm_debug" />
+				<Option output="../../build/spearmint_debug/spearmint.x86_64" prefix_auto="0" extension_auto="0" />
+				<Option object_output="../../build/spearmint_debug" />
 				<Option type="0" />
 				<Option compiler="gcc" />
 				<Option parameters="+set sv_pure 0 +set vm_cgame 0 +set vm_game 0 +set vm_ui 0" />
