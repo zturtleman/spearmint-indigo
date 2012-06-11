@@ -277,6 +277,9 @@
 			<Option target="Release TA Linux x86_64" />
 			<Option target="Debug TA Linux x86_64" />
 		</Unit>
+		<Unit filename="../../code/cgame/cg_particles.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../code/cgame/cg_players.c">
 			<Option compilerVar="CC" />
 		</Unit>
