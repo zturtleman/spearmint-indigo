@@ -165,7 +165,7 @@ void QDECL SourceError(source_t *source, char *str, ...) __attribute__ ((format 
 void QDECL SourceWarning(source_t *source, char *str, ...)  __attribute__ ((format (printf, 2, 3)));
 
 #ifdef BSPC
-// some of BSPC source does include game/q_shared.h and some does not
+// some of BSPC source does include qcommon/q_shared.h and some does not
 // we define pc_token_s pc_token_t if needed (yes, it's ugly)
 #ifndef __Q_SHARED_H
 #define MAX_TOKENLENGTH		1024

@@ -85,6 +85,7 @@ typedef enum {qfalse, qtrue}	qboolean;
 
 #define qtrue	true
 #define qfalse	false
+#define Com_sprintf snprintf
 #endif //BSPC
 
 
@@ -1447,9 +1448,5 @@ void FreeScript(script_t *script)
 //============================================================================
 void PS_SetBaseFolder(char *path)
 {
-#ifdef BSPC
-	sprintf(basefolder, path);
-#else
 	Com_sprintf(basefolder, sizeof(basefolder), "%s", path);
-#endif
 } //end of the function PS_SetBaseFolder
