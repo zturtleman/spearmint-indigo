@@ -519,7 +519,9 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 		return;
 	}
 	trap_R_SetColor( hcolor );
+	CG_SetScreenPlacement(PLACE_STRETCH);
 	CG_DrawPic( x, y, w, h, cgs.media.teamStatusBar );
+	CG_PopScreenPlacement();
 	trap_R_SetColor( NULL );
 }
 
@@ -549,6 +551,8 @@ static void CG_DrawStatusBar( void ) {
 	if ( cg_drawStatus.integer == 0 ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
 	ps = cg.cur_ps;
 	cent = &cg_entities[ps->clientNum];
@@ -994,6 +998,8 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame)
 
 	y = 0;
 
+	CG_SetScreenPlacement(PLACE_RIGHT);
+
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 1 ) {
 		y = CG_DrawTeamOverlay( y, qtrue, qtrue );
 	} 
@@ -1288,6 +1294,8 @@ static void CG_DrawLowerRight( void ) {
 
 	y = 480 - ICON_SIZE;
 
+	CG_SetScreenPlacement(PLACE_RIGHT);
+
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 2 ) {
 		y = CG_DrawTeamOverlay( y, qtrue, qfalse );
 	} 
@@ -1340,6 +1348,8 @@ static void CG_DrawLowerLeft( void ) {
 	float	y;
 
 	y = 480 - ICON_SIZE;
+
+	CG_SetScreenPlacement(PLACE_LEFT);
 
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 3 ) {
 		y = CG_DrawTeamOverlay( y, qfalse, qfalse );
@@ -1425,6 +1435,8 @@ CG_DrawHoldableItem
 static void CG_DrawHoldableItem( void ) { 
 	int		value;
 
+	CG_SetScreenPlacement(PLACE_RIGHT);
+
 	value = cg.cur_ps->stats[STAT_HOLDABLE_ITEM];
 	if ( value ) {
 		CG_RegisterItemVisuals( value );
@@ -1443,6 +1455,8 @@ CG_DrawPersistantPowerup
 #if 0 // sos001208 - DEAD
 static void CG_DrawPersistantPowerup( void ) { 
 	int		value;
+
+	CG_SetScreenPlacement(PLACE_RIGHT);
 
 	value = cg.cur_ps->stats[STAT_PERSISTANT_POWERUP];
 	if ( value ) {
@@ -1468,6 +1482,8 @@ static void CG_DrawReward( void ) {
 	if ( !cg_drawRewards.integer ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
 	color = CG_FadeColor( cg.cur_lc->rewardTime, REWARD_TIME );
 	if ( !color ) {
@@ -1609,6 +1625,8 @@ static void CG_DrawDisconnect( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	// also add text in center of screen
 	s = "Connection Interrupted";
 	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
@@ -1618,6 +1636,8 @@ static void CG_DrawDisconnect( void ) {
 	if ( ( cg.time >> 9 ) & 1 ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_RIGHT);
 
 	x = 640 - 48;
 	y = 480 - 48;
@@ -1645,6 +1665,8 @@ static void CG_DrawLagometer( void ) {
 		CG_DrawDisconnect();
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_RIGHT);
 
 	//
 	// draw the graph
@@ -1805,6 +1827,8 @@ static void CG_DrawCenterString( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	trap_R_SetColor( color );
 
 	start = cg.cur_lc->centerPrint;
@@ -1886,6 +1910,8 @@ static void CG_DrawCrosshair(void)
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	// set color based on health
 	if ( cg_crosshairHealth.integer ) {
 		vec4_t		hcolor;
@@ -1952,6 +1978,8 @@ static void CG_DrawCrosshair3D(void)
 	if ( cg.renderingThirdPerson ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
 	w = cg_crosshairSize.value;
 
@@ -2056,6 +2084,8 @@ static void CG_DrawCrosshairNames( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	// scan the known entities to see if the crosshair is sighted on one
 	CG_ScanForCrosshairEntity();
 
@@ -2087,6 +2117,7 @@ CG_DrawSpectator
 =================
 */
 static void CG_DrawSpectator(void) {
+	CG_SetScreenPlacement(PLACE_CENTER);
 	CG_DrawBigString(320 - 9 * 8, 440, "SPECTATOR", 1.0F);
 	if ( cgs.gametype == GT_TOURNAMENT ) {
 		CG_DrawBigString(320 - 15 * 8, 460, "waiting to play", 1.0F);
@@ -2108,6 +2139,8 @@ static void CG_DrawVote(void) {
 	if ( !cgs.voteTime ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_LEFT);
 
 	// play a talk beep whenever it is modified
 	if ( cgs.voteModified ) {
@@ -2150,6 +2183,8 @@ static void CG_DrawTeamVote(void) {
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_LEFT);
+
 	// play a talk beep whenever it is modified
 	if ( cgs.teamVoteModified[cs_offset] ) {
 		cgs.teamVoteModified[cs_offset] = qfalse;
@@ -2169,6 +2204,8 @@ static void CG_DrawTeamVote(void) {
 static qboolean CG_DrawScoreboard( void ) {
 #ifdef MISSIONPACK
 	static qboolean firstTime = qtrue;
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
 	if (menuScoreboard) {
 		menuScoreboard->window.flags &= ~WINDOW_FORCED;
@@ -2267,11 +2304,13 @@ static qboolean CG_DrawFollow( void ) {
 	if ( !(cg.cur_ps->pm_flags & PMF_FOLLOW) ) {
 		return qfalse;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	color[0] = 1;
 	color[1] = 1;
 	color[2] = 1;
 	color[3] = 1;
-
 
 	CG_DrawBigString( 320 - 9 * 8, 24, "following", 1.0F );
 
@@ -2303,6 +2342,8 @@ static void CG_DrawAmmoWarning( void ) {
 		return;
 	}
 
+	CG_SetScreenPlacement(PLACE_CENTER);
+
 	if ( cg.cur_lc->lowAmmoWarning == 2 ) {
 		s = "OUT OF AMMO";
 	} else {
@@ -2330,6 +2371,8 @@ static void CG_DrawProxWarning( void ) {
     proxTime = 0;
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
   if (proxTime == 0) {
     proxTime = cg.time + 5000;
@@ -2375,6 +2418,8 @@ static void CG_DrawWarmup( void ) {
 	if ( !sec ) {
 		return;
 	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
 
 	if ( sec < 0 ) {
 		s = "Waiting for players";		

@@ -31,6 +31,30 @@ Suite 120, Rockville, Maryland 20850 USA.
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
 #include "cg_local.h"
 
+static screenPlacement_e cg_screenPlacement = PLACE_CENTER;
+static screenPlacement_e cg_lastScreenPlacement = PLACE_CENTER;
+
+/*
+================
+CG_SetScreenPlacement
+================
+*/
+void CG_SetScreenPlacement(screenPlacement_e pos)
+{
+	cg_lastScreenPlacement = cg_screenPlacement;
+	cg_screenPlacement = pos;
+}
+
+/*
+================
+CG_PopScreenPlacement
+================
+*/
+void CG_PopScreenPlacement(void)
+{
+	cg_screenPlacement = cg_lastScreenPlacement;
+}
+
 /*
 ================
 CG_AdjustFrom640
@@ -76,23 +100,29 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 		}
 	}
 
-#if 0
-	// adjust for wide screens
-	if ( cgs.glconfig.vidWidth * 480 > cgs.glconfig.vidHeight * 640 ) {
-		*x += 0.5 * ( cgs.glconfig.vidWidth - ( cgs.glconfig.vidHeight * 640 / 480 ) );
+	if (cg_screenPlacement == PLACE_STRETCH) {
+		// scale for screen sizes (not aspect correct in wide screen)
+		*x *= cgs.screenXScaleStretch;
+		*y *= cgs.screenYScaleStretch;
+		*w *= cgs.screenXScaleStretch;
+		*h *= cgs.screenYScaleStretch;
+	} else {
+		// scale for screen sizes
+		*x *= cgs.screenXScale;
+		*y *= cgs.screenYScale;
+		*w *= cgs.screenXScale;
+		*h *= cgs.screenYScale;
+
+		// Screen Placement
+		if (cg_screenPlacement == PLACE_CENTER) {
+			*x += cgs.screenXBias;
+		} else if (cg_screenPlacement == PLACE_RIGHT) {
+			*x += cgs.screenXBias*2;
+		}
+
+		// Offset for widescreen
+		*x += cgs.screenXBias*(viewXBias);
 	}
-#endif
-	// scale for screen sizes
-	*x *= cgs.screenXScale;
-	*y *= cgs.screenYScale;
-	*w *= cgs.screenXScale;
-	*h *= cgs.screenYScale;
-
-	// Center HUD
-	*x += cgs.screenXBias;
-
-	// Offset for widescreen
-	*x += cgs.screenXBias*(viewXBias);
 }
 
 /*
@@ -120,14 +150,22 @@ Coords are virtual 640x480
 */
 void CG_DrawSides(float x, float y, float w, float h, float size) {
 	CG_AdjustFrom640( &x, &y, &w, &h );
-	size *= cgs.screenXScale;
+	if (cg_screenPlacement == PLACE_STRETCH) {
+		size *= cgs.screenXScaleStretch;
+	} else {
+		size *= cgs.screenXScale;
+	}
 	trap_R_DrawStretchPic( x, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
 	trap_R_DrawStretchPic( x + w - size, y, size, h, 0, 0, 0, 0, cgs.media.whiteShader );
 }
 
 void CG_DrawTopBottom(float x, float y, float w, float h, float size) {
 	CG_AdjustFrom640( &x, &y, &w, &h );
-	size *= cgs.screenYScale;
+	if (cg_screenPlacement == PLACE_STRETCH) {
+		size *= cgs.screenYScaleStretch;
+	} else {
+		size *= cgs.screenYScale;
+	}
 	trap_R_DrawStretchPic( x, y, w, size, 0, 0, 0, 0, cgs.media.whiteShader );
 	trap_R_DrawStretchPic( x, y + h - size, w, size, 0, 0, 0, 0, cgs.media.whiteShader );
 }

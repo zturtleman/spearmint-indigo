@@ -252,6 +252,8 @@ static void CG_CalcVrect (void) {
 	}
 
 	// Viewport scale and offset
+	cgs.screenXScaleStretch = viewWidth * (1.0/640.0);
+	cgs.screenYScaleStretch = viewHeight * (1.0/480.0);
 	if ( viewWidth * 480 > viewHeight * 640 ) {
 		cgs.screenXScale = viewWidth * (1.0/640.0);
 		cgs.screenYScale = viewHeight * (1.0/480.0);
@@ -259,8 +261,8 @@ static void CG_CalcVrect (void) {
 		cgs.screenXBias = 0.5 * ( viewWidth - ( viewHeight * (640.0/480.0) ) );
 		cgs.screenXScale = cgs.screenYScale;
 	} else {
-		cgs.screenXScale = viewWidth * (1.0/640.0);
-		cgs.screenYScale = viewHeight * (1.0/480.0);
+		cgs.screenXScale = cgs.screenXScaleStretch;
+		cgs.screenYScale = cgs.screenYScaleStretch;
 		// no wide screen
 		cgs.screenXBias = 0;
 	}
