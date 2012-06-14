@@ -1636,3 +1636,7 @@ void BG_PlayerStateToEntityStateExtraPolate( playerState_t *ps, entityState_t *s
 		SnapVector( s->maxs );
 	}
 }
+
+int cmdcmp( const void *a, const void *b ) {
+  return Q_stricmp( (const char *)a, ((dummyCmd_t *)b)->name );
+}

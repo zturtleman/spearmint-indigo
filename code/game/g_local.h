@@ -597,6 +597,8 @@ qboolean SpotWouldTelefrag( gentity_t *spot );
 // g_svcmds.c
 //
 qboolean	ConsoleCommand( void );
+void G_RegisterCommands( void );
+void G_UnregisterCommands( void );
 void G_ProcessIPBans(void);
 qboolean G_FilterPacket (char *from);
 
@@ -618,6 +620,7 @@ void DeathmatchScoreboardMessage (gentity_t *client);
 //
 // g_cmds.c
 //
+char *ConcatArgs( int start );
 
 //
 // g_pweapon.c
