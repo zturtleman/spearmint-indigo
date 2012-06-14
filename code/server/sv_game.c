@@ -516,6 +516,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case BOTLIB_AAS_AREA_REACHABILITY:
 		return botlib_export->aas.AAS_AreaReachability( args[1] );
+	case BOTLIB_AAS_BEST_REACHABLE_AREA:
+		return botlib_export->aas.AAS_BestReachableArea( VMA(1), VMA(2), VMA(3), VMA(4) );
 
 	case BOTLIB_AAS_AREA_TRAVEL_TIME_TO_GOAL_AREA:
 		return botlib_export->aas.AAS_AreaTravelTimeToGoalArea( args[1], VMA(2), args[3], args[4] );
