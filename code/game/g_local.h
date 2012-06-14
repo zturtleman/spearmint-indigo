@@ -981,3 +981,5 @@ int		trap_GeneticParentsAndChildSelection(int numranks, float *ranks, int *paren
 
 void	trap_SnapVector( float *v );
 
+void	trap_AddCommand( const char *cmdName );
+void	trap_RemoveCommand( const char *cmdName );

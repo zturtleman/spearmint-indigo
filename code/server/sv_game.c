@@ -437,6 +437,13 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		Q_SnapVector(VMA(1));
 		return 0;
 
+	case G_ADDCOMMAND:
+		Cmd_AddCommand( VMA(1), NULL );
+		return 0;
+	case G_REMOVECOMMAND:
+		Cmd_RemoveCommandSafe( VMA(1) );
+		return 0;
+
 		//====================================
 
 	case BOTLIB_SETUP:

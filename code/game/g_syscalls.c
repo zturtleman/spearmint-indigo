@@ -238,6 +238,14 @@ void trap_SnapVector( float *v ) {
 	return;
 }
 
+void trap_AddCommand( const char *cmdName ) {
+	syscall( G_ADDCOMMAND, cmdName );
+}
+
+void trap_RemoveCommand( const char *cmdName ) {
+	syscall( G_REMOVECOMMAND, cmdName );
+}
+
 // BotLib traps start here
 int trap_BotLibSetup( void ) {
 	return syscall( BOTLIB_SETUP );
