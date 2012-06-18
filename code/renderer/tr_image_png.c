@@ -972,7 +972,7 @@ static qboolean UnfilterImage(uint8_t  *DecompressedData,
 			PixelLeft = DecompPtr;
 
 			/*
-			 *  We only have a upleft pixel if we are on the second line or above.
+			 *  We only have an upleft pixel if we are on the second line or above.
 			 */
 
 			if(h > 0)
@@ -2141,7 +2141,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 		ChunkHeaderType   = BigLong(CH->Type);
 
 		/*
-		 *  Check if the chunk is an PLTE.
+		 *  Check if the chunk is a PLTE.
 		 */
 
 		if(!(ChunkHeaderType == PNG_ChunkType_PLTE))
@@ -2212,7 +2212,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 	}
 
 	/*
-	 *  transparency information is sometimes stored in an tRNS chunk
+	 *  transparency information is sometimes stored in a tRNS chunk
 	 */
 
 	/*
@@ -2243,7 +2243,7 @@ void R_LoadPNG(const char *name, byte **pic, int *width, int *height)
 		ChunkHeaderType   = BigLong(CH->Type);
 
 		/*
-		 *  Check if the chunk is an tRNS.
+		 *  Check if the chunk is a tRNS.
 		 */
 
 		if(!(ChunkHeaderType == PNG_ChunkType_tRNS))

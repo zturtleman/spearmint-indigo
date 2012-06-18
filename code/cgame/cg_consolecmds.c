@@ -32,8 +32,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 // executed by a key binding
 
 #include "cg_local.h"
-#include "../ui/ui_shared.h"
 #ifdef MISSIONPACK
+#include "../ui/ui_shared.h"
 extern menuDef_t *menuScoreboard;
 #endif
 
@@ -220,6 +220,7 @@ static void CG_TellAttacker_f( void ) {
 	trap_SendClientCommand( command );
 }
 
+#ifdef MISSIONPACK
 static void CG_VoiceTellTarget_f( void ) {
 	int		clientNum;
 	char	command[128];
@@ -250,7 +251,6 @@ static void CG_VoiceTellAttacker_f( void ) {
 	trap_SendClientCommand( command );
 }
 
-#ifdef MISSIONPACK
 static void CG_NextTeamMember_f( void ) {
   CG_SelectNextPlayer();
 }
@@ -492,12 +492,12 @@ static consoleCommand_t	commands[] = {
 	{ "4weapnext", CG_4NextWeapon_f },
 	{ "4weapprev", CG_4PrevWeapon_f },
 	{ "4weapon", CG_4Weapon_f },
+	{ "tcmd", CG_TargetCommand_f },
 	{ "tell_target", CG_TellTarget_f },
 	{ "tell_attacker", CG_TellAttacker_f },
+#ifdef MISSIONPACK
 	{ "vtell_target", CG_VoiceTellTarget_f },
 	{ "vtell_attacker", CG_VoiceTellAttacker_f },
-	{ "tcmd", CG_TargetCommand_f },
-#ifdef MISSIONPACK
 	{ "loadhud", CG_LoadHud_f },
 	{ "nextTeamMember", CG_NextTeamMember_f },
 	{ "prevTeamMember", CG_PrevTeamMember_f },
@@ -577,6 +577,7 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "say"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "say_team"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "tell"));
+#ifdef MISSIONPACK
 		trap_AddCommand(Com_LocalClientCvarName(i, "vsay"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "vsay_team"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "vtell"));
@@ -584,10 +585,12 @@ void CG_InitConsoleCommands( void ) {
 		trap_AddCommand(Com_LocalClientCvarName(i, "vosay_team"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "votell"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "vtaunt"));
+#endif
 		trap_AddCommand(Com_LocalClientCvarName(i, "give"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "god"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "notarget"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "noclip"));
+		trap_AddCommand(Com_LocalClientCvarName(i, "where"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "kill"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "teamtask"));
 		trap_AddCommand(Com_LocalClientCvarName(i, "levelshot"));
