@@ -326,7 +326,7 @@ int G_RemoveRandomBot( int team ) {
 		if ( team >= 0 && cl->sess.sessionTeam != team ) {
 			continue;
 		}
-		trap_SendConsoleCommand( EXEC_INSERT, va("clientkick %d\n", cl->ps.clientNum) );
+		trap_SendConsoleCommand( EXEC_INSERT, va("kicknum %d\n", cl->ps.clientNum) );
 		return qtrue;
 	}
 	return qfalse;
