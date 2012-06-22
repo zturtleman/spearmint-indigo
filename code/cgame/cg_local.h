@@ -1620,6 +1620,7 @@ void		trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin );
 // given entityNum and position
 void		trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson );
 sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed );		// returns buzz if not found
+int			trap_S_SoundDuration( sfxHandle_t handle );
 void		trap_S_StartBackgroundTrack( const char *intro, const char *loop );	// empty name stops music
 void	trap_S_StopBackgroundTrack( void );
 

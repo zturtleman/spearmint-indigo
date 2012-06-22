@@ -131,6 +131,8 @@ typedef enum {
 	// 1.32
 	UI_FS_SEEK,
 
+	UI_S_SOUNDDURATION
+
 	// See sharedTraps_t in qcommon.h for TRAP_MEMSET=100, etc
 } uiImport_t;
 
