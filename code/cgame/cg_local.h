@@ -1699,6 +1699,11 @@ qboolean	trap_Key_IsDown( int keynum );
 int			trap_Key_GetCatcher( void );
 void		trap_Key_SetCatcher( int catcher );
 int			trap_Key_GetKey( const char *binding );
+void		trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
+void		trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
+void		trap_Key_SetBinding( int keynum, const char *binding );
+void		trap_Key_SetOverstrikeMode( qboolean state );
+qboolean	trap_Key_GetOverstrikeMode( void );
 
 
 typedef enum {
