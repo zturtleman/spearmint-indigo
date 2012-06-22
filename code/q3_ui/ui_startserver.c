@@ -633,7 +633,8 @@ typedef struct {
 	menubitmap_s		mappic;
 	menubitmap_s		picframe;
 
-	menulist_s			dedicated;
+	menuradiobutton_s	publicserver;
+	menuradiobutton_s	dedicated;
 	menufield_s			timelimit;
 	menufield_s			fraglimit;
 	menufield_s			flaglimit;
@@ -662,13 +663,6 @@ typedef struct {
 } serveroptions_t;
 
 static serveroptions_t s_serveroptions;
-
-static const char *dedicated_list[] = {
-	"No",
-	"LAN",
-	"Internet",
-	NULL
-};
 
 #define PT_OPEN 0
 #define PT_BOT 1
@@ -741,6 +735,7 @@ static void ServerOptions_Start( void ) {
 	int		fraglimit;
 	int		maxclients;
 	int		localClients;
+	int		publicserver;
 	int		dedicated;
 	int		friendlyfire;
 	int		flaglimit;
@@ -753,6 +748,7 @@ static void ServerOptions_Start( void ) {
 	timelimit	 = atoi( s_serveroptions.timelimit.field.buffer );
 	fraglimit	 = atoi( s_serveroptions.fraglimit.field.buffer );
 	flaglimit	 = atoi( s_serveroptions.flaglimit.field.buffer );
+	publicserver = s_serveroptions.publicserver.curvalue;
 	dedicated	 = s_serveroptions.dedicated.curvalue;
 	friendlyfire = s_serveroptions.friendlyfire.curvalue;
 	pure		 = s_serveroptions.pure.curvalue;
@@ -804,7 +800,9 @@ static void ServerOptions_Start( void ) {
 	}
 
 	trap_Cvar_SetValue( "sv_maxclients", Com_Clamp( 0, 12, maxclients ) );
-	trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 2, dedicated ) );
+	trap_Cvar_SetValue( "ui_publicServer", Com_Clamp( 0, 1, publicserver ) );
+	trap_Cvar_SetValue( "sv_public", Com_Clamp( 0, 1, publicserver ) );
+	trap_Cvar_SetValue( "dedicated", Com_Clamp( 0, 1, dedicated ) );
 	trap_Cvar_SetValue ("timelimit", Com_Clamp( 0, timelimit, timelimit ) );
 	trap_Cvar_SetValue ("fraglimit", Com_Clamp( 0, fraglimit, fraglimit ) );
 	trap_Cvar_SetValue ("capturelimit", Com_Clamp( 0, flaglimit, flaglimit ) );
@@ -1211,6 +1209,7 @@ static void ServerOptions_SetMenuItems( void ) {
 		break;
 	}
 
+	s_serveroptions.publicserver.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "ui_publicServer" ) );
 	Q_strncpyz( s_serveroptions.hostname.field.buffer, UI_Cvar_VariableString( "sv_hostname" ), sizeof( s_serveroptions.hostname.field.buffer ) );
 	s_serveroptions.pure.curvalue = Com_Clamp( 0, 1, trap_Cvar_VariableValue( "sv_pure" ) );
 
@@ -1380,14 +1379,20 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 
 	if( s_serveroptions.multiplayer ) {
 		y += BIGCHAR_HEIGHT+2;
-		s_serveroptions.dedicated.generic.type		= MTYPE_SPINCONTROL;
+		s_serveroptions.publicserver.generic.type	= MTYPE_RADIOBUTTON;
+		s_serveroptions.publicserver.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+		s_serveroptions.publicserver.generic.x		= OPTIONS_X;
+		s_serveroptions.publicserver.generic.y		= y;
+		s_serveroptions.publicserver.generic.name	= "Advertise on Internet:";
+
+		y += BIGCHAR_HEIGHT+2;
+		s_serveroptions.dedicated.generic.type	= MTYPE_RADIOBUTTON;
 		s_serveroptions.dedicated.generic.id		= ID_DEDICATED;
-		s_serveroptions.dedicated.generic.flags		= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
+		s_serveroptions.dedicated.generic.flags	= QMF_PULSEIFFOCUS|QMF_SMALLFONT;
 		s_serveroptions.dedicated.generic.callback	= ServerOptions_Event;
-		s_serveroptions.dedicated.generic.x			= OPTIONS_X;
-		s_serveroptions.dedicated.generic.y			= y;
-		s_serveroptions.dedicated.generic.name		= "Dedicated:";
-		s_serveroptions.dedicated.itemnames			= dedicated_list;
+		s_serveroptions.dedicated.generic.x		= OPTIONS_X;
+		s_serveroptions.dedicated.generic.y		= y;
+		s_serveroptions.dedicated.generic.name	= "Dedicated:";
 	}
 
 	if( s_serveroptions.multiplayer ) {
@@ -1517,9 +1522,8 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 	}
 	Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.pure );
 	if( s_serveroptions.multiplayer ) {
+		Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.publicserver );
 		Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.dedicated );
-	}
-	if( s_serveroptions.multiplayer ) {
 		Menu_AddItem( &s_serveroptions.menu, &s_serveroptions.hostname );
 	}
 

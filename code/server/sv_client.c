@@ -61,6 +61,11 @@ void SV_GetChallenge(netadr_t from)
 	char *gameName;
 	qboolean gameMismatch;
 
+	// Don't allow players to connect if sv_public is -2
+	if ( sv_public->integer <= -2 ) {
+		return;
+	}
+
 	// ignore if we are in single player
 	if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive")) {
 		return;

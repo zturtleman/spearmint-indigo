@@ -66,6 +66,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // Heartbeat for dpmaster protocol. You shouldn't change this unless you know what you're doing
 #define HEARTBEAT_FOR_MASTER		"DarkPlaces"
+#define FLATLINE_FOR_MASTER			HEARTBEAT_FOR_MASTER
 
 // id Software games to not auto download
 #define BASEQ3				"baseq3"

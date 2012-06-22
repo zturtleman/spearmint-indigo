@@ -703,6 +703,8 @@ void SV_Init (void)
 	sv_lanForceRate = Cvar_Get ("sv_lanForceRate", "1", CVAR_ARCHIVE );
 	sv_banFile = Cvar_Get("sv_banFile", "serverbans.dat", CVAR_ARCHIVE);
 
+	sv_public = Cvar_Get("sv_public", (com_dedicated->integer == 2) ? "1" : "0", 0 );
+
 	// initialize bot cvars so they are listed and can be set before loading the botlib
 	SV_BotInitCvars();
 
@@ -788,6 +790,7 @@ void SV_Shutdown( char *finalmsg ) {
 
 	Cvar_Set( "sv_running", "0" );
 	Cvar_Set("ui_singlePlayerActive", "0");
+	Cvar_Set("sv_public", "0");
 
 	Com_Printf( "---------------------------\n" );
 
