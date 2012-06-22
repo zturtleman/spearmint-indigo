@@ -377,7 +377,6 @@ Kick a user off of the server
 */
 static void SV_Kick_f( void ) {
 	client_t	*cl;
-	int			i;
 
 	// make sure server is running
 	if ( !com_sv_running->integer ) {
