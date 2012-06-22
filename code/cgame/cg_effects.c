@@ -538,7 +538,7 @@ void CG_Bleed( vec3_t origin, int entityNum ) {
 
 	// don't show player's own blood in view
 	if ( CG_LocalClientPlayerStateForClientNum(entityNum) && (!cg.snap || cg.snap->numPSs <= 1) ) {
-		ex->refEntity.renderfx |= RF_THIRD_PERSON;
+		ex->refEntity.renderfx |= RF_ONLY_MIRROR;
 	}
 }
 

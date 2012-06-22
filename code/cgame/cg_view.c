@@ -117,7 +117,7 @@ Replaces the current view weapon with the given model
 void CG_TestGun_f (void) {
 	CG_TestModel_f();
 	cg.testGun = qtrue;
-	cg.testModelEntity.renderfx = RF_MINLIGHT | RF_DEPTHHACK | RF_FIRST_PERSON;
+	cg.testModelEntity.renderfx = RF_DEPTHHACK | RF_NO_MIRROR | RF_MINLIGHT;
 }
 
 
@@ -714,7 +714,7 @@ static void CG_DamageBlendBlob( void ) {
 
 	memset( &ent, 0, sizeof( ent ) );
 	ent.reType = RT_SPRITE;
-	ent.renderfx = RF_FIRST_PERSON;
+	ent.renderfx = RF_NO_MIRROR;
 
 	VectorMA( cg.refdef.vieworg, 8, cg.refdef.viewaxis[0], ent.origin );
 	VectorMA( ent.origin, cg.cur_lc->damageX * -8, cg.refdef.viewaxis[1], ent.origin );

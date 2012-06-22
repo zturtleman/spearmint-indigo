@@ -200,7 +200,7 @@ static void CG_General( centity_t *cent ) {
 
 	// player model
 	if (s1->number == cg.cur_ps->clientNum) {
-		ent.renderfx |= RF_THIRD_PERSON;	// only draw from mirrors
+		ent.renderfx |= RF_ONLY_MIRROR;
 	}
 
 	// convert angles to axis

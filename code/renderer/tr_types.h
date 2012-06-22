@@ -39,8 +39,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 // renderfx flags
 #define	RF_MINLIGHT		0x0001		// allways have some light (viewmodel, some items)
-#define	RF_THIRD_PERSON		0x0002		// don't draw through eyes, only mirrors (player bodies, chat sprites)
-#define	RF_FIRST_PERSON		0x0004		// only draw through eyes (view weapon, damage blood blob)
+#define	RF_ONLY_MIRROR		0x0002		// only draw in mirrors and portals
+#define	RF_NO_MIRROR		0x0004		// do not draw in mirrors or portals
 #define	RF_DEPTHHACK		0x0008		// for view weapon Z crunching
 
 #define RF_CROSSHAIR		0x0010		// This item is a cross hair and will draw over everything similar to

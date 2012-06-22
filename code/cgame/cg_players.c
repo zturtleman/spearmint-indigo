@@ -1900,7 +1900,7 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 	refEntity_t		ent;
 
 	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.renderingThirdPerson ) {
-		rf = RF_THIRD_PERSON;		// only show in mirrors
+		rf = RF_ONLY_MIRROR;
 	} else {
 		rf = 0;
 	}
@@ -2265,7 +2265,7 @@ void CG_Player( centity_t *cent ) {
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->clientNum) {
 		if (!cg.renderingThirdPerson) {
-			renderfx = RF_THIRD_PERSON;			// only draw in mirrors
+			renderfx = RF_ONLY_MIRROR;
 		} else {
 			if (cg_cameraMode.integer) {
 				return;
@@ -2500,7 +2500,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.hModel = cgs.media.invulnerabilityPowerupModel;
 		powerup.customSkin = 0;
 		// always draw
-		powerup.renderfx &= ~RF_THIRD_PERSON;
+		powerup.renderfx &= ~RF_ONLY_MIRROR;
 		VectorCopy(cent->lerpOrigin, powerup.origin);
 
 		if ( cg.time - ci->invulnerabilityStartTime < 250 ) {
@@ -2524,7 +2524,7 @@ void CG_Player( centity_t *cent ) {
 		powerup.hModel = cgs.media.medkitUsageModel;
 		powerup.customSkin = 0;
 		// always draw
-		powerup.renderfx &= ~RF_THIRD_PERSON;
+		powerup.renderfx &= ~RF_ONLY_MIRROR;
 		VectorClear(angles);
 		AnglesToAxis(angles, powerup.axis);
 		VectorCopy(cent->lerpOrigin, powerup.origin);

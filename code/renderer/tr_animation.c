@@ -336,7 +336,8 @@ void R_MDRAddAnimSurfaces( trRefEntity_t *ent ) {
 
 	header = (mdrHeader_t *) tr.currentModel->modelData;
 	
-	personalModel = (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal;
+	// don't add mirror only objects if not in a mirror/portal
+	personalModel = (ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal;
 	
 	if ( ent->e.renderfx & RF_WRAP_FRAMES )
 	{

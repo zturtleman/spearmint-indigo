@@ -1229,6 +1229,7 @@ R_AddEntitySurfaces
 void R_AddEntitySurfaces (void) {
 	trRefEntity_t	*ent;
 	shader_t		*shader;
+	qboolean		onlyRenderShadows;
 
 	if ( !r_drawentities->integer ) {
 		return;
@@ -1246,11 +1247,26 @@ void R_AddEntitySurfaces (void) {
 
 		//
 		// the weapon model must be handled special --
-		// we don't want the hacked weapon position showing in 
+		// we don't want the hacked first person weapon position showing in 
 		// mirrors, because the true body position will already be drawn
 		//
-		if ( (ent->e.renderfx & RF_FIRST_PERSON) && tr.viewParms.isPortal) {
+		if ((ent->e.renderfx & RF_NO_MIRROR) && tr.viewParms.isPortal) {
 			continue;
+		}
+
+		onlyRenderShadows = qfalse;
+
+		//
+		// the player model must be handled special --
+		// we only want the player model shown in mirrors in first person mode,
+		// but may need to render shadow.
+		//
+		if ((ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal) {
+			if (ent->e.reType == RT_MODEL && (ent->e.renderfx & RF_SHADOW_PLANE)) {
+				onlyRenderShadows = qtrue;
+			} else {
+				continue;
+			}
 		}
 
 		// simple generated models, like sprites and beams, are not culled
@@ -1262,12 +1278,6 @@ void R_AddEntitySurfaces (void) {
 		case RT_LIGHTNING:
 		case RT_RAIL_CORE:
 		case RT_RAIL_RINGS:
-			// self blood sprites, talk balloons, etc should not be drawn in the primary
-			// view.  We can't just do this check for all entities, because md3
-			// entities may still want to cast shadows from them
-			if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
-				continue;
-			}
 			shader = R_GetShaderByHandle( ent->e.customShader );
 			R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0 );
 			break;
@@ -1280,6 +1290,13 @@ void R_AddEntitySurfaces (void) {
 			if (!tr.currentModel) {
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
 			} else {
+				// Check if model format doesn't support only rendering shadows
+				if (onlyRenderShadows && (tr.currentModel->type == MOD_BAD
+					|| tr.currentModel->type == MOD_BRUSH
+					|| tr.currentModel->type == MOD_MD4)) {
+					break;
+				}
+
 				switch ( tr.currentModel->type ) {
 				case MOD_MESH:
 					R_AddMD3Surfaces( ent );
@@ -1299,9 +1316,6 @@ void R_AddEntitySurfaces (void) {
 					R_AddBrushModelSurfaces( ent );
 					break;
 				case MOD_BAD:		// null model axis
-					if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
-						break;
-					}
 					R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0 );
 					break;
 				default:
