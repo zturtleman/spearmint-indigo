@@ -205,6 +205,14 @@ ifndef USE_INTERNAL_FREETYPE
 USE_INTERNAL_FREETYPE=1
 endif
 
+ifndef USE_INTERNAL_OGG
+USE_INTERNAL_OGG=1
+endif
+
+ifndef USE_INTERNAL_VORBIS
+USE_INTERNAL_VORBIS=1
+endif
+
 ifndef USE_LOCAL_HEADERS
 USE_LOCAL_HEADERS=1
 endif
@@ -394,10 +402,6 @@ ifneq (,$(findstring "$(PLATFORM)", "linux" "gnu_kfreebsd" "kfreebsd-gnu"))
     endif
   endif
 
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
-  endif
-
   ifeq ($(USE_MUMBLE),1)
     CLIENT_LIBS += -lrt
   endif
@@ -466,10 +470,6 @@ ifeq ($(PLATFORM),darwin)
     ifneq ($(USE_INTERNAL_FREETYPE), 1)
       BASE_CFLAGS += $(FREETYPE_CFLAGS)
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   BASE_CFLAGS += -D_THREAD_SAFE=1
@@ -609,23 +609,11 @@ ifeq ($(PLATFORM),mingw32)
       RENDERER_LIBS += $(WINLIBDIR)/libSDL.dll.a
       SDLDLL=SDL.dll
     endif
-
-    ifeq ($(USE_CODEC_VORBIS),1)
-      CLIENT_CFLAGS += -I$(OGGDIR)/include \
-                      -I$(VORBISDIR)/include
-      CLIENT_LIBS += $(WINLIBDIR)/libvorbisfile.a \
-                      $(WINLIBDIR)/libvorbis.a \
-                      $(WINLIBDIR)/libogg.a
-    endif
   else
     CLIENT_CFLAGS += $(SDL_CFLAGS)
     CLIENT_LIBS += $(SDL_LIBS)
     RENDERER_LIBS += $(SDL_LIBS)
     SDLDLL=SDL.dll
-
-    ifeq ($(USE_CODEC_VORBIS),1)
-      CLIENT_LIBS += -lvorbisfile -lvorbis -logg
-    endif
   endif
 
   BUILD_CLIENT_SMP = 0
@@ -672,10 +660,6 @@ ifeq ($(PLATFORM),freebsd)
     ifeq ($(USE_CURL_DLOPEN),1)
       CLIENT_LIBS += -lcurl
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   # cross-compiling tweaks
@@ -726,10 +710,6 @@ ifeq ($(PLATFORM),openbsd)
     ifneq ($(USE_OPENAL_DLOPEN),1)
       CLIENT_LIBS += $(THREAD_LIBS) -lossaudio -lopenal
     endif
-  endif
-
-  ifeq ($(USE_CODEC_VORBIS),1)
-    CLIENT_LIBS += -lvorbisfile -lvorbis -logg
   endif
 
   ifeq ($(USE_CURL),1) 
@@ -1003,6 +983,20 @@ else
 endif
 endif
 
+ifeq ($(USE_CODEC_VORBIS),1)
+ifeq ($(USE_INTERNAL_VORBIS),1)
+  CLIENT_CFLAGS += -I$(VORBISDIR)/include
+  
+else
+  CLIENT_LIBS += -lvorbisfile -lvorbis
+endif
+ifeq ($(USE_INTERNAL_OGG),1)
+  CLIENT_CFLAGS += -I$(OGGDIR)/include
+else
+  CLIENT_LIBS += -logg
+endif
+endif
+
 ifeq ("$(CC)", $(findstring "$(CC)", "clang" "clang++"))
   BASE_CFLAGS += -Qunused-arguments
 endif
@@ -1215,6 +1209,7 @@ makedirs:
 	@if [ ! -d $(BUILD_DIR) ];then $(MKDIR) $(BUILD_DIR);fi
 	@if [ ! -d $(B) ];then $(MKDIR) $(B);fi
 	@if [ ! -d $(B)/client ];then $(MKDIR) $(B)/client;fi
+	@if [ ! -d $(B)/client/vorbis ];then $(MKDIR) $(B)/client/vorbis;fi
 	@if [ ! -d $(B)/renderer ];then $(MKDIR) $(B)/renderer;fi
 	@if [ ! -d $(B)/renderersmp ];then $(MKDIR) $(B)/renderersmp;fi
 	@if [ ! -d $(B)/ded ];then $(MKDIR) $(B)/ded;fi
@@ -1519,6 +1514,38 @@ ifeq ($(PLATFORM),mingw32)
 else
   Q3OBJ += \
 	$(B)/client/con_tty.o
+endif
+
+ifeq ($(USE_CODEC_VORBIS),1)
+ifneq ($(USE_INTERNAL_VORBIS),0)
+  Q3OBJ += \
+		$(B)/client/vorbis/mdct.o \
+		$(B)/client/vorbis/smallft.o \
+		$(B)/client/vorbis/block.o \
+		$(B)/client/vorbis/envelope.o \
+		$(B)/client/vorbis/window.o \
+		$(B)/client/vorbis/lsp.o \
+		$(B)/client/vorbis/lpc.o \
+		$(B)/client/vorbis/analysis.o \
+		$(B)/client/vorbis/synthesis.o \
+		$(B)/client/vorbis/psy.o \
+		$(B)/client/vorbis/info.o \
+		$(B)/client/vorbis/floor1.o \
+		$(B)/client/vorbis/floor0.o \
+		$(B)/client/vorbis/res0.o \
+		$(B)/client/vorbis/mapping0.o \
+		$(B)/client/vorbis/registry.o \
+		$(B)/client/vorbis/codebook.o \
+		$(B)/client/vorbis/sharedbook.o \
+		$(B)/client/vorbis/lookup.o \
+		$(B)/client/vorbis/bitrate.o \
+		$(B)/client/vorbis/vorbisfile.o
+endif
+ifneq ($(USE_INTERNAL_OGG),0)
+  Q3OBJ += \
+		$(B)/client/bitwise.o \
+		$(B)/client/framing.o
+endif
 endif
 
 Q3ROBJ = \
@@ -2342,6 +2369,12 @@ $(B)/client/%.o: $(SPEEXDIR)/%.c
 	$(DO_CC)
 
 $(B)/client/%.o: $(ZDIR)/%.c
+	$(DO_CC)
+
+$(B)/client/%.o: $(OGGDIR)/src/%.c
+	$(DO_CC)
+
+$(B)/client/vorbis/%.o: $(VORBISDIR)/lib/%.c
 	$(DO_CC)
 
 $(B)/client/%.o: $(SDLDIR)/%.c
