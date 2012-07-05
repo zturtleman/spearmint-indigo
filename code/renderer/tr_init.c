@@ -186,7 +186,6 @@ int		max_polyverts;
 */
 static void InitOpenGL( void )
 {
-	static qboolean firstTime = qtrue;
 	char renderer_buffer[1024];
 
 	//
@@ -222,14 +221,6 @@ static void InitOpenGL( void )
 
 	// init command buffers and SMP
 	R_InitCommandBuffers();
-
-	if (firstTime)
-	{
-		firstTime = qfalse;
-
-		// print info
-		GfxInfo_f();
-	}
 
 	// set default state
 	GL_SetDefaultState();
@@ -1160,6 +1151,7 @@ R_Init
 ===============
 */
 void R_Init( void ) {	
+	static qboolean firstTime = qtrue;
 	int	err;
 	int i;
 	byte *ptr;
@@ -1252,6 +1244,14 @@ void R_Init( void ) {
 	err = qglGetError();
 	if ( err != GL_NO_ERROR )
 		ri.Printf (PRINT_ALL, "glGetError() = 0x%x\n", err);
+
+	if (firstTime)
+	{
+		firstTime = qfalse;
+
+		// print info
+		GfxInfo_f();
+	}
 
 	ri.Printf(PRINT_DEVELOPER, "----- finished R_Init -----\n");
 }

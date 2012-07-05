@@ -467,7 +467,6 @@ static void CG_MapRestart( void ) {
 	cg.fraglimitWarnings = 0;
 
 	cg.timelimitWarnings = 0;
-
 	cg.intermissionStarted = qfalse;
 	cg.levelShot = qfalse;
 
@@ -504,6 +503,9 @@ static void CG_MapRestart( void ) {
 #endif
 
 	for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
+		cg.localClients[lc].rewardTime = 0;
+		cg.localClients[lc].rewardStack = 0;
+
 		trap_Cvar_Set(Com_LocalClientCvarName(lc, "cg_thirdPerson"), "0");
 	}
 }
