@@ -1992,8 +1992,8 @@ Returns the Z component of the surface being shadowed
 ===============
 */
 #define	SHADOW_DISTANCE		128
-static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
-	vec3_t		end, mins = {-15, -15, 0}, maxs = {15, 15, 2};
+static qboolean CG_PlayerShadow( centity_t *cent, vec3_t start, float *shadowPlane ) {
+	vec3_t		end, mins = {-8, -8, 0}, maxs = {8, 8, 2};
 	trace_t		trace;
 	float		alpha;
 
@@ -2009,10 +2009,10 @@ static qboolean CG_PlayerShadow( centity_t *cent, float *shadowPlane ) {
 	}
 
 	// send a trace down from the player to the ground
-	VectorCopy( cent->lerpOrigin, end );
+	VectorCopy( start, end );
 	end[2] -= SHADOW_DISTANCE;
 
-	trap_CM_BoxTrace( &trace, cent->lerpOrigin, end, mins, maxs, 0, MASK_PLAYERSOLID );
+	trap_CM_BoxTrace( &trace, start, end, mins, maxs, 0, MASK_PLAYERSOLID );
 
 	// no shadow if too high
 	if ( trace.fraction == 1.0 || trace.startsolid || trace.allsolid ) {
@@ -2237,6 +2237,8 @@ void CG_Player( centity_t *cent ) {
 	int				renderfx;
 	qboolean		shadow;
 	float			shadowPlane;
+	refEntity_t		shadowRef;
+	vec3_t			shadowOrigin;
 #ifdef MISSIONPACK
 	refEntity_t		skull;
 	refEntity_t		powerup;
@@ -2288,8 +2290,18 @@ void CG_Player( centity_t *cent ) {
 	// add the talk baloon or disconnect icon
 	CG_PlayerSprites( cent );
 
+	// cast shadow from torso origin
+	memcpy(&shadowRef, &torso, sizeof(shadowRef));
+	VectorCopy(cent->lerpOrigin, legs.origin);
+
+	if (CG_PositionRotatedEntityOnTag(&shadowRef, &legs, ci->legsModel, "tag_torso")) {
+		VectorCopy(shadowRef.origin, shadowOrigin);
+	} else {
+		VectorCopy(cent->lerpOrigin, shadowOrigin);
+	}
+
 	// add the shadow
-	shadow = CG_PlayerShadow( cent, &shadowPlane );
+	shadow = CG_PlayerShadow( cent, shadowOrigin, &shadowPlane );
 
 	// add a water splash if partially in and out of water
 	CG_PlayerSplash( cent );
