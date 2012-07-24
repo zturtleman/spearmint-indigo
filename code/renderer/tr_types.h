@@ -189,7 +189,7 @@ typedef struct {
 	char					renderer_string[MAX_STRING_CHARS];
 	char					vendor_string[MAX_STRING_CHARS];
 	char					version_string[MAX_STRING_CHARS];
-	char					extensions_string[BIG_INFO_STRING];
+	char					extensions_string[BIG_INFO_STRING * 4];
 
 	int						maxTextureSize;			// queried from GL
 	int						numTextureUnits;		// multitexture ability
@@ -202,13 +202,18 @@ typedef struct {
 	qboolean				deviceSupportsGamma;
 	textureCompression_t	textureCompression;
 	qboolean				textureEnvAddAvailable;
+	qboolean				textureFilterAnisotropic;
+	int						maxAnisotropy;
 
-	int						vidWidth, vidHeight;
-	// aspect is the screen's physical width / height, which may be different
-	// than scrWidth / scrHeight if the pixels are non-square
-	// normal screens should be 4/3, but wide aspect monitors may be 16/9
+	// Game resolution, aspect, and refresh rate.
+	int						vidWidth;
+	int						vidHeight;
 	float					windowAspect;
 
+	// Display (desktop) resolution, aspect, and refresh rate.
+	int						displayWidth;
+	int						displayHeight;
+	float					displayAspect;
 	int						displayFrequency;
 
 	// synonymous with "does rendering consume the entire screen?", therefore
