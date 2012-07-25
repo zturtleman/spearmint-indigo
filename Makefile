@@ -2064,6 +2064,8 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/bg_pmove.o \
   $(B)/$(BASEGAME)/cgame/bg_slidemove.o \
   $(B)/$(BASEGAME)/cgame/bg_lib.o \
+  $(B)/$(BASEGAME)/cgame/bg_tracemap.o \
+  $(B)/$(BASEGAME)/cgame/cg_atmospheric.o \
   $(B)/$(BASEGAME)/cgame/cg_consolecmds.o \
   $(B)/$(BASEGAME)/cgame/cg_newdraw.o \
   $(B)/$(BASEGAME)/cgame/cg_draw.o \
@@ -2077,10 +2079,12 @@ Q3CGOBJ_ = \
   $(B)/$(BASEGAME)/cgame/cg_particles.o \
   $(B)/$(BASEGAME)/cgame/cg_players.o \
   $(B)/$(BASEGAME)/cgame/cg_playerstate.o \
+  $(B)/$(BASEGAME)/cgame/cg_polybus.o \
   $(B)/$(BASEGAME)/cgame/cg_predict.o \
   $(B)/$(BASEGAME)/cgame/cg_scoreboard.o \
   $(B)/$(BASEGAME)/cgame/cg_servercmds.o \
   $(B)/$(BASEGAME)/cgame/cg_snapshot.o \
+  $(B)/$(BASEGAME)/cgame/cg_spawn.o \
   $(B)/$(BASEGAME)/cgame/cg_view.o \
   $(B)/$(BASEGAME)/cgame/cg_weapons.o \
   \
@@ -2108,6 +2112,8 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/bg_pmove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/cgame/bg_lib.o \
+  $(B)/$(MISSIONPACK)/cgame/bg_tracemap.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_atmospheric.o \
   $(B)/$(MISSIONPACK)/cgame/cg_consolecmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_newdraw.o \
   $(B)/$(MISSIONPACK)/cgame/cg_draw.o \
@@ -2121,10 +2127,12 @@ MPCGOBJ_ = \
   $(B)/$(MISSIONPACK)/cgame/cg_particles.o \
   $(B)/$(MISSIONPACK)/cgame/cg_players.o \
   $(B)/$(MISSIONPACK)/cgame/cg_playerstate.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_polybus.o \
   $(B)/$(MISSIONPACK)/cgame/cg_predict.o \
   $(B)/$(MISSIONPACK)/cgame/cg_scoreboard.o \
   $(B)/$(MISSIONPACK)/cgame/cg_servercmds.o \
   $(B)/$(MISSIONPACK)/cgame/cg_snapshot.o \
+  $(B)/$(MISSIONPACK)/cgame/cg_spawn.o \
   $(B)/$(MISSIONPACK)/cgame/cg_view.o \
   $(B)/$(MISSIONPACK)/cgame/cg_weapons.o \
   $(B)/$(MISSIONPACK)/ui/ui_shared.o \
@@ -2162,6 +2170,7 @@ Q3GOBJ_ = \
   $(B)/$(BASEGAME)/game/bg_pmove.o \
   $(B)/$(BASEGAME)/game/bg_slidemove.o \
   $(B)/$(BASEGAME)/game/bg_lib.o \
+  $(B)/$(BASEGAME)/game/bg_tracemap.o \
   $(B)/$(BASEGAME)/game/g_active.o \
   $(B)/$(BASEGAME)/game/g_arenas.o \
   $(B)/$(BASEGAME)/game/g_bot.o \
@@ -2213,6 +2222,7 @@ MPGOBJ_ = \
   $(B)/$(MISSIONPACK)/game/bg_pmove.o \
   $(B)/$(MISSIONPACK)/game/bg_slidemove.o \
   $(B)/$(MISSIONPACK)/game/bg_lib.o \
+  $(B)/$(MISSIONPACK)/game/bg_tracemap.o \
   $(B)/$(MISSIONPACK)/game/g_active.o \
   $(B)/$(MISSIONPACK)/game/g_arenas.o \
   $(B)/$(MISSIONPACK)/game/g_bot.o \

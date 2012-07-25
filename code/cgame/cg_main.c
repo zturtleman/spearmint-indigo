@@ -190,6 +190,7 @@ vmCvar_t	cg_oldRail;
 vmCvar_t	cg_oldRocket;
 vmCvar_t	cg_oldPlasma;
 vmCvar_t	cg_trueLightning;
+vmCvar_t	cg_atmosphericEffects;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -336,7 +337,8 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_oldRail, "cg_oldRail", "1", CVAR_ARCHIVE},
 	{ &cg_oldRocket, "cg_oldRocket", "1", CVAR_ARCHIVE},
 	{ &cg_oldPlasma, "cg_oldPlasma", "1", CVAR_ARCHIVE},
-	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE}
+	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
+	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE }
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE }
 };
 
@@ -883,6 +885,10 @@ static void CG_RegisterGraphics( void ) {
 	CG_LoadingString( cgs.mapname );
 
 	trap_R_LoadWorldMap( cgs.mapname );
+
+	CG_LoadingString( "entities" );
+
+	CG_ParseEntitiesFromString();
 
 	// precache status bar pics
 	CG_LoadingString( "game media" );

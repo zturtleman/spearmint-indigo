@@ -2712,6 +2712,8 @@ void CG_DrawActive( stereoFrame_t stereoView ) {
 	if(stereoView != STEREO_CENTER)
 		CG_DrawCrosshair3D();
 
+	CG_PB_RenderPolyBuffers();
+
 	// draw 3D view
 	trap_R_RenderScene( &cg.refdef );
 

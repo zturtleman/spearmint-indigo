@@ -172,6 +172,8 @@ cvar_t	*r_maxpolys;
 int		max_polys;
 cvar_t	*r_maxpolyverts;
 int		max_polyverts;
+cvar_t	*r_maxpolybuffers;
+int		max_polybuffers;
 
 /*
 ** InitOpenGL
@@ -1123,6 +1125,7 @@ void R_Register( void )
 
 	r_maxpolys = ri.Cvar_Get( "r_maxpolys", va("%d", MAX_POLYS*MAX_SPLITVIEW), 0);
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va("%d", MAX_POLYVERTS*MAX_SPLITVIEW), 0);
+	r_maxpolybuffers = ri.Cvar_Get( "r_maxpolybuffers", va("%d", MAX_POLYS*MAX_SPLITVIEW), 0);
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
@@ -1206,15 +1209,25 @@ void R_Init( void ) {
 	if (max_polyverts < MAX_POLYVERTS)
 		max_polyverts = MAX_POLYVERTS;
 
-	ptr = ri.Hunk_Alloc( sizeof( *backEndData[0] ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
+	max_polybuffers = r_maxpolybuffers->integer;
+	if (max_polybuffers < MAX_POLYS)
+		max_polybuffers = MAX_POLYS;
+
+	ptr = ri.Hunk_Alloc( sizeof( *backEndData[0] ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts
+			+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);
 	backEndData[0] = (backEndData_t *) ptr;
 	backEndData[0]->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData[0] ));
 	backEndData[0]->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData[0] ) + sizeof(srfPoly_t) * max_polys);
+	backEndData[0]->polybuffers = (srfPolyBuffer_t *) ((char *) ptr + sizeof( *backEndData[0] ) + sizeof(srfPoly_t) * max_polys
+			+ sizeof(polyVert_t) * max_polyverts);
 	if ( r_smp->integer ) {
-		ptr = ri.Hunk_Alloc( sizeof( *backEndData[1] ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts, h_low);
+		ptr = ri.Hunk_Alloc( sizeof( *backEndData[1] ) + sizeof(srfPoly_t) * max_polys + sizeof(polyVert_t) * max_polyverts
+				+ sizeof(srfPolyBuffer_t) * max_polybuffers, h_low);
 		backEndData[1] = (backEndData_t *) ptr;
 		backEndData[1]->polys = (srfPoly_t *) ((char *) ptr + sizeof( *backEndData[1] ));
 		backEndData[1]->polyVerts = (polyVert_t *) ((char *) ptr + sizeof( *backEndData[1] ) + sizeof(srfPoly_t) * max_polys);
+		backEndData[1]->polybuffers = (srfPolyBuffer_t *) ((char *) ptr + sizeof( *backEndData[1] ) + sizeof(srfPoly_t) * max_polys
+				+ sizeof(polyVert_t) * max_polyverts);
 	} else {
 		backEndData[1] = NULL;
 	}
@@ -1348,6 +1361,7 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 	re.ClearScene = RE_ClearScene;
 	re.AddRefEntityToScene = RE_AddRefEntityToScene;
 	re.AddPolyToScene = RE_AddPolyToScene;
+	re.AddPolyBufferToScene = RE_AddPolyBufferToScene;
 	re.LightForPoint = R_LightForPoint;
 	re.AddLightToScene = RE_AddLightToScene;
 	re.AddAdditiveLightToScene = RE_AddAdditiveLightToScene;
