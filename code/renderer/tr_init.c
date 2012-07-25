@@ -295,7 +295,6 @@ static int	s_numVidModes = ARRAY_LEN( r_vidModes );
 
 qboolean R_GetModeInfo( int *width, int *height, float *windowAspect, int mode ) {
 	vidmode_t	*vm;
-	float			pixelAspect;
 
 	if ( mode < -1 ) {
 		return qfalse;
@@ -1156,8 +1155,8 @@ void R_Init( void ) {
 	Com_Memset( &backEnd, 0, sizeof( backEnd ) );
 	Com_Memset( &tess, 0, sizeof( tess ) );
 
-	if(sizeof(glconfig_t) != 35932)
-		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 35932", (unsigned int) sizeof(glconfig_t));
+	if(sizeof(glconfig_t) != 35928)
+		ri.Error( ERR_FATAL, "Mod ABI incompatible: sizeof(glconfig_t) == %u != 35928", (unsigned int) sizeof(glconfig_t));
 
 //	Swap_Init();
 
