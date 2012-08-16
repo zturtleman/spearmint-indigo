@@ -151,7 +151,8 @@ typedef enum {
 	GF_SAWTOOTH, 
 	GF_INVERSE_SAWTOOTH, 
 
-	GF_NOISE
+	GF_NOISE,
+	GF_RANDOM
 
 } genFunc_t;
 
@@ -1026,6 +1027,7 @@ typedef struct {
 	float					triangleTable[FUNCTABLE_SIZE];
 	float					sawToothTable[FUNCTABLE_SIZE];
 	float					inverseSawToothTable[FUNCTABLE_SIZE];
+	float					noiseTable[FUNCTABLE_SIZE];
 	float					fogTable[FOG_TABLE_SIZE];
 } trGlobals_t;
 
@@ -1170,6 +1172,7 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );
+qboolean R_RandomOn( float t );
 void  R_NoiseInit( void );
 
 void R_SwapBuffers( int );
