@@ -1172,7 +1172,7 @@ extern cvar_t	*r_marksOnTriangleMeshes;
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );
-qboolean R_RandomOn( float t );
+int R_RandomOn( float t );
 void  R_NoiseInit( void );
 
 void R_SwapBuffers( int );
