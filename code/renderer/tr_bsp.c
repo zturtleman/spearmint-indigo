@@ -145,11 +145,29 @@ static	void R_LoadLightmaps( lump_t *l ) {
 	int			len;
 	byte		image[LIGHTMAP_SIZE*LIGHTMAP_SIZE*4];
 	int			i, j;
-	float maxIntensity = 0;
-	double sumIntensity = 0;
+	float		maxIntensity = 0;
+	double		sumIntensity = 0;
+	int			numExternalLightmaps = 0;
+
+	// ydnar: clear lightmaps first
+	tr.numLightmaps = tr.maxLightmaps = 0;
+	tr.lightmaps = NULL;
+
+	// if we are in r_vertexLight mode, we don't need the lightmaps at all
+	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
+		return;
+	}
+
+	// get number of external lightmaps
+	if (tr.worldDir) {
+		ri.FS_ListFiles(tr.worldDir, ".tga", &numExternalLightmaps);
+	}
 
 	len = l->filelen;
 	if ( !len ) {
+		// Allocate data for external lightmaps.
+		tr.maxLightmaps = numExternalLightmaps;
+		tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 		return;
 	}
 	buf = fileBase + l->fileofs;
@@ -165,12 +183,8 @@ static	void R_LoadLightmaps( lump_t *l ) {
 		tr.numLightmaps++;
 	}
 
-	// if we are in r_vertexLight mode, we don't need the lightmaps at all
-	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
-		return;
-	}
-
-	tr.lightmaps = ri.Hunk_Alloc( tr.numLightmaps * sizeof(image_t *), h_low );
+	tr.maxLightmaps = tr.numLightmaps + numExternalLightmaps;
+	tr.lightmaps = ri.Hunk_Alloc( tr.maxLightmaps * sizeof(image_t *), h_low );
 	for ( i = 0 ; i < tr.numLightmaps ; i++ ) {
 		// expand the 24 bit on-disk to 32 bit
 		buf_p = buf + i * LIGHTMAP_SIZE*LIGHTMAP_SIZE * 3;
@@ -1821,12 +1835,16 @@ void RE_LoadWorldMap( const char *name ) {
 	VectorNormalize( tr.sunDirection );
 
 	tr.worldMapLoaded = qtrue;
+	tr.worldDir = NULL;
 
 	// load it
     ri.FS_ReadFile( name, &buffer.v );
 	if ( !buffer.b ) {
 		ri.Error (ERR_DROP, "RE_LoadWorldMap: %s not found", name);
 	}
+
+	tr.worldDir = S_Malloc(strlen(name)+1);
+	COM_StripExtension(name, tr.worldDir, strlen(name)+1);
 
 	// clear tr.world so if the level fails to load, the next
 	// try will not look at the partially loaded version
