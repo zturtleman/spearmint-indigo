@@ -348,7 +348,7 @@ void SV_MasterHeartbeat(const char *message)
 	int			netenabled;
 
 	// Do not send heartbeats in single player.
-	if (Cvar_VariableValue("ui_singlePlayerActive") || Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER) {
+	if ( Com_GameIsSinglePlayer() ) {
 		return;
 	}
 
@@ -655,7 +655,7 @@ static void SVC_Status( netadr_t from ) {
 	}
 
 	// ignore if we are in single player
-	if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER ) {
+	if ( Com_GameIsSinglePlayer() ) {
 		return;
 	}
 
@@ -719,7 +719,7 @@ void SVC_Info( netadr_t from ) {
 	}
 
 	// ignore if we are in single player
-	if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive")) {
+	if ( Com_GameIsSinglePlayer() ) {
 		return;
 	}
 

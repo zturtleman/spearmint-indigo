@@ -31,6 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "q_shared.h"
 #include "qcommon.h"
+#include "../game/bg_public.h"
 #include <setjmp.h>
 #ifndef _WIN32
 #include <netinet/in.h>
@@ -3440,4 +3441,13 @@ qboolean Com_IsVoipTarget(uint8_t *voipTargets, int voipTargetsSize, int clientN
 		return (voipTargets[index] & (1 << (clientNum & 0x07)));
 
 	return qfalse;
+}
+
+/*
+====================
+Com_GameIsSinglePlayer
+====================
+*/
+qboolean Com_GameIsSinglePlayer( void ) {
+	return ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue( "ui_singlePlayerActive" ) );
 }

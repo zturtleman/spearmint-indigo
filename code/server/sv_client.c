@@ -67,7 +67,7 @@ void SV_GetChallenge(netadr_t from)
 	}
 
 	// ignore if we are in single player
-	if ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue("ui_singlePlayerActive")) {
+	if ( Com_GameIsSinglePlayer() ) {
 		return;
 	}
 
@@ -193,8 +193,7 @@ void SV_AddExtraLocalClient(client_t *owner, int lc, const char *userinfo) {
 	}
 
 	// Don't allow joining in single player
-	if (sv_gametype->integer == GT_SINGLE_PLAYER
-		|| Cvar_VariableIntegerValue("ui_singlePlayerActive")) {
+	if ( Com_GameIsSinglePlayer() ) {
 		SV_SendServerCommand( owner, "print \"Additional local clients not allowed in single player mode.\n\"" );
 		return;
 	}
