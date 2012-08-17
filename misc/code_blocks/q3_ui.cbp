@@ -129,6 +129,7 @@
 		<Unit filename="../../code/game/bg_misc.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../code/game/bg_misc.h" />
 		<Unit filename="../../code/game/bg_public.h" />
 		<Unit filename="../../code/q3_ui/ui_addbots.c">
 			<Option compilerVar="CC" />
