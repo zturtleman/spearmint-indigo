@@ -1121,7 +1121,7 @@ endef
 
 define DO_WINDRES
 $(echo_cmd) "WINDRES $<"
-$(Q)$(WINDRES) -i $< -o $@
+$(Q)$(WINDRES) -DWIN32_MISC_ICON_PATH -i $< -o $@
 endef
 
 
