@@ -814,8 +814,10 @@ typedef struct {
 	qhandle_t	battleSuitShader;
 	qhandle_t	battleWeaponShader;
 	qhandle_t	hastePuffShader;
+#ifdef MISSIONPACK
 	qhandle_t	redKamikazeShader;
 	qhandle_t	blueKamikazeShader;
+#endif
 
 	// weapon effect models
 	qhandle_t	bulletFlashModel;
@@ -849,8 +851,8 @@ typedef struct {
 	qhandle_t	medkitUsageModel;
 	qhandle_t	dustPuffShader;
 	qhandle_t	heartShader;
-#endif
 	qhandle_t	invulnerabilityPowerupModel;
+#endif
 
 	// scoreboard headers
 	qhandle_t	scoreboardName;
@@ -955,7 +957,9 @@ typedef struct {
 	sfxHandle_t flightSound;
 	sfxHandle_t medkitSound;
 
+#ifdef MISSIONPACK
 	sfxHandle_t weaponHoverSound;
+#endif
 
 	// teamplay sounds
 	sfxHandle_t captureAwardSound;
@@ -974,13 +978,17 @@ typedef struct {
 
 	sfxHandle_t redFlagReturnedSound;
 	sfxHandle_t blueFlagReturnedSound;
+#ifdef MISSIONPACK
 	sfxHandle_t neutralFlagReturnedSound;
+#endif
 	sfxHandle_t	enemyTookYourFlagSound;
-	sfxHandle_t	enemyTookTheFlagSound;
 	sfxHandle_t yourTeamTookEnemyFlagSound;
-	sfxHandle_t yourTeamTookTheFlagSound;
 	sfxHandle_t	youHaveFlagSound;
+#ifdef MISSIONPACK
+	sfxHandle_t	enemyTookTheFlagSound;
+	sfxHandle_t yourTeamTookTheFlagSound;
 	sfxHandle_t yourBaseIsUnderAttackSound;
+#endif
 	sfxHandle_t holyShitSound;
 
 	// tournament sounds
@@ -1007,10 +1015,11 @@ typedef struct {
 	sfxHandle_t doublerSound;
 	sfxHandle_t guardSound;
 	sfxHandle_t scoutSound;
-#endif
+
 	qhandle_t cursor;
 	qhandle_t selectCursor;
 	qhandle_t sizeCursor;
+#endif
 
 	sfxHandle_t	regenSound;
 	sfxHandle_t	protectSound;
