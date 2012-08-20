@@ -56,17 +56,3 @@ enum {
 	ET_MISSILE,
 	ET_MOVER
 };
-
-// server and botlib
-
-// Server, client, and botlib need GT_SINGLE_PLAYER, botlib needs GT_TEAM,
-//    server needs GT_FFA
-
-//FIXME: these are game specific
-
-#define GT_FFA 0				// free for all
-//GT_TOURNAMENT 1				// one on one tournament
-#define GT_SINGLE_PLAYER 2		// single player tournament
-#define GT_TEAM 3				// team deathmatch
-//GT_CTF 4						// capture the flag
-

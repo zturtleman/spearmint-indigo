@@ -31,7 +31,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "q_shared.h"
 #include "qcommon.h"
-#include "../game/bg_public.h"
 #include <setjmp.h>
 #ifndef _WIN32
 #include <netinet/in.h>
@@ -3449,5 +3448,5 @@ Com_GameIsSinglePlayer
 ====================
 */
 qboolean Com_GameIsSinglePlayer( void ) {
-	return ( Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER || Cvar_VariableValue( "ui_singlePlayerActive" ) );
+	return ( Cvar_VariableValue( "ui_singlePlayerActive" ) );
 }
