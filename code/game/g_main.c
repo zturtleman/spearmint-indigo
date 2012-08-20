@@ -387,7 +387,7 @@ void G_RegisterCvars( void ) {
 		trap_Cvar_Set( "g_gametype", "0" );
 	}
 
-	// Don't allow SP gametype unless single player cvar is enabled, it will pervent other clients from joining.
+	// Don't allow single player gametype to be used in multiplayer.
 	if ( g_gametype.integer == GT_SINGLE_PLAYER && !g_singlePlayer.integer) {
 		g_gametype.integer = GT_FFA;
 		trap_Cvar_Set( "g_gametype", va("%d", g_gametype.integer) );
