@@ -319,7 +319,6 @@
 		<Unit filename="../../code/game/bg_pmove.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../../code/game/bg_public.h" />
 		<Unit filename="../../code/game/bg_slidemove.c">
 			<Option compilerVar="CC" />
 		</Unit>
