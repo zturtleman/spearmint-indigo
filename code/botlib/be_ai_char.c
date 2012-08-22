@@ -465,7 +465,7 @@ int BotLoadCachedCharacter(char *charfile, float skill, int reload)
 	if (ch)
 	{
 		botcharacters[handle] = ch;
-		botimport.Print(PRT_MESSAGE, "loaded skill %f from %s\n", ch->skill, charfile);
+		botimport.Print(PRT_DEVELOPER, "loaded skill %f from %s\n", ch->skill, charfile);
 		return handle;
 	} //end if
 	//

@@ -100,9 +100,6 @@ typedef struct bot_movestate_s
 //prediction times
 #define PREDICTIONTIME_JUMP	3		//in seconds
 #define PREDICTIONTIME_MOVE	2		//in seconds
-//weapon indexes for weapon jumping
-#define WEAPONINDEX_ROCKET_LAUNCHER		5
-#define WEAPONINDEX_BFG					9
 
 #define MODELTYPE_FUNC_PLAT		1
 #define MODELTYPE_FUNC_BOB		2

@@ -992,7 +992,6 @@ void BotFindEntityForLevelItem(levelitem_t *li)
 // Returns:				-
 // Changes Globals:		-
 //===========================================================================
-
 void BotUpdateEntityItems(void)
 {
 	int ent, i, modelindex;
