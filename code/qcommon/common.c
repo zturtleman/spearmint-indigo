@@ -39,8 +39,10 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include <winsock.h>
 #endif
 
+// List of demo protocols that are supported for playback.
+// Also plays protocol com_protocol
 int demo_protocols[] =
-{ 67, 66, 0 };
+{ PROTOCOL_VERSION, 0 };
 
 #define MAX_NUM_ARGVS	50
 
