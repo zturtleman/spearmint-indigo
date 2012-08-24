@@ -38,6 +38,10 @@ displayContextDef_t cgDC;
 #endif
 
 int forceModelModificationCount = -1;
+#ifdef MISSIONPACK
+int redTeamNameModificationCount = -1;
+int blueTeamNameModificationCount = -1;
+#endif
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
 void CG_Shutdown( void );
@@ -306,8 +310,8 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_blood, "com_blood", "1", CVAR_ARCHIVE },
 	{ &cg_synchronousClients, "g_synchronousClients", "0", CVAR_SYSTEMINFO },
 #ifdef MISSIONPACK
-	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
-	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SERVERINFO | CVAR_USERINFO },
+	{ &cg_redTeamName, "g_redteam", DEFAULT_REDTEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
+	{ &cg_blueTeamName, "g_blueteam", DEFAULT_BLUETEAM_NAME, CVAR_ARCHIVE | CVAR_SYSTEMINFO },
 	{ &cg_currentSelectedPlayer, "cg_currentSelectedPlayer", "0", CVAR_ARCHIVE},
 	{ &cg_currentSelectedPlayerName, "cg_currentSelectedPlayerName", "", CVAR_ARCHIVE},
 	{ &cg_singlePlayer, "ui_singlePlayerActive", "0", CVAR_SYSTEMINFO | CVAR_ROM},
@@ -364,6 +368,10 @@ void CG_RegisterCvars( void ) {
 	cgs.localServer = atoi( var );
 
 	forceModelModificationCount = cg_forceModel.modificationCount;
+#ifdef MISSIONPACK
+	redTeamNameModificationCount = cg_redTeamName.modificationCount;
+	blueTeamNameModificationCount = cg_blueTeamName.modificationCount;
+#endif
 
 	// ZTM: FIXME: Add extra local clients, or can this be safely removed?
 	trap_Cvar_Register(NULL, "model", DEFAULT_MODEL, CVAR_USERINFO | CVAR_ARCHIVE );
@@ -418,11 +426,25 @@ void CG_UpdateCvars( void ) {
 		}
 	}
 
+#ifdef MISSIONPACK
+	// if force model or a team name changed
+	if ( forceModelModificationCount != cg_forceModel.modificationCount
+		|| redTeamNameModificationCount != cg_redTeamName.modificationCount
+		|| blueTeamNameModificationCount != cg_blueTeamName.modificationCount )
+	{
+		forceModelModificationCount = cg_forceModel.modificationCount;
+		redTeamNameModificationCount = cg_redTeamName.modificationCount;
+		blueTeamNameModificationCount = cg_blueTeamName.modificationCount;
+		CG_ForceModelChange();
+	}
+#else
 	// if force model changed
-	if ( forceModelModificationCount != cg_forceModel.modificationCount ) {
+	if ( forceModelModificationCount != cg_forceModel.modificationCount )
+	{
 		forceModelModificationCount = cg_forceModel.modificationCount;
 		CG_ForceModelChange();
 	}
+#endif
 }
 
 int CG_CrosshairPlayer( int localClientNum ) {

@@ -556,6 +556,9 @@ typedef struct animation_s {
 #define	ANIM_TOGGLEBIT		128
 
 
+#define DEFAULT_REDTEAM_NAME		"Pagans"
+#define DEFAULT_BLUETEAM_NAME		"Stroggs"
+
 typedef enum {
 	TEAM_FREE,
 	TEAM_RED,

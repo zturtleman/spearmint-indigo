@@ -100,9 +100,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #define	DEFAULT_TEAM_HEAD		"sarge"
 #endif
 
-#define DEFAULT_REDTEAM_NAME		"Stroggs"
-#define DEFAULT_BLUETEAM_NAME		"Pagans"
-
 typedef enum {
 	FOOTSTEP_NORMAL,
 	FOOTSTEP_BOOT,
@@ -359,8 +356,10 @@ typedef struct {
 	char			skinName[MAX_QPATH];
 	char			headModelName[MAX_QPATH];
 	char			headSkinName[MAX_QPATH];
+#ifdef MISSIONPACK
 	char			redTeam[MAX_TEAMNAME];
 	char			blueTeam[MAX_TEAMNAME];
+#endif
 	qboolean		deferred;
 
 	qboolean		newAnims;		// true if using the new mission pack animations
@@ -1061,8 +1060,6 @@ typedef struct {
 	int				timelimit;
 	int				maxclients;
 	char			mapname[MAX_QPATH];
-	char			redTeam[MAX_QPATH];
-	char			blueTeam[MAX_QPATH];
 
 	int				voteTime;
 	int				voteYes;
