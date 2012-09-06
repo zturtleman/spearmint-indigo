@@ -73,6 +73,13 @@ static qboolean debugMode = qfalse;
 #define DOUBLE_CLICK_DELAY 300
 static int lastListBoxClickTime = 0;
 
+// Shared by cgame and ui.
+int			trap_PC_AddGlobalDefine( char *define );
+int			trap_PC_LoadSource( const char *filename );
+int			trap_PC_FreeSource( int handle );
+int			trap_PC_ReadToken( int handle, pc_token_t *pc_token );
+int			trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
+
 void Item_RunScript(itemDef_t *item, const char *s);
 void Item_SetupKeywordHash(void);
 void Menu_SetupKeywordHash(void);
