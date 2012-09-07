@@ -487,8 +487,7 @@ static void CG_MapRestart( void ) {
 				continue;
 			}
 
-			cg.cur_lc = &cg.localClients[lc];
-			CG_CenterPrint( "FIGHT!", 120, GIANTCHAR_WIDTH*2 );
+			CG_CenterPrint( lc, "FIGHT!", 120, GIANTCHAR_WIDTH*2 );
 		}
 	}
 #ifdef MISSIONPACK
@@ -1036,8 +1035,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
-		cg.cur_lc = &cg.localClients[lc];
-		CG_CenterPrint( CG_Argv(start+1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+		CG_CenterPrint( lc, CG_Argv(start+1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 		return;
 	}
 

@@ -229,7 +229,6 @@ static void CG_Obituary( entityState_t *ent ) {
 				continue;
 			}
 
-			cg.cur_lc = &cg.localClients[i];
 			ps = &cg.snap->pss[cg.snap->lcIndex[i]];
 
 			if ( cgs.gametype < GT_TEAM ) {
@@ -241,15 +240,12 @@ static void CG_Obituary( entityState_t *ent ) {
 			}
 #ifdef MISSIONPACK
 			if (!(cg_singlePlayerActive.integer && cg_cameraOrbit.integer)) {
-				CG_CenterPrint( s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+				CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 			} 
 #else
-			CG_CenterPrint( s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 #endif
 		}
-
-		// Restore cg.cur_lc
-		cg.cur_lc = &cg.localClients[cg.cur_localClientNum];
 
 		// print the text message as well
 	}
@@ -385,18 +381,13 @@ static void CG_UseItem( centity_t *cent ) {
 			continue;
 		}
 
-		cg.cur_lc = &cg.localClients[i];
-
 		if ( !itemNum ) {
-			CG_CenterPrint( "No item to use", SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, "No item to use", SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 		} else {
 			item = BG_FindItemForHoldable( itemNum );
-			CG_CenterPrint( va("Use %s", item->pickup_name), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, va("Use %s", item->pickup_name), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
 		}
 	}
-
-	// Restore cg.cur_lc
-	cg.cur_lc = &cg.localClients[cg.cur_localClientNum];
 
 	switch ( itemNum ) {
 	default:
@@ -437,16 +428,18 @@ CG_ItemPickup
 A new item was picked up this frame
 ================
 */
-static void CG_ItemPickup( int itemNum ) {
-	cg.cur_lc->itemPickup = itemNum;
-	cg.cur_lc->itemPickupTime = cg.time;
-	cg.cur_lc->itemPickupBlendTime = cg.time;
+static void CG_ItemPickup( int localClientNum, int itemNum ) {
+	cglc_t *lc = &cg.localClients[localClientNum];
+
+	lc->itemPickup = itemNum;
+	lc->itemPickupTime = cg.time;
+	lc->itemPickupBlendTime = cg.time;
 	// see if it should be the grabbed weapon
 	if ( bg_itemlist[itemNum].giType == IT_WEAPON ) {
 		// select it immediately
-		if ( cg_autoswitch[cg.cur_lc-cg.localClients].integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN ) {
-			cg.cur_lc->weaponSelectTime = cg.time;
-			cg.cur_lc->weaponSelect = bg_itemlist[itemNum].giTag;
+		if ( cg_autoswitch[localClientNum].integer && bg_itemlist[itemNum].giTag != WP_MACHINEGUN ) {
+			lc->weaponSelectTime = cg.time;
+			lc->weaponSelect = bg_itemlist[itemNum].giTag;
 		}
 	}
 
@@ -815,11 +808,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			// show icon and name on status bar
 			for (i = 0; i < MAX_SPLITVIEW; i++) {
 				if ( cg.snap->lcIndex[i] != -1 && es->number == cg.snap->pss[cg.snap->lcIndex[i]].clientNum ) {
-					cg.cur_lc = &cg.localClients[i];
-					CG_ItemPickup( index );
+					CG_ItemPickup( i, index );
 				}
 			}
-			cg.cur_lc = &cg.localClients[cg.cur_localClientNum];
 		}
 		break;
 
@@ -843,11 +834,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 			// show icon and name on status bar
 			for (i = 0; i < MAX_SPLITVIEW; i++) {
 				if ( cg.snap->lcIndex[i] != -1 && es->number == cg.snap->pss[cg.snap->lcIndex[i]].clientNum ) {
-					cg.cur_lc = &cg.localClients[i];
-					CG_ItemPickup( index );
+					CG_ItemPickup( i, index );
 				}
 			}
-			cg.cur_lc = &cg.localClients[cg.cur_localClientNum];
 		}
 		break;
 
@@ -859,13 +848,9 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 //		trap_S_StartSound (NULL, es->number, CHAN_AUTO, cgs.media.noAmmoSound );
 		for (i = 0; i < MAX_SPLITVIEW; i++) {
 			if ( cg.snap->lcIndex[i] != -1 && es->number == cg.snap->pss[cg.snap->lcIndex[i]].clientNum ) {
-				cg.cur_lc = &cg.localClients[i];
-				cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
-				CG_OutOfAmmoChange();
+				CG_OutOfAmmoChange(i);
 			}
 		}
-		cg.cur_lc = &cg.localClients[cg.cur_localClientNum];
-		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[cg.cur_localClientNum]];
 		break;
 	case EV_CHANGE_WEAPON:
 		DEBUGNAME("EV_CHANGE_WEAPON");

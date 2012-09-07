@@ -1734,14 +1734,19 @@ CG_OutOfAmmoChange
 The current weapon has just run out of ammo
 ===================
 */
-void CG_OutOfAmmoChange( void ) {
-	int		i;
+void CG_OutOfAmmoChange( int localClientNum ) {
+	cglc_t			*lc;
+	playerState_t	*ps;
+	int				i;
 
-	cg.cur_lc->weaponSelectTime = cg.time;
+	lc = &cg.localClients[localClientNum];
+	ps = &cg.snap->pss[cg.snap->lcIndex[localClientNum]];
+
+	lc->weaponSelectTime = cg.time;
 
 	for ( i = MAX_WEAPONS-1 ; i > 0 ; i-- ) {
-		if ( CG_WeaponSelectable( cg.cur_ps, i ) ) {
-			cg.cur_lc->weaponSelect = i;
+		if ( CG_WeaponSelectable( ps, i ) ) {
+			lc->weaponSelect = i;
 			break;
 		}
 	}

@@ -1782,23 +1782,26 @@ Called for important messages that should stay in the center of the screen
 for a few moments
 ==============
 */
-void CG_CenterPrint( const char *str, int y, int charWidth ) {
+void CG_CenterPrint( int localClientNum, const char *str, int y, int charWidth ) {
+	cglc_t	*lc;
 	char	*s;
 
-	Q_strncpyz( cg.cur_lc->centerPrint, str, sizeof(cg.cur_lc->centerPrint) );
+	lc = &cg.localClients[localClientNum];
 
-	cg.cur_lc->centerPrintTime = cg.time;
-	cg.cur_lc->centerPrintY = y;
+	Q_strncpyz( lc->centerPrint, str, sizeof(lc->centerPrint) );
+
+	lc->centerPrintTime = cg.time;
+	lc->centerPrintY = y;
 #ifndef MISSIONPACK
-	cg.cur_lc->centerPrintCharWidth = charWidth;
+	lc->centerPrintCharWidth = charWidth;
 #endif
 
 	// count the number of lines for centering
-	cg.cur_lc->centerPrintLines = 1;
-	s = cg.cur_lc->centerPrint;
+	lc->centerPrintLines = 1;
+	s = lc->centerPrint;
 	while( *s ) {
 		if (*s == '\n')
-			cg.cur_lc->centerPrintLines++;
+			lc->centerPrintLines++;
 		s++;
 	}
 }
