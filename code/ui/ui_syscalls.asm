@@ -85,6 +85,7 @@ equ trap_LAN_ServerIsVisible				-82
 equ trap_LAN_CompareServers					-83
 equ trap_FS_Seek							-84
 equ trap_S_SoundDuration					-85
+equ	trap_R_SetClipRegion					-86
 
 equ	memset						-101
 equ	memcpy						-102
