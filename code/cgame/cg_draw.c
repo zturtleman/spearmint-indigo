@@ -1909,7 +1909,7 @@ static void CG_DrawCrosshair(void)
 		return;
 	}
 
-	if ( cg.renderingThirdPerson ) {
+	if ( cg.cur_lc->renderingThirdPerson ) {
 		return;
 	}
 
@@ -1978,7 +1978,7 @@ static void CG_DrawCrosshair3D(void)
 		return;
 	}
 
-	if ( cg.renderingThirdPerson ) {
+	if ( cg.cur_lc->renderingThirdPerson ) {
 		return;
 	}
 
@@ -2083,7 +2083,7 @@ static void CG_DrawCrosshairNames( void ) {
 	if ( !cg_drawCrosshairNames.integer ) {
 		return;
 	}
-	if ( cg.renderingThirdPerson ) {
+	if ( cg.cur_lc->renderingThirdPerson ) {
 		return;
 	}
 

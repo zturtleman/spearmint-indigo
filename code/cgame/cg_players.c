@@ -1543,7 +1543,7 @@ static void CG_BreathPuffs( centity_t *cent, refEntity_t *head) {
 	if (!cg_enableBreath.integer) {
 		return;
 	}
-	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.renderingThirdPerson) {
+	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson) {
 		return;
 	}
 	if ( cent->currentState.eFlags & EF_DEAD ) {
@@ -1901,7 +1901,7 @@ static void CG_PlayerFloatSprite( centity_t *cent, qhandle_t shader ) {
 	int				rf;
 	refEntity_t		ent;
 
-	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.renderingThirdPerson ) {
+	if ( cent->currentState.number == cg.cur_ps->clientNum && !cg.cur_lc->renderingThirdPerson ) {
 		rf = RF_ONLY_MIRROR;
 	} else {
 		rf = 0;
@@ -2268,7 +2268,7 @@ void CG_Player( centity_t *cent ) {
 	// get the player model information
 	renderfx = 0;
 	if ( cent->currentState.number == cg.cur_ps->clientNum) {
-		if (!cg.renderingThirdPerson) {
+		if (!cg.cur_lc->renderingThirdPerson) {
 			renderfx = RF_ONLY_MIRROR;
 		} else {
 			if (cg_cameraMode.integer) {

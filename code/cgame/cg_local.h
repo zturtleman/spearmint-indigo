@@ -554,6 +554,8 @@ typedef struct {
 	vec3_t		kick_angles;	// weapon kicks
 	vec3_t		kick_origin;
 
+	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
+
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
 	char		killerName[MAX_NAME_LENGTH];
@@ -597,8 +599,6 @@ typedef struct {
 	int			fraglimitWarnings;
 
 	qboolean	mapRestart;			// set on a map restart to set back the weapon
-
-	qboolean	renderingThirdPerson;		// during deaths, chasecams, etc
 
 	// auto rotating items
 	vec3_t		autoAngles;
@@ -1170,7 +1170,7 @@ extern	vmCvar_t		cg_gun_frame;
 extern	vmCvar_t		cg_gun_x;
 extern	vmCvar_t		cg_gun_y;
 extern	vmCvar_t		cg_gun_z;
-extern	vmCvar_t		cg_drawGun;
+extern	vmCvar_t		cg_drawGun[MAX_SPLITVIEW];
 extern	vmCvar_t		cg_viewsize;
 extern	vmCvar_t		cg_tracerChance;
 extern	vmCvar_t		cg_tracerWidth;

@@ -801,7 +801,7 @@ static int CG_CalcViewValues( void ) {
 		}
 	}
 
-	if ( cg.renderingThirdPerson ) {
+	if ( cg.cur_lc->renderingThirdPerson ) {
 		// back away from character
 		CG_OffsetThirdPersonView();
 	} else {
@@ -1049,7 +1049,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		cg.cur_ps = &cg.snap->pss[cg.snap->lcIndex[i]];
 
 		// decide on third person view
-		cg.renderingThirdPerson = cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0);
+		cg.cur_lc->renderingThirdPerson = cg_thirdPerson[cg.cur_localClientNum].integer || (cg.cur_ps->stats[STAT_HEALTH] <= 0);
 
 		CG_PB_ClearPolyBuffers();
 
@@ -1058,7 +1058,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_SetupFrustum();
 
 		// first person blend blobs, done after AnglesToAxis
-		if ( !cg.renderingThirdPerson ) {
+		if ( !cg.cur_lc->renderingThirdPerson ) {
 			CG_DamageBlendBlob();
 		}
 
@@ -1091,7 +1091,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		CG_PowerupTimerSounds();
 
 		// update audio positions
-		trap_S_Respatialize( cg.cur_ps->clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater, !cg.renderingThirdPerson );
+		trap_S_Respatialize( cg.cur_ps->clientNum, cg.refdef.vieworg, cg.refdef.viewaxis, inwater, !cg.cur_lc->renderingThirdPerson );
 
 		// make sure the lagometerSample and frame timing isn't done twice when in stereo
 		if ( stereoView != STEREO_RIGHT && cg.viewport == 0 ) {

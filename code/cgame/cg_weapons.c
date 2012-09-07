@@ -1266,9 +1266,9 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	VectorMA(gun.origin, lerped.origin[0], parent->axis[0], gun.origin);
 
 	// Make weapon appear left-handed for 2 and centered for 3
-	if(ps && cg_drawGun.integer == 2)
+	if(ps && cg_drawGun[cg.cur_localClientNum].integer == 2)
 		VectorMA(gun.origin, -lerped.origin[1], parent->axis[1], gun.origin);
-	else if(!ps || cg_drawGun.integer != 3)
+	else if(!ps || cg_drawGun[cg.cur_localClientNum].integer != 3)
 	       	VectorMA(gun.origin, lerped.origin[1], parent->axis[1], gun.origin);
 
 	VectorMA(gun.origin, lerped.origin[2], parent->axis[2], gun.origin);
@@ -1345,7 +1345,7 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 	CG_PositionRotatedEntityOnTag( &flash, &gun, weapon->weaponModel, "tag_flash");
 	trap_R_AddRefEntityToScene( &flash );
 
-	if ( ps || cg.renderingThirdPerson ||
+	if ( ps || cg.cur_lc->renderingThirdPerson ||
 		cent->currentState.number != cg.cur_lc->predictedPlayerState.clientNum ) {
 		// add lightning bolt
 		CG_LightningBolt( nonPredictedCent, flash.origin );
@@ -1381,14 +1381,14 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 	}
 
 	// no gun if in third person view or a camera is active
-	//if ( cg.renderingThirdPerson || cg.cameraMode) {
-	if ( cg.renderingThirdPerson ) {
+	//if ( cg.cur_lc->renderingThirdPerson || cg.cur_lc->cameraMode) {
+	if ( cg.cur_lc->renderingThirdPerson ) {
 		return;
 	}
 
 
 	// allow the gun to be completely removed
-	if ( !cg_drawGun.integer ) {
+	if ( !cg_drawGun[cg.cur_localClientNum].integer ) {
 		vec3_t		origin;
 
 		if ( cg.cur_lc->predictedPlayerState.eFlags & EF_FIRING ) {

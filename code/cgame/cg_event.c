@@ -1029,12 +1029,16 @@ void CG_EntityEvent( centity_t *cent, vec3_t position ) {
 		DEBUGNAME("EV_RAILTRAIL");
 		cent->currentState.weapon = WP_RAILGUN;
 		
-		if(es->clientNum == cg.snap->pss[0].clientNum && !cg.renderingThirdPerson)
-		{
-			if(cg_drawGun.integer == 2)
-				VectorMA(es->origin2, 8, cg.refdef.viewaxis[1], es->origin2);
-			else if(cg_drawGun.integer == 3)
-				VectorMA(es->origin2, 4, cg.refdef.viewaxis[1], es->origin2);
+		for (i = 0; i < MAX_SPLITVIEW; i++) {
+			if ( cg.snap->lcIndex[i] != -1 && es->clientNum == cg.snap->pss[cg.snap->lcIndex[i]].clientNum 
+				&& !cg.localClients[i].renderingThirdPerson)
+			{
+				if(cg_drawGun[i].integer == 2)
+					VectorMA(es->origin2, 8, cg.refdef.viewaxis[1], es->origin2);
+				else if(cg_drawGun[i].integer == 3)
+					VectorMA(es->origin2, 4, cg.refdef.viewaxis[1], es->origin2);
+				break;
+			}
 		}
 
 		CG_RailTrail(ci, es->origin2, es->pos.trBase);
