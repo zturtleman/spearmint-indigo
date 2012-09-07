@@ -1182,6 +1182,7 @@ static void CG_RegisterGraphics( void ) {
 
 
 
+#ifdef MISSIONPACK
 /*																																			
 =======================
 CG_BuildSpectatorString
@@ -1196,12 +1197,8 @@ void CG_BuildSpectatorString(void) {
 			Q_strcat(cg.spectatorList, sizeof(cg.spectatorList), va("%s     ", cgs.clientinfo[i].name));
 		}
 	}
-	i = strlen(cg.spectatorList);
-	if (i != cg.spectatorLen) {
-		cg.spectatorLen = i;
-		cg.spectatorWidth = -1;
-	}
 }
+#endif
 
 
 /*																																			
@@ -1238,7 +1235,9 @@ static void CG_RegisterClients( void ) {
 		CG_LoadingClient( i );
 		CG_NewClientInfo( i );
 	}
+#ifdef MISSIONPACK
 	CG_BuildSpectatorString();
+#endif
 }
 
 //===========================================================================

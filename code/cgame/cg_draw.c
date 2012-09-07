@@ -2203,7 +2203,7 @@ static void CG_DrawTeamVote(void) {
 
 static qboolean CG_DrawScoreboard( void ) {
 #ifdef MISSIONPACK
-	static qboolean firstTime = qtrue;
+	static qboolean firstTime[MAX_SPLITVIEW] = {qtrue, qtrue, qtrue, qtrue};
 
 	CG_SetScreenPlacement(PLACE_CENTER);
 
@@ -2212,14 +2212,14 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 	if (cg_paused.integer) {
 		cg.deferredPlayerLoading = 0;
-		firstTime = qtrue;
+		firstTime[cg.cur_localClientNum] = qtrue;
 		return qfalse;
 	}
 
 	// should never happen in Team Arena
 	if (cgs.gametype == GT_SINGLE_PLAYER && cg.cur_lc && cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		cg.deferredPlayerLoading = 0;
-		firstTime = qtrue;
+		firstTime[cg.cur_localClientNum] = qtrue;
 		return qfalse;
 	}
 
@@ -2237,7 +2237,7 @@ static qboolean CG_DrawScoreboard( void ) {
 			if (cg.cur_lc) {
 				cg.cur_lc->killerName[0] = 0;
 			}
-			firstTime = qtrue;
+			firstTime[cg.cur_localClientNum] = qtrue;
 			return qfalse;
 		}
 	}
@@ -2251,9 +2251,12 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 
 	if (menuScoreboard) {
-		if (firstTime) {
+		if (firstTime[cg.cur_localClientNum]) {
+			firstTime[cg.cur_localClientNum] = qfalse;
 			CG_SetScoreSelection(menuScoreboard);
-			firstTime = qfalse;
+
+			// Update time now to prevent spectator list from jumping.
+			cg.spectatorTime = trap_Milliseconds();
 		}
 		Menu_Paint(menuScoreboard, qtrue);
 	}
