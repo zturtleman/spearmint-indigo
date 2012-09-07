@@ -411,6 +411,8 @@ void CG_TileClear( void ) {
 		return;		// full screen rendering
 	}
 
+	CG_SetScreenPlacement(PLACE_STRETCH);
+
 	// viewport coords
 	x = y = 0;
 	w = SCREEN_WIDTH;
@@ -434,6 +436,8 @@ void CG_TileClear( void ) {
 
 	// clear right of view screen
 	CG_TileClearBox( right, top, w - right, bottom - top + 1, cgs.media.backTileShader );
+
+	CG_PopScreenPlacement();
 }
 
 
