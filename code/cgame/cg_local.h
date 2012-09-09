@@ -1340,8 +1340,9 @@ typedef enum {
   TEAMCHAT_PRINT
 } q3print_t;
 
-extern	int sortedTeamPlayers[TEAM_MAXOVERLAY];
-extern	int	numSortedTeamPlayers;
+extern	int sortedTeamPlayers[TEAM_NUM_TEAMS][TEAM_MAXOVERLAY];
+extern	int	numSortedTeamPlayers[TEAM_NUM_TEAMS];
+extern	int	sortedTeamPlayersTime[TEAM_NUM_TEAMS];
 extern	int drawTeamOverlayModificationCount;
 extern  char systemChat[256];
 extern  char teamChat1[256];

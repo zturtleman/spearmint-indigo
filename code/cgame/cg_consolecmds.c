@@ -260,9 +260,12 @@ static void CG_PrevTeamMember_f( void ) {
 // ASS U ME's enumeration order as far as task specific orders, OFFENSE is zero, CAMP is last
 //
 static void CG_NextOrder_f( void ) {
-	clientInfo_t *ci = cgs.clientinfo + cg.snap->pss[0].clientNum;
+	int clientNum = cg.snap->pss[0].clientNum;
+	int team = cg.snap->pss[0].persistant[PERS_TEAM];
+	clientInfo_t *ci = cgs.clientinfo + clientNum;
+
 	if (ci) {
-		if (!ci->teamLeader && sortedTeamPlayers[cg_currentSelectedPlayer.integer] != cg.snap->pss[0].clientNum) {
+		if (!ci->teamLeader && sortedTeamPlayers[team][cg_currentSelectedPlayer.integer] != clientNum) {
 			return;
 		}
 	}

@@ -121,33 +121,44 @@ CG_ParseTeamInfo
 
 =================
 */
-static void CG_ParseTeamInfo( void ) {
+static void CG_ParseTeamInfo( int start ) {
 	int		i;
 	int		client;
+	int		team;
 
-	numSortedTeamPlayers = atoi( CG_Argv( 1 ) );
-	if( numSortedTeamPlayers < 0 || numSortedTeamPlayers > TEAM_MAXOVERLAY )
+	team = atoi( CG_Argv( 1 + start ) );
+	if( team < 0 || team >= TEAM_NUM_TEAMS )
 	{
-		CG_Error( "CG_ParseTeamInfo: numSortedTeamPlayers out of range (%d)",
-				numSortedTeamPlayers );
+		CG_Error( "CG_ParseTeamInfo: team out of range (%d)",
+				team );
 		return;
 	}
 
-	for ( i = 0 ; i < numSortedTeamPlayers ; i++ ) {
-		client = atoi( CG_Argv( i * 6 + 2 ) );
+	sortedTeamPlayersTime[team] = cg.time;
+
+	numSortedTeamPlayers[team] = atoi( CG_Argv( 2 + start ) );
+	if( numSortedTeamPlayers[team] < 0 || numSortedTeamPlayers[team] > TEAM_MAXOVERLAY )
+	{
+		CG_Error( "CG_ParseTeamInfo: numSortedTeamPlayers out of range (%d)",
+				numSortedTeamPlayers[team] );
+		return;
+	}
+
+	for ( i = 0 ; i < numSortedTeamPlayers[team] ; i++ ) {
+		client = atoi( CG_Argv( i * 6 + 3 + start ) );
 		if( client < 0 || client >= MAX_CLIENTS )
 		{
-		  CG_Error( "CG_ParseTeamInfo: bad client number: %d", client );
-		  return;
+			CG_Error( "CG_ParseTeamInfo: bad client number: %d", client );
+			return;
 		}
 
-		sortedTeamPlayers[i] = client;
+		sortedTeamPlayers[team][i] = client;
 
-		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * 6 + 3 ) );
-		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 6 + 4 ) );
-		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * 6 + 5 ) );
-		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 6 ) );
-		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 7 ) );
+		cgs.clientinfo[ client ].location = atoi( CG_Argv( i * 6 + 4 + start ) );
+		cgs.clientinfo[ client ].health = atoi( CG_Argv( i * 6 + 5 + start ) );
+		cgs.clientinfo[ client ].armor = atoi( CG_Argv( i * 6 + 6 + start ) );
+		cgs.clientinfo[ client ].curWeapon = atoi( CG_Argv( i * 6 + 7 + start ) );
+		cgs.clientinfo[ client ].powerups = atoi( CG_Argv( i * 6 + 8 + start ) );
 	}
 }
 
@@ -1131,11 +1142,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "tinfo" ) ) {
-		if (lc != 0) {
-			return;
-		}
-
-		CG_ParseTeamInfo();
+		CG_ParseTeamInfo(start);
 		return;
 	}
 

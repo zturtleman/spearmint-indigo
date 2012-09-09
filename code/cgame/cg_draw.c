@@ -43,8 +43,9 @@ menuDef_t *menuScoreboard = NULL;
 int drawTeamOverlayModificationCount = -1;
 #endif
 
-int sortedTeamPlayers[TEAM_MAXOVERLAY];
-int	numSortedTeamPlayers;
+int sortedTeamPlayers[TEAM_NUM_TEAMS][TEAM_MAXOVERLAY];
+int	numSortedTeamPlayers[TEAM_NUM_TEAMS];
+int sortedTeamPlayersTime[TEAM_NUM_TEAMS];
 
 char systemChat[256];
 char teamChat1[256];
@@ -829,23 +830,31 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	clientInfo_t *ci;
 	gitem_t	*item;
 	int ret_y, count;
+	int team;
 
 	if ( !cg_drawTeamOverlay.integer ) {
 		return y;
 	}
 
-	if ( cg.cur_ps->persistant[PERS_TEAM] != TEAM_RED && cg.cur_ps->persistant[PERS_TEAM] != TEAM_BLUE ) {
+	team = cg.cur_ps->persistant[PERS_TEAM];
+
+	if ( team != TEAM_RED && team != TEAM_BLUE ) {
 		return y; // Not on any team
+	}
+
+	if (cg.time - sortedTeamPlayersTime[team] > 5000) {
+		// Info is too out of date.
+		return y;
 	}
 
 	plyrs = 0;
 
 	// max player name width
 	pwidth = 0;
-	count = (numSortedTeamPlayers > 8) ? 8 : numSortedTeamPlayers;
+	count = (numSortedTeamPlayers[team] > 8) ? 8 : numSortedTeamPlayers[team];
 	for (i = 0; i < count; i++) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.cur_ps->persistant[PERS_TEAM]) {
+		ci = cgs.clientinfo + sortedTeamPlayers[team][i];
+		if ( ci->infoValid && ci->team == team) {
 			plyrs++;
 			len = CG_DrawStrlen(ci->name);
 			if (len > pwidth)
@@ -889,12 +898,12 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 		ret_y = y;
 	}
 
-	if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_RED ) {
+	if ( team == TEAM_RED ) {
 		hcolor[0] = 1.0f;
 		hcolor[1] = 0.0f;
 		hcolor[2] = 0.0f;
 		hcolor[3] = 0.33f;
-	} else { // if ( cg.cur_ps->persistant[PERS_TEAM] == TEAM_BLUE )
+	} else { // if ( team == TEAM_BLUE )
 		hcolor[0] = 0.0f;
 		hcolor[1] = 0.0f;
 		hcolor[2] = 1.0f;
@@ -905,8 +914,8 @@ static float CG_DrawTeamOverlay( float y, qboolean right, qboolean upper ) {
 	trap_R_SetColor( NULL );
 
 	for (i = 0; i < count; i++) {
-		ci = cgs.clientinfo + sortedTeamPlayers[i];
-		if ( ci->infoValid && ci->team == cg.cur_ps->persistant[PERS_TEAM]) {
+		ci = cgs.clientinfo + sortedTeamPlayers[team][i];
+		if ( ci->infoValid && ci->team == team) {
 
 			hcolor[0] = hcolor[1] = hcolor[2] = hcolor[3] = 1.0;
 

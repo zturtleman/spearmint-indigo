@@ -1134,7 +1134,7 @@ void TeamplayInfoMessage( gentity_t *ent ) {
 		}
 	}
 
-	trap_SendServerCommand( ent-g_entities, va("tinfo %i %s", cnt, string) );
+	trap_SendServerCommand( ent-g_entities, va("tinfo %i %i %s", team, cnt, string) );
 }
 
 void CheckTeamStatus(void) {
