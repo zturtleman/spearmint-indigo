@@ -990,7 +990,7 @@ void SV_PacketEvent( netadr_t from, msg_t *msg ) {
 		if (cl->netchan.qport != qport) {
 			continue;
 		}
-		// ignore splitscreen players, they have the same qport as they're main client and never send any packets.
+		// ignore splitscreen players, they have the same qport as their main client and never send any packets.
 		if (cl->mainClient) {
 			continue;
 		}
