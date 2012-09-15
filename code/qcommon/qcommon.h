@@ -347,7 +347,8 @@ typedef enum {
 	TRAP_SQRT,
 	TRAP_FLOOR,
 	TRAP_CEIL,
-	TRAP_ACOS
+	TRAP_ACOS,
+	TRAP_ASIN
 } sharedTraps_t;
 
 void	VM_Init( void );
