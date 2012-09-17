@@ -639,8 +639,8 @@ typedef struct {
 	int			scoreFadeTime;
 #ifdef MISSIONPACK
 	char			spectatorList[MAX_STRING_CHARS];		// list of names
-	int				spectatorTime;											// next time to offset
-	int				spectatorOffset;										// current offset from start
+	int				spectatorTime;							// last time offset
+	float			spectatorOffset;						// current offset from start
 #endif
 
 	// sound buffer mainly for announcer sounds
