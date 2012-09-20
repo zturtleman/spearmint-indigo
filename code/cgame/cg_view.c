@@ -596,7 +596,7 @@ static int CG_CalcFov( void ) {
 
 	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
-		fov_x = 90;
+		cg.fov = fov_x = 90;
 	} else {
 		// user selectable
 		if ( cgs.dmflags & DF_FIXED_FOV ) {
@@ -610,6 +610,8 @@ static int CG_CalcFov( void ) {
 				fov_x = 160;
 			}
 		}
+
+		cg.fov = fov_x;
 
 		// account for zooms
 		zoomFov = cg_zoomFov.value;
