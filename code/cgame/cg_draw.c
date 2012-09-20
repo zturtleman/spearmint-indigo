@@ -2878,7 +2878,7 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 
 	// don't draw center string if scoreboard is up
 	if (!cg.scoreBoardShowing) {
-		CG_DrawCenterString();
+		CG_DrawGlobalCenterString();
 	}
 }
 
