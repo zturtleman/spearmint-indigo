@@ -1007,8 +1007,14 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	// this counter will be bumped for every valid scene we generate
 	cg.clientFrame++;
 
-	// Single camera mode only uses one viewport for viewing all local clients
-	cg.singleCamera = (cg.snap->pss[0].pm_type == PM_INTERMISSION);
+	// Use single camera/viewport at intermission
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION) {
+			// client present and not at intermission, keep viewports separate.
+			break;
+		}
+	}
+	cg.singleCamera = (i == MAX_SPLITVIEW);
 
 	cg.numViewports = 0;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
