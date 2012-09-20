@@ -240,10 +240,10 @@ static void CG_Obituary( entityState_t *ent ) {
 			}
 #ifdef MISSIONPACK
 			if (!(cg_singlePlayerActive.integer && cg_cameraOrbit.integer)) {
-				CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+				CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, 0.5 );
 			} 
 #else
-			CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, s, SCREEN_HEIGHT * 0.30, 0.5 );
 #endif
 		}
 
@@ -382,10 +382,10 @@ static void CG_UseItem( centity_t *cent ) {
 		}
 
 		if ( !itemNum ) {
-			CG_CenterPrint( i, "No item to use", SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, "No item to use", SCREEN_HEIGHT * 0.30, 0.5 );
 		} else {
 			item = BG_FindItemForHoldable( itemNum );
-			CG_CenterPrint( i, va("Use %s", item->pickup_name), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+			CG_CenterPrint( i, va("Use %s", item->pickup_name), SCREEN_HEIGHT * 0.30, 0.5 );
 		}
 	}
 

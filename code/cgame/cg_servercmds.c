@@ -492,14 +492,7 @@ static void CG_MapRestart( void ) {
 	// play the "fight" sound if this is a restart without warmup
 	if ( cg.warmup == 0 /* && cgs.gametype == GT_TOURNAMENT */) {
 		trap_S_StartLocalSound( cgs.media.countFightSound, CHAN_ANNOUNCER );
-		// ZTM: TODO: Only show this message once in center of screen (drawn over all viewports)
-		for (lc = 0; lc < MAX_SPLITVIEW; lc++) {
-			if ( cg.snap->lcIndex[lc] == -1 ) {
-				continue;
-			}
-
-			CG_CenterPrint( lc, "FIGHT!", 120, GIANTCHAR_WIDTH*2 );
-		}
+		CG_GlobalCenterPrint( "FIGHT!", SCREEN_HEIGHT/2, 2.0 );
 	}
 #ifdef MISSIONPACK
 	if (cg_singlePlayerActive.integer) {
@@ -1046,7 +1039,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
-		CG_CenterPrint( lc, CG_Argv(start+1), SCREEN_HEIGHT * 0.30, BIGCHAR_WIDTH );
+		CG_CenterPrint( lc, CG_Argv(start+1), SCREEN_HEIGHT * 0.30, 0.5 );
 		return;
 	}
 

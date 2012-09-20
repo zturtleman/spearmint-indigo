@@ -1787,11 +1787,11 @@ CENTER PRINTING
 ==============
 CG_CenterPrint
 
-Called for important messages that should stay in the center of the screen
+Called for important messages that should stay in the center of the viewport
 for a few moments
 ==============
 */
-void CG_CenterPrint( int localClientNum, const char *str, int y, int charWidth ) {
+void CG_CenterPrint( int localClientNum, const char *str, int y, float charScale ) {
 	cglc_t	*lc;
 	char	*s;
 
@@ -1801,9 +1801,7 @@ void CG_CenterPrint( int localClientNum, const char *str, int y, int charWidth )
 
 	lc->centerPrintTime = cg.time;
 	lc->centerPrintY = y;
-#ifndef MISSIONPACK
-	lc->centerPrintCharWidth = charWidth;
-#endif
+	lc->centerPrintCharScale = charScale;
 
 	// count the number of lines for centering
 	lc->centerPrintLines = 1;
@@ -1826,8 +1824,11 @@ static void CG_DrawCenterString( void ) {
 	int		l;
 	int		x, y, w;
 #ifdef MISSIONPACK
-	int h;
+	int		h;
+#else
+	int		charWidth;
 #endif
+	int		charHeight;
 	float	*color;
 
 	if ( !cg.cur_lc->centerPrintTime ) {
@@ -1845,7 +1846,14 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * BIGCHAR_HEIGHT / 2;
+#ifdef MISSIONPACK
+	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
+#else
+	charWidth = BIGCHAR_WIDTH * 2 * cg.centerPrintCharScale;
+	charHeight = (int)(charWidth * 1.5);
+#endif
+
+	y = cg.cur_lc->centerPrintY - cg.cur_lc->centerPrintLines * charHeight / 2;
 
 	while ( 1 ) {
 		char linebuffer[1024];
@@ -1859,20 +1867,20 @@ static void CG_DrawCenterString( void ) {
 		linebuffer[l] = 0;
 
 #ifdef MISSIONPACK
-		w = CG_Text_Width(linebuffer, 0.5, 0);
-		h = CG_Text_Height(linebuffer, 0.5, 0);
+		w = CG_Text_Width(linebuffer, cg.centerPrintCharScale, 0);
+		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
 		x = (SCREEN_WIDTH - w) / 2;
-		CG_Text_Paint(x, y + h, 0.5, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+		CG_Text_Paint(x, y + h, cg.centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 		y += h + 6;
 #else
-		w = cg.cur_lc->centerPrintCharWidth * CG_DrawStrlen( linebuffer );
+		w = charWidth * CG_DrawStrlen( linebuffer );
 
 		x = ( SCREEN_WIDTH - w ) / 2;
 
 		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue,
-			cg.cur_lc->centerPrintCharWidth, (int)(cg.cur_lc->centerPrintCharWidth * 1.5), 0 );
+			charWidth, charHeight, 0 );
 
-		y += cg.cur_lc->centerPrintCharWidth * 1.5;
+		y += charHeight;
 #endif
 		while ( *start && ( *start != '\n' ) ) {
 			start++;
@@ -1886,6 +1894,114 @@ static void CG_DrawCenterString( void ) {
 	trap_R_SetColor( NULL );
 }
 
+
+/*
+==============
+CG_GlobalCenterPrint
+
+Called for important messages that should stay in the center of the screen
+for a few moments
+==============
+*/
+void CG_GlobalCenterPrint( const char *str, int y, float charScale ) {
+	char	*s;
+
+	Q_strncpyz( cg.centerPrint, str, sizeof(cg.centerPrint) );
+
+	cg.centerPrintTime = cg.time;
+	cg.centerPrintY = y;
+	cg.centerPrintCharScale = charScale;
+
+	// count the number of lines for centering
+	cg.centerPrintLines = 1;
+	s = cg.centerPrint;
+	while( *s ) {
+		if (*s == '\n')
+			cg.centerPrintLines++;
+		s++;
+	}
+}
+
+
+/*
+===================
+CG_DrawGlobalCenterString
+===================
+*/
+static void CG_DrawGlobalCenterString( void ) {
+	char	*start;
+	int		l;
+	int		x, y, w;
+#ifdef MISSIONPACK
+	int		h;
+#else
+	int		charWidth;
+#endif
+	int		charHeight;
+	float	*color;
+
+	if ( !cg.centerPrintTime ) {
+		return;
+	}
+
+	color = CG_FadeColor( cg.centerPrintTime, 1000 * cg_centertime.value );
+	if ( !color ) {
+		return;
+	}
+
+	CG_SetScreenPlacement(PLACE_CENTER);
+
+	trap_R_SetColor( color );
+
+	start = cg.centerPrint;
+
+#ifdef MISSIONPACK
+	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
+#else
+	charWidth = BIGCHAR_WIDTH * 2 * cg.centerPrintCharScale;
+	charHeight = (int)(charWidth * 1.5);
+#endif
+
+	y = cg.centerPrintY - cg.centerPrintLines * charHeight / 2;
+
+	while ( 1 ) {
+		char linebuffer[1024];
+
+		for ( l = 0; l < 50; l++ ) {
+			if ( !start[l] || start[l] == '\n' ) {
+				break;
+			}
+			linebuffer[l] = start[l];
+		}
+		linebuffer[l] = 0;
+
+#ifdef MISSIONPACK
+		w = CG_Text_Width(linebuffer, cg.centerPrintCharScale, 0);
+		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
+		x = (SCREEN_WIDTH - w) / 2;
+		CG_Text_Paint(x, y + h, cg.centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+		y += h + 6;
+#else
+		w = charWidth * CG_DrawStrlen( linebuffer );
+
+		x = ( SCREEN_WIDTH - w ) / 2;
+
+		CG_DrawStringExt( x, y, linebuffer, color, qfalse, qtrue,
+			charWidth, charHeight, 0 );
+
+		y += charHeight;
+#endif
+		while ( *start && ( *start != '\n' ) ) {
+			start++;
+		}
+		if ( !*start ) {
+			break;
+		}
+		start++;
+	}
+
+	trap_R_SetColor( NULL );
+}
 
 
 /*
@@ -2682,9 +2798,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	CG_DrawLowerLeft();
 #endif
 
-	if ( !CG_DrawFollow() ) {
-		CG_DrawWarmup();
-	}
+	CG_DrawFollow();
 
 	// don't draw center string if scoreboard is up
 	if (!cg.showScores && !cg.scoreBoardShowing && !CG_DrawScoreboard()) {
@@ -2757,8 +2871,15 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 		return;
 	}
 
+	CG_DrawWarmup();
+
 	// Draw scoreboard over all viewports.
 	cg.scoreBoardShowing = CG_DrawScoreboard();
+
+	// don't draw center string if scoreboard is up
+	if (!cg.scoreBoardShowing) {
+		CG_DrawCenterString();
+	}
 }
 
 
