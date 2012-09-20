@@ -1847,9 +1847,9 @@ static void CG_DrawCenterString( void ) {
 	start = cg.cur_lc->centerPrint;
 
 #ifdef MISSIONPACK
-	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
+	charHeight = CG_Text_Height("I", cg.cur_lc->centerPrintCharScale, 0);
 #else
-	charWidth = BIGCHAR_WIDTH * 2 * cg.centerPrintCharScale;
+	charWidth = BIGCHAR_WIDTH * 2 * cg.cur_lc->centerPrintCharScale;
 	charHeight = (int)(charWidth * 1.5);
 #endif
 
@@ -1867,10 +1867,10 @@ static void CG_DrawCenterString( void ) {
 		linebuffer[l] = 0;
 
 #ifdef MISSIONPACK
-		w = CG_Text_Width(linebuffer, cg.centerPrintCharScale, 0);
-		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
+		w = CG_Text_Width(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
+		h = CG_Text_Height(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
 		x = (SCREEN_WIDTH - w) / 2;
-		CG_Text_Paint(x, y + h, cg.centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
+		CG_Text_Paint(x, y + h, cg.cur_lc->centerPrintCharScale, color, linebuffer, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 		y += h + 6;
 #else
 		w = charWidth * CG_DrawStrlen( linebuffer );
@@ -2748,6 +2748,8 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 
 #ifdef MISSIONPACK
 			if ( cg_drawStatus.integer ) {
+				CG_SetScreenPlacement(PLACE_CENTER);
+
 				Menu_PaintAll();
 				CG_DrawTimedMenus();
 			}
