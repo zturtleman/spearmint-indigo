@@ -1059,6 +1059,7 @@ void BeginIntermission( void ) {
 			ClientRespawn(client);
 		}
 		MoveClientToIntermission( client );
+		trap_UnlinkEntity(client);
 	}
 #ifdef MISSIONPACK
 	if (g_singlePlayer.integer) {
