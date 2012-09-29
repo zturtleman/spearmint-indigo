@@ -31,7 +31,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 // cg_main.c -- initialization and primary entry point for cgame
 #include "cg_local.h"
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
 // display context for new ui stuff
 displayContextDef_t cgDC;
@@ -324,7 +324,9 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_recordSPDemo, "ui_recordSPDemo", "0", CVAR_ARCHIVE},
 	{ &cg_recordSPDemoName, "ui_recordSPDemoName", "", CVAR_ARCHIVE},
 	{ &cg_obeliskRespawnDelay, "g_obeliskRespawnDelay", "10", CVAR_SERVERINFO},
+#ifdef MISSIONPACK_HUD
 	{ &cg_hudFiles, "cg_hudFiles", "ui/hud.txt", CVAR_ARCHIVE},
+#endif
 #endif
 	{ &cg_cameraOrbit, "cg_cameraOrbit", "0", CVAR_CHEAT},
 	{ &cg_cameraOrbitDelay, "cg_cameraOrbitDelay", "50", CVAR_ARCHIVE},
@@ -1276,7 +1278,7 @@ void CG_StartMusic( void ) {
 
 	trap_S_StartBackgroundTrack( parm1, parm2 );
 }
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 char *CG_GetMenuBuffer(const char *filename) {
 	int	len;
 	fileHandle_t	f;
@@ -1779,18 +1781,14 @@ static void CG_FeederSelection(float feederID, int index) {
 		cg.selectedScore = index;
 	}
 }
-#endif
 
-#ifdef MISSIONPACK
 static float CG_Cvar_Get(const char *cvar) {
 	char buff[128];
 	memset(buff, 0, sizeof(buff));
 	trap_Cvar_VariableStringBuffer(cvar, buff, sizeof(buff));
 	return atof(buff);
 }
-#endif
 
-#ifdef MISSIONPACK
 void CG_Text_PaintWithCursor(float x, float y, float scale, vec4_t color, const char *text, int cursorPos, char cursor, int limit, int style) {
 	CG_Text_Paint(x, y, scale, color, text, 0, limit, style);
 }
@@ -2023,7 +2021,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	trap_CM_LoadMap( cgs.mapname );
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	String_Init();
 #endif
 
@@ -2041,7 +2039,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_RegisterClients();		// if low on memory, some clients will be deferred
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	CG_AssetCache();
 	CG_LoadHudMenu();      // load new hud stuff
 #endif
@@ -2093,7 +2091,7 @@ CG_EventHandling
       2 - hud editor
 
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 void CG_EventHandling(int type) {
 }
 

@@ -107,7 +107,7 @@ Makefile.local:
   BASEGAME           - rename 'baseq3'
   BASEGAME_CFLAGS    - custom CFLAGS for basegame
   MISSIONPACK        - rename 'missionpack'
-  MISSIONPACK_CFLAGS - custom CFLAGS for missionpack (default '-DMISSIONPACK')
+  MISSIONPACK_CFLAGS - custom CFLAGS for missionpack (default '-DMISSIONPACK -DMISSIONPACK_HUD')
   USE_OPENAL         - use OpenAL where available
   USE_OPENAL_DLOPEN  - link with OpenAL at runtime
   USE_CURL           - use libcurl for http/ftp download support

@@ -42,7 +42,7 @@
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
-			<Target title="Release TA Win32">
+			<Target title="Release TA_UI Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/cgame_release_ta/cgamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_release_ta" />
@@ -59,9 +59,10 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
-			<Target title="Debug TA Win32">
+			<Target title="Debug TA_UI Win32">
 				<Option platforms="Windows;" />
 				<Option output="../../build/cgame_debug_ta/cgamex86.dll" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_debug_ta" />
@@ -78,6 +79,7 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux i386">
@@ -118,7 +120,7 @@
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
-			<Target title="Release TA Linux i386">
+			<Target title="Release TA_UI Linux i386">
 				<Option platforms="Unix;" />
 				<Option output="../../build/cgame_release_ta/cgamei386.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_release_ta" />
@@ -136,9 +138,10 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
-			<Target title="Debug TA Linux i386">
+			<Target title="Debug TA_UI Linux i386">
 				<Option platforms="Unix;" />
 				<Option output="../../build/cgame_debug_ta/cgamei386.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_debug_ta" />
@@ -156,6 +159,7 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
 			<Target title="Release Linux x86_64">
@@ -196,7 +200,7 @@
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 				</Compiler>
 			</Target>
-			<Target title="Release TA Linux x86_64">
+			<Target title="Release TA_UI Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/cgame_release_ta/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_release_ta" />
@@ -214,9 +218,10 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
-			<Target title="Debug TA Linux x86_64">
+			<Target title="Debug TA_UI Linux x86_64">
 				<Option platforms="Unix;" />
 				<Option output="../../build/cgame_debug_ta/cgamex86_64.so" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../../build/cgame_debug_ta" />
@@ -234,6 +239,7 @@
 					<Add option="-D_WINDOWS" />
 					<Add option="-D_CRT_SECURE_NO_DEPRECATE" />
 					<Add option="-DMISSIONPACK" />
+					<Add option="-DMISSIONPACK_HUD" />
 				</Compiler>
 			</Target>
 		</Build>
@@ -270,12 +276,6 @@
 		</Unit>
 		<Unit filename="../../code/cgame/cg_newdraw.c">
 			<Option compilerVar="CC" />
-			<Option target="Release TA Win32" />
-			<Option target="Debug TA Win32" />
-			<Option target="Release TA Linux i386" />
-			<Option target="Debug TA Linux i386" />
-			<Option target="Release TA Linux x86_64" />
-			<Option target="Debug TA Linux x86_64" />
 		</Unit>
 		<Unit filename="../../code/cgame/cg_particles.c">
 			<Option compilerVar="CC" />

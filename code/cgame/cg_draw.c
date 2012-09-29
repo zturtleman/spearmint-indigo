@@ -33,7 +33,7 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #include "cg_local.h"
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 #include "../ui/ui_shared.h"
 
 // used for scoreboard
@@ -51,7 +51,7 @@ char systemChat[256];
 char teamChat1[256];
 char teamChat2[256];
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 
 int CG_Text_Width(const char *text, float scale, int limit) {
   int count,len;
@@ -206,9 +206,7 @@ void CG_Text_Paint(float x, float y, float scale, vec4_t color, const char *text
 	  trap_R_SetColor( NULL );
   }
 }
-
-
-#endif
+#endif // MISSIONPACK_HUD
 
 /*
 ==============
@@ -217,7 +215,7 @@ CG_DrawField
 Draws large numbers for status bar and powerups
 ==============
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawField (int x, int y, int width, int value) {
 	char	num[16], *ptr;
 	int		l;
@@ -271,7 +269,7 @@ static void CG_DrawField (int x, int y, int width, int value) {
 		l--;
 	}
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ================
@@ -431,7 +429,7 @@ CG_DrawStatusBarHead
 
 ================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 
 static void CG_DrawStatusBarHead( float x ) {
 	vec3_t		angles;
@@ -483,7 +481,7 @@ static void CG_DrawStatusBarHead( float x ) {
 	CG_DrawHead( x, 480 - size, size, size, 
 				cg.cur_ps->clientNum, angles );
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ================
@@ -491,11 +489,11 @@ CG_DrawStatusBarFlag
 
 ================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawStatusBarFlag( float x, int team ) {
 	CG_DrawFlagModel( x, 480 - ICON_SIZE, ICON_SIZE, ICON_SIZE, team, qfalse );
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ================
@@ -532,7 +530,7 @@ CG_DrawStatusBar
 
 ================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawStatusBar( void ) {
 	int			color;
 	centity_t	*cent;
@@ -661,7 +659,7 @@ static void CG_DrawStatusBar( void ) {
 
 	}
 }
-#endif
+#endif // MISSIONPACK_HUD
 
 /*
 ===========================================================================================
@@ -1042,7 +1040,7 @@ CG_DrawScores
 Draw the small two score display
 =================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static float CG_DrawScores( float y ) {
 	const char	*s;
 	int			s1, s2, score;
@@ -1086,6 +1084,34 @@ static float CG_DrawScores( float y ) {
 				}
 			}
 		}
+
+#ifdef MISSIONPACK
+		if ( cgs.gametype == GT_1FCTF ) {
+			// Display flag status
+			item = BG_FindItemForPowerup( PW_NEUTRALFLAG );
+
+			if (item) {
+				y1 = y - BIGCHAR_HEIGHT - 8;
+				if( cgs.flagStatus >= 0 && cgs.flagStatus <= 4 ) {
+					vec4_t color = {1, 1, 1, 1};
+					int index = 0;
+					if (cgs.flagStatus == FLAG_TAKEN_RED) {
+						color[1] = color[2] = 0;
+						index = 1;
+					} else if (cgs.flagStatus == FLAG_TAKEN_BLUE) {
+						color[0] = color[1] = 0;
+						index = 1;
+					} else if (cgs.flagStatus == FLAG_DROPPED) {
+						index = 2;
+					}
+					trap_R_SetColor(color);
+					CG_DrawPic( x, y1-4, w, BIGCHAR_HEIGHT+8, cgs.media.flagShaders[index] );
+					trap_R_SetColor(NULL);
+				}
+			}
+		}
+#endif
+
 		color[0] = 1.0f;
 		color[1] = 0.0f;
 		color[2] = 0.0f;
@@ -1188,14 +1214,14 @@ static float CG_DrawScores( float y ) {
 
 	return y1 - 8;
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ================
 CG_DrawPowerups
 ================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static float CG_DrawPowerups( float y ) {
 	int		sorted[MAX_POWERUPS];
 	int		sortedTime[MAX_POWERUPS];
@@ -1225,6 +1251,17 @@ static float CG_DrawPowerups( float y ) {
 		if ( !ps->powerups[ i ] ) {
 			continue;
 		}
+
+#ifdef MISSIONPACK
+		if (i == PW_SCOUT
+			|| i == PW_GUARD
+			|| i == PW_DOUBLER
+			|| i == PW_AMMOREGEN)
+		{
+			continue;
+		}
+#endif
+
 		t = ps->powerups[ i ] - cg.time;
 		// ZOID--don't draw if the power up has unlimited time (999 seconds)
 		// This is true of the CTF flags
@@ -1289,7 +1326,7 @@ static float CG_DrawPowerups( float y ) {
 
 	return y;
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 =====================
@@ -1297,7 +1334,7 @@ CG_DrawLowerRight
 
 =====================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawLowerRight( void ) {
 	float	y;
 
@@ -1312,14 +1349,14 @@ static void CG_DrawLowerRight( void ) {
 	y = CG_DrawScores( y );
 	y = CG_DrawPowerups( y );
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ===================
 CG_DrawPickupItem
 ===================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static int CG_DrawPickupItem( int y ) {
 	int		value;
 	float	*fadeColor;
@@ -1344,7 +1381,7 @@ static int CG_DrawPickupItem( int y ) {
 	
 	return y;
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 =====================
@@ -1352,7 +1389,7 @@ CG_DrawLowerLeft
 
 =====================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawLowerLeft( void ) {
 	float	y;
 
@@ -1367,7 +1404,7 @@ static void CG_DrawLowerLeft( void ) {
 
 	y = CG_DrawPickupItem( y );
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 
 //===========================================================================================
@@ -1377,7 +1414,7 @@ static void CG_DrawLowerLeft( void ) {
 CG_DrawTeamInfo
 =================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawTeamInfo( void ) {
 	int h;
 	int i;
@@ -1433,14 +1470,14 @@ static void CG_DrawTeamInfo( void ) {
 		}
 	}
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 /*
 ===================
 CG_DrawHoldableItem
 ===================
 */
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 static void CG_DrawHoldableItem( void ) { 
 	int		value;
 
@@ -1453,7 +1490,7 @@ static void CG_DrawHoldableItem( void ) {
 	}
 
 }
-#endif // MISSIONPACK
+#endif // MISSIONPACK_HUD
 
 #ifdef MISSIONPACK
 /*
@@ -1461,7 +1498,7 @@ static void CG_DrawHoldableItem( void ) {
 CG_DrawPersistantPowerup
 ===================
 */
-#if 0 // sos001208 - DEAD
+#ifndef MISSIONPACK_HUD
 static void CG_DrawPersistantPowerup( void ) { 
 	int		value;
 
@@ -1473,7 +1510,7 @@ static void CG_DrawPersistantPowerup( void ) {
 		CG_DrawPic( 640-ICON_SIZE, (SCREEN_HEIGHT-ICON_SIZE)/2 - ICON_SIZE, ICON_SIZE, ICON_SIZE, cg_items[ value ].icon );
 	}
 }
-#endif
+#endif // MISSIONPACK_HUD
 #endif // MISSIONPACK
 
 
@@ -1680,7 +1717,7 @@ static void CG_DrawLagometer( void ) {
 	//
 	// draw the graph
 	//
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	x = 640 - 48;
 	y = 480 - 144;
 #else
@@ -1823,7 +1860,7 @@ static void CG_DrawCenterString( void ) {
 	char	*start;
 	int		l;
 	int		x, y, w;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	int		h;
 #else
 	int		charWidth;
@@ -1846,7 +1883,7 @@ static void CG_DrawCenterString( void ) {
 
 	start = cg.cur_lc->centerPrint;
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	charHeight = CG_Text_Height("I", cg.cur_lc->centerPrintCharScale, 0);
 #else
 	charWidth = BIGCHAR_WIDTH * 2 * cg.cur_lc->centerPrintCharScale;
@@ -1866,7 +1903,7 @@ static void CG_DrawCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 		w = CG_Text_Width(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
 		h = CG_Text_Height(linebuffer, cg.cur_lc->centerPrintCharScale, 0);
 		x = (SCREEN_WIDTH - w) / 2;
@@ -1932,7 +1969,7 @@ static void CG_DrawGlobalCenterString( void ) {
 	char	*start;
 	int		l;
 	int		x, y, w;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	int		h;
 #else
 	int		charWidth;
@@ -1955,7 +1992,7 @@ static void CG_DrawGlobalCenterString( void ) {
 
 	start = cg.centerPrint;
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	charHeight = CG_Text_Height("I", cg.centerPrintCharScale, 0);
 #else
 	charWidth = BIGCHAR_WIDTH * 2 * cg.centerPrintCharScale;
@@ -1975,7 +2012,7 @@ static void CG_DrawGlobalCenterString( void ) {
 		}
 		linebuffer[l] = 0;
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 		w = CG_Text_Width(linebuffer, cg.centerPrintCharScale, 0);
 		h = CG_Text_Height(linebuffer, cg.centerPrintCharScale, 0);
 		x = (SCREEN_WIDTH - w) / 2;
@@ -2225,7 +2262,7 @@ static void CG_DrawCrosshairNames( void ) {
 	}
 
 	name = cgs.clientinfo[ cg.cur_lc->crosshairClientNum ].name;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	color[3] *= 0.5f;
 	w = CG_Text_Width(name, 0.3f, 0);
 	CG_Text_Paint( 320 - w / 2, 190, 0.3f, color, name, 0, 0, ITEM_TEXTSTYLE_SHADOWED);
@@ -2280,7 +2317,7 @@ static void CG_DrawVote(void) {
 	if ( sec < 0 ) {
 		sec = 0;
 	}
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD // ZTM: TODO: Add vote to Q3 ingame menu?
 	s = va("VOTE(%i):%s yes:%i no:%i", sec, cgs.voteString, cgs.voteYes, cgs.voteNo);
 	CG_DrawSmallString( 0, 58, s, 1.0F );
 	s = "or press ESC then click Vote";
@@ -2330,7 +2367,7 @@ static void CG_DrawTeamVote(void) {
 
 
 static qboolean CG_DrawScoreboard( void ) {
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	static qboolean firstTime[MAX_SPLITVIEW] = {qtrue, qtrue, qtrue, qtrue};
 
 	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
@@ -2407,7 +2444,7 @@ CG_DrawIntermission
 */
 static void CG_DrawIntermission( void ) {
 //	int key;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	//if (cg_singlePlayer.integer) {
 	//	CG_DrawCenterString();
 	//	return;
@@ -2537,7 +2574,7 @@ static void CG_DrawWarmup( void ) {
 	int			w;
 	int			sec;
 	int			i;
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	float		scale;
 #else
 	int			cw;
@@ -2576,7 +2613,7 @@ static void CG_DrawWarmup( void ) {
 
 		if ( ci1 && ci2 ) {
 			s = va( "%s vs %s", ci1->name, ci2->name );
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 			w = CG_Text_Width(s, 0.6f, 0);
 			CG_Text_Paint(320 - w / 2, 60, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 #else
@@ -2608,7 +2645,7 @@ static void CG_DrawWarmup( void ) {
 		} else {
 			s = "";
 		}
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 		w = CG_Text_Width(s, 0.6f, 0);
 		CG_Text_Paint(320 - w / 2, 90, 0.6f, colorWhite, s, 0, 0, ITEM_TEXTSTYLE_SHADOWEDMORE);
 #else
@@ -2646,7 +2683,7 @@ static void CG_DrawWarmup( void ) {
 		}
 	}
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	switch ( cg.warmupCount ) {
 	case 0:
 		scale = 0.54f;
@@ -2687,7 +2724,7 @@ static void CG_DrawWarmup( void ) {
 }
 
 //==================================================================================
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 /* 
 =================
 CG_DrawTimedMenus
@@ -2746,7 +2783,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 		// don't draw any status if dead or the scoreboard is being explicitly shown
 		if ( !cg.showScores && cg.cur_ps->stats[STAT_HEALTH] > 0 ) {
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 			if ( cg_drawStatus.integer ) {
 				CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
@@ -2767,16 +2804,17 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 			CG_DrawCrosshairNames();
 			CG_DrawWeaponSelect();
 
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 			CG_DrawHoldableItem();
-#else
-			//CG_DrawPersistantPowerup();
+#ifdef MISSIONPACK
+			CG_DrawPersistantPowerup();
+#endif
 #endif
 			CG_DrawReward();
 		}
     
 		if ( cgs.gametype >= GT_TEAM ) {
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 			CG_DrawTeamInfo();
 #endif
 		}
@@ -2795,7 +2833,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 	CG_DrawUpperRight(stereoFrame);
 #endif
 
-#ifndef MISSIONPACK
+#ifndef MISSIONPACK_HUD
 	CG_DrawLowerRight();
 	CG_DrawLowerLeft();
 #endif
@@ -2810,7 +2848,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 
 
 static void CG_DrawTourneyScoreboard( void ) {
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 #else
 	CG_DrawOldTourneyScoreboard();
 #endif

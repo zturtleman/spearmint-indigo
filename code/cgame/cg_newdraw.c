@@ -33,14 +33,18 @@ Suite 120, Rockville, Maryland 20850 USA.
 
 #ifdef MISSIONPACK
 
+#ifdef MISSIONPACK_HUD
 extern displayContextDef_t cgDC;
+#endif
 
 
 // set in CG_ParseTeamInfo
 
 //static int sortedTeamPlayers[TEAM_MAXOVERLAY];
 //static int numSortedTeamPlayers;
+#ifdef MISSIONPACK_HUD
 int drawTeamOverlayModificationCount = -1;
+#endif
 
 //static char systemChat[256];
 //static char teamChat1[256];
@@ -190,6 +194,7 @@ void CG_SelectPrevPlayer( void ) {
 }
 
 
+#ifdef MISSIONPACK_HUD
 static void CG_DrawPlayerArmorIcon( rectDef_t *rect, qboolean draw2D ) {
 	vec3_t		angles;
 	vec3_t		origin;
@@ -996,6 +1001,7 @@ float CG_GetValue(int ownerDraw) {
   }
 	return -1;
 }
+#endif // MISSIONPACK_HUD
 
 qboolean CG_OtherTeamHasFlag(void) {
 	if (cgs.gametype == GT_CTF || cgs.gametype == GT_1FCTF) {
@@ -1045,6 +1051,7 @@ qboolean CG_YourTeamHasFlag(void) {
 	return qfalse;
 }
 
+#ifdef MISSIONPACK_HUD
 // THINKABOUTME: should these be exclusive or inclusive.. 
 // 
 qboolean CG_OwnerDrawVisible(int flags) {
@@ -1840,6 +1847,7 @@ void CG_KeyEvent(int key, qboolean down) {
 		}
 	}
 }
+#endif // MISSIONPACK_HUD
 
 int CG_ClientNumFromName(const char *p) {
   int i;
@@ -1852,9 +1860,11 @@ int CG_ClientNumFromName(const char *p) {
 }
 
 void CG_ShowResponseHead(void) {
+#ifdef MISSIONPACK_HUD
   Menus_OpenByName("voiceMenu");
 	trap_Cvar_Set("cl_conXOffset", "72");
 	cg.cur_lc->voiceTime = cg.time;
+#endif // MISSIONPACK_HUD
 }
 
 void CG_RunMenuScript(char **args) {

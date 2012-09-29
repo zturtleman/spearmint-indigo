@@ -34,6 +34,8 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 #ifdef MISSIONPACK
 #include "../ui/ui_shared.h"
+#endif
+#ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
 #endif
 
@@ -94,7 +96,7 @@ static void CG_Viewpos_f (void) {
 
 static void CG_ScoresDown_f( void ) {
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	CG_BuildSpectatorString();
 #endif
 	if ( cg.scoresRequestTime + 2000 < cg.time ) {
@@ -123,7 +125,7 @@ static void CG_ScoresUp_f( void ) {
 	}
 }
 
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 extern menuDef_t *menuScoreboard;
 void Menu_Reset( void );			// FIXME: add to right include file
 
@@ -162,8 +164,10 @@ static void CG_scrollScoresUp_f( void) {
 		Menu_ScrollFeeder(menuScoreboard, FEEDER_BLUETEAM_LIST, qfalse);
 	}
 }
+#endif
 
 
+#ifdef MISSIONPACK
 static void CG_spWin_f( void) {
 	trap_Cvar_Set("cg_cameraOrbit", "2");
 	trap_Cvar_Set("cg_cameraOrbitDelay", "35");
@@ -514,7 +518,6 @@ static consoleCommand_t	commands[] = {
 #ifdef MISSIONPACK
 	{ "vtell_target", CG_VoiceTellTarget_f },
 	{ "vtell_attacker", CG_VoiceTellAttacker_f },
-	{ "loadhud", CG_LoadHud_f },
 	{ "nextTeamMember", CG_NextTeamMember_f },
 	{ "prevTeamMember", CG_PrevTeamMember_f },
 	{ "nextOrder", CG_NextOrder_f },
@@ -536,8 +539,11 @@ static consoleCommand_t	commands[] = {
 	{ "tauntGauntlet", CG_TauntGauntlet_f },
 	{ "spWin", CG_spWin_f },
 	{ "spLose", CG_spLose_f },
+#ifdef MISSIONPACK_HUD
+	{ "loadhud", CG_LoadHud_f },
 	{ "scoresDown", CG_scrollScoresDown_f },
 	{ "scoresUp", CG_scrollScoresUp_f },
+#endif
 #endif
 	{ "startOrbit", CG_StartOrbit_f },
 	//{ "camera", CG_Camera_f },

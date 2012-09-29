@@ -109,7 +109,7 @@ static void CG_ParseScores( int start ) {
 
 		cg.scores[i].team = cgs.clientinfo[cg.scores[i].client].team;
 	}
-#ifdef MISSIONPACK
+#ifdef MISSIONPACK_HUD
 	CG_SetScoreSelection(NULL);
 #endif
 
