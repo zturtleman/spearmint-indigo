@@ -520,7 +520,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 		return;
 	}
 	trap_R_SetColor( hcolor );
-	CG_SetScreenPlacement(PLACE_STRETCH);
+	CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
 	CG_DrawPic( x, y, w, h, cgs.media.teamStatusBar );
 	CG_PopScreenPlacement();
 	trap_R_SetColor( NULL );
@@ -553,7 +553,7 @@ static void CG_DrawStatusBar( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
 	ps = cg.cur_ps;
 	cent = &cg_entities[ps->clientNum];
@@ -1007,7 +1007,7 @@ static void CG_DrawUpperRight(stereoFrame_t stereoFrame)
 
 	y = 0;
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_TOP);
 
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 1 ) {
 		y = CG_DrawTeamOverlay( y, qtrue, qtrue );
@@ -1303,7 +1303,7 @@ static void CG_DrawLowerRight( void ) {
 
 	y = 480 - ICON_SIZE;
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 2 ) {
 		y = CG_DrawTeamOverlay( y, qtrue, qfalse );
@@ -1358,7 +1358,7 @@ static void CG_DrawLowerLeft( void ) {
 
 	y = 480 - ICON_SIZE;
 
-	CG_SetScreenPlacement(PLACE_LEFT);
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 
 	if ( cgs.gametype >= GT_TEAM && cg_drawTeamOverlay.integer == 3 ) {
 		y = CG_DrawTeamOverlay( y, qfalse, qfalse );
@@ -1444,7 +1444,7 @@ CG_DrawHoldableItem
 static void CG_DrawHoldableItem( void ) { 
 	int		value;
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
 
 	value = cg.cur_ps->stats[STAT_HOLDABLE_ITEM];
 	if ( value ) {
@@ -1465,7 +1465,7 @@ CG_DrawPersistantPowerup
 static void CG_DrawPersistantPowerup( void ) { 
 	int		value;
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
 
 	value = cg.cur_ps->stats[STAT_PERSISTANT_POWERUP];
 	if ( value ) {
@@ -1492,7 +1492,7 @@ static void CG_DrawReward( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	color = CG_FadeColor( cg.cur_lc->rewardTime, REWARD_TIME );
 	if ( !color ) {
@@ -1634,7 +1634,7 @@ static void CG_DrawDisconnect( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	// also add text in center of screen
 	s = "Connection Interrupted";
@@ -1646,7 +1646,7 @@ static void CG_DrawDisconnect( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
 	x = 640 - 48;
 	y = 480 - 48;
@@ -1675,7 +1675,7 @@ static void CG_DrawLagometer( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_RIGHT);
+	CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 
 	//
 	// draw the graph
@@ -1840,7 +1840,7 @@ static void CG_DrawCenterString( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	trap_R_SetColor( color );
 
@@ -1949,7 +1949,7 @@ static void CG_DrawGlobalCenterString( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	trap_R_SetColor( color );
 
@@ -2038,7 +2038,7 @@ static void CG_DrawCrosshair(void)
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	// set color based on health
 	if ( cg_crosshairHealth.integer ) {
@@ -2107,7 +2107,7 @@ static void CG_DrawCrosshair3D(void)
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	w = cg_crosshairSize.value;
 
@@ -2212,7 +2212,7 @@ static void CG_DrawCrosshairNames( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	// scan the known entities to see if the crosshair is sighted on one
 	CG_ScanForCrosshairEntity();
@@ -2245,7 +2245,7 @@ CG_DrawSpectator
 =================
 */
 static void CG_DrawSpectator(void) {
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 	CG_DrawBigString(320 - 9 * 8, 440, "SPECTATOR", 1.0F);
 	if ( cgs.gametype == GT_TOURNAMENT ) {
 		CG_DrawBigString(320 - 15 * 8, 460, "waiting to play", 1.0F);
@@ -2268,7 +2268,7 @@ static void CG_DrawVote(void) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_LEFT);
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
 
 	// play a talk beep whenever it is modified
 	if ( cgs.voteModified ) {
@@ -2311,7 +2311,7 @@ static void CG_DrawTeamVote(void) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_LEFT);
+	CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
 
 	// play a talk beep whenever it is modified
 	if ( cgs.teamVoteModified[cs_offset] ) {
@@ -2333,7 +2333,7 @@ static qboolean CG_DrawScoreboard( void ) {
 #ifdef MISSIONPACK
 	static qboolean firstTime[MAX_SPLITVIEW] = {qtrue, qtrue, qtrue, qtrue};
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
 
 	if (menuScoreboard) {
 		menuScoreboard->window.flags &= ~WINDOW_FORCED;
@@ -2436,7 +2436,7 @@ static qboolean CG_DrawFollow( void ) {
 		return qfalse;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
 	color[0] = 1;
 	color[1] = 1;
@@ -2473,7 +2473,7 @@ static void CG_DrawAmmoWarning( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
 	if ( cg.cur_lc->lowAmmoWarning == 2 ) {
 		s = "OUT OF AMMO";
@@ -2503,7 +2503,7 @@ static void CG_DrawProxWarning( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
   if (proxTime == 0) {
     proxTime = cg.time + 5000;
@@ -2550,7 +2550,7 @@ static void CG_DrawWarmup( void ) {
 		return;
 	}
 
-	CG_SetScreenPlacement(PLACE_CENTER);
+	CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 
 	if ( sec < 0 ) {
 		s = "Waiting for players";		
@@ -2748,7 +2748,7 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 
 #ifdef MISSIONPACK
 			if ( cg_drawStatus.integer ) {
-				CG_SetScreenPlacement(PLACE_CENTER);
+				CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
 
 				Menu_PaintAll();
 				CG_DrawTimedMenus();
