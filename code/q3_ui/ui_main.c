@@ -119,6 +119,20 @@ vmCvar_t	ui_ctf_capturelimit;
 vmCvar_t	ui_ctf_timelimit;
 vmCvar_t	ui_ctf_friendly;
 
+#ifdef MISSIONPACK
+vmCvar_t	ui_1flag_capturelimit;
+vmCvar_t	ui_1flag_timelimit;
+vmCvar_t	ui_1flag_friendly;
+
+vmCvar_t	ui_obelisk_capturelimit;
+vmCvar_t	ui_obelisk_timelimit;
+vmCvar_t	ui_obelisk_friendly;
+
+vmCvar_t	ui_harvester_capturelimit;
+vmCvar_t	ui_harvester_timelimit;
+vmCvar_t	ui_harvester_friendly;
+#endif
+
 vmCvar_t	ui_publicServer;
 
 vmCvar_t	ui_arenasFile;
@@ -178,6 +192,20 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_ctf_capturelimit, "ui_ctf_capturelimit", "8", CVAR_ARCHIVE },
 	{ &ui_ctf_timelimit, "ui_ctf_timelimit", "30", CVAR_ARCHIVE },
 	{ &ui_ctf_friendly, "ui_ctf_friendly",  "0", CVAR_ARCHIVE },
+
+#ifdef MISSIONPACK
+	{ &ui_1flag_capturelimit, "ui_1flag_capturelimit", "5", CVAR_ARCHIVE },
+	{ &ui_1flag_timelimit, "ui_1flag_timelimit", "30", CVAR_ARCHIVE },
+	{ &ui_1flag_friendly, "ui_1flag_friendly",  "0", CVAR_ARCHIVE },
+
+	{ &ui_obelisk_capturelimit, "ui_obelisk_capturelimit", "5", CVAR_ARCHIVE },
+	{ &ui_obelisk_timelimit, "ui_obelisk_timelimit", "20", CVAR_ARCHIVE },
+	{ &ui_obelisk_friendly, "ui_obelisk_friendly",  "0", CVAR_ARCHIVE },
+
+	{ &ui_harvester_capturelimit, "ui_harvester_capturelimit", "5", CVAR_ARCHIVE },
+	{ &ui_harvester_timelimit, "ui_harvester_timelimit", "30", CVAR_ARCHIVE },
+	{ &ui_harvester_friendly, "ui_harvester_friendly",  "0", CVAR_ARCHIVE },
+#endif
 
 	{ &ui_publicServer, "ui_publicServer", "1", CVAR_ARCHIVE },
 

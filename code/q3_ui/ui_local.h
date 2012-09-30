@@ -54,6 +54,20 @@ extern vmCvar_t	ui_ctf_capturelimit;
 extern vmCvar_t	ui_ctf_timelimit;
 extern vmCvar_t	ui_ctf_friendly;
 
+#ifdef MISSIONPACK
+extern vmCvar_t	ui_1flag_capturelimit;
+extern vmCvar_t	ui_1flag_timelimit;
+extern vmCvar_t	ui_1flag_friendly;
+
+extern vmCvar_t	ui_obelisk_capturelimit;
+extern vmCvar_t	ui_obelisk_timelimit;
+extern vmCvar_t	ui_obelisk_friendly;
+
+extern vmCvar_t	ui_harvester_capturelimit;
+extern vmCvar_t	ui_harvester_timelimit;
+extern vmCvar_t	ui_harvester_friendly;
+#endif
+
 extern vmCvar_t	ui_publicServer;
 
 extern vmCvar_t	ui_arenasFile;
