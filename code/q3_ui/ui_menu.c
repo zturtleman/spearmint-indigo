@@ -45,7 +45,9 @@ MAIN MENU
 #define ID_SETUP				12
 #define ID_DEMOS				13
 #define ID_CINEMATICS			14
-#define ID_TEAMARENA		15
+#ifndef MISSIONPACK
+#define ID_TEAMARENA			15
+#endif
 #define ID_MODS					16
 #define ID_EXIT					17
 
@@ -61,7 +63,9 @@ typedef struct {
 	menutext_s		setup;
 	menutext_s		demos;
 	menutext_s		cinematics;
+#ifndef MISSIONPACK
 	menutext_s		teamArena;
+#endif
 	menutext_s		mods;
 	menutext_s		exit;
 
@@ -128,10 +132,12 @@ void Main_MenuEvent (void* ptr, int event) {
 		UI_ModsMenu();
 		break;
 
+#ifndef MISSIONPACK
 	case ID_TEAMARENA:
 		trap_Cvar_Set( "fs_game", BASETA);
 		trap_Cmd_ExecuteText( EXEC_APPEND, "vid_restart;" );
 		break;
+#endif
 
 	case ID_EXIT:
 		UI_ConfirmMenu( "EXIT GAME?", 0, MainMenu_ExitAction );
@@ -238,6 +244,7 @@ static void Main_MenuDraw( void ) {
 }
 
 
+#ifndef MISSIONPACK
 /*
 ===============
 UI_TeamArenaExists
@@ -263,6 +270,7 @@ static qboolean UI_TeamArenaExists( void ) {
 	}
 	return qfalse;
 }
+#endif
 
 
 /*
@@ -276,7 +284,9 @@ and that local cinematics are killed
 */
 void UI_MainMenu( void ) {
 	int		y;
+#ifndef MISSIONPACK
 	qboolean teamArena = qfalse;
+#endif
 	int		style = UI_CENTER | UI_DROPSHADOW;
 
 	trap_Cvar_Set( "sv_killserver", "1" );
@@ -363,6 +373,7 @@ void UI_MainMenu( void ) {
 	s_main.cinematics.color					= color_red;
 	s_main.cinematics.style					= style;
 
+#ifndef MISSIONPACK
 	if (UI_TeamArenaExists()) {
 		teamArena = qtrue;
 		y += MAIN_MENU_VERTICAL_SPACING;
@@ -376,6 +387,7 @@ void UI_MainMenu( void ) {
 		s_main.teamArena.color					= color_red;
 		s_main.teamArena.style					= style;
 	}
+#endif
 
 	y += MAIN_MENU_VERTICAL_SPACING;
 	s_main.mods.generic.type			= MTYPE_PTEXT;
@@ -404,9 +416,11 @@ void UI_MainMenu( void ) {
 	Menu_AddItem( &s_main.menu,	&s_main.setup );
 	Menu_AddItem( &s_main.menu,	&s_main.demos );
 	Menu_AddItem( &s_main.menu,	&s_main.cinematics );
+#ifndef MISSIONPACK
 	if (teamArena) {
 		Menu_AddItem( &s_main.menu,	&s_main.teamArena );
 	}
+#endif
 	Menu_AddItem( &s_main.menu,	&s_main.mods );
 	Menu_AddItem( &s_main.menu,	&s_main.exit );             
 
