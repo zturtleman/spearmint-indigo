@@ -556,6 +556,10 @@ typedef struct {
 
 	//qboolean cameraMode;		// if rendering from a loaded camera
 
+	// scoreboard
+	qboolean	showScores;
+	qboolean	scoreBoardShowing;
+	int			scoreFadeTime;
 	char		killerName[MAX_NAME_LENGTH];
 
 } cglc_t;
@@ -640,9 +644,6 @@ typedef struct {
 	int			selectedScore;
 	int			teamScores[2];
 	score_t		scores[MAX_CLIENTS];
-	qboolean	showScores;
-	qboolean	scoreBoardShowing;
-	int			scoreFadeTime;
 #ifdef MISSIONPACK
 	char			spectatorList[MAX_STRING_CHARS];		// list of names
 	int				spectatorTime;							// last time offset
