@@ -2377,7 +2377,9 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 	if (cg_paused.integer) {
 		cg.deferredPlayerLoading = 0;
-		firstTime[cg.cur_localClientNum] = qtrue;
+		if (cg.cur_lc) {
+			firstTime[cg.cur_localClientNum] = qtrue;
+		}
 		return qfalse;
 	}
 
@@ -2414,7 +2416,7 @@ static qboolean CG_DrawScoreboard( void ) {
 	}
 
 	if (menuScoreboard) {
-		if (firstTime[cg.cur_localClientNum]) {
+		if (cg.cur_lc && firstTime[cg.cur_localClientNum]) {
 			firstTime[cg.cur_localClientNum] = qfalse;
 			CG_SetScoreSelection(menuScoreboard);
 
@@ -2756,6 +2758,10 @@ static void CG_Draw2D(stereoFrame_t stereoFrame)
 		return;
 	}
 
+	if ( cg.singleCamera ) {
+		return;
+	}
+
 	if ( cg_draw2D.integer == 0 ) {
 		return;
 	}
@@ -2912,8 +2918,11 @@ void CG_DrawScreen2D( stereoFrame_t stereoView ) {
 
 	CG_DrawWarmup();
 
-	// ZTM: FIXME: Don't draw if any player is viewing scoreboard?
-	CG_DrawGlobalCenterString();
+	if ( cg.singleCamera ) {
+		CG_DrawScoreboard();
+	} else {
+		CG_DrawGlobalCenterString();
+	}
 }
 
 

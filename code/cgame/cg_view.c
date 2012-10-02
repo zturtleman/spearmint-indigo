@@ -1021,7 +1021,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 			break;
 		}
 	}
-	cg.singleCamera = (i == MAX_SPLITVIEW);
+	cg.singleCamera = (cg.snap->numPSs > 1) && (i == MAX_SPLITVIEW);
 
 	cg.numViewports = 0;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
@@ -1139,24 +1139,20 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 	if (cg.numViewports != 1) {
 		// Setup single viewport
-		cg.singleCamera = qtrue;
 		cg.numViewports = 1;
 		cg.viewport = 0;
 
 		// calculate size of viewport
 		CG_CalcVrect();
-
-		// Not drawing single client view.
-		cg.cur_lc = NULL;
-		cg.cur_ps = NULL;
 	}
-
-	// Draw over all viewports
-	CG_DrawScreen2D( stereoView );
 
 	// Not drawing single client view.
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
+	cg.cur_localClientNum = -1;
+
+	// Draw over all viewports
+	CG_DrawScreen2D( stereoView );
 
 	if ( cg_stats.integer ) {
 		CG_Printf( "cg.clientFrame:%i\n", cg.clientFrame );
