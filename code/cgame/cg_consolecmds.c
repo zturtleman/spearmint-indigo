@@ -102,7 +102,7 @@ static qboolean CG_AnyScoreboardShowing(void) {
 	int i;
 
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		if (cg.localClients[i].scoreBoardShowing) {
+		if (cg.snap->lcIndex[i] != -1 && cg.localClients[i].scoreBoardShowing) {
 			return qtrue;
 		}
 	}
