@@ -5018,7 +5018,7 @@ UI_Init
 void _UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	const char *menuSet;
 
-	uiInfo.maxSplitView = Com_ClampCvar(1, MAX_SPLITVIEW, maxSplitView);
+	uiInfo.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	//uiInfo.inGameLoad = inGameLoad;
 
 	UI_RegisterCvars();
