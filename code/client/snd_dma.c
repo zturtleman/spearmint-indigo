@@ -551,7 +551,7 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 	} else {
 		if (entityNum == MAX_GENTITIES) {
 			// Special case for sounds started using StartLocalSound
-			allowed = 4 * MAX_SPLITVIEW;
+			allowed = 4 * CL_MAX_SPLITVIEW;
 			fullVolume = qtrue;
 		} else if (S_HearingThroughEntity(entityNum)) {
 			allowed = 8;

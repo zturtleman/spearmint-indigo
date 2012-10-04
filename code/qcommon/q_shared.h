@@ -1221,7 +1221,9 @@ typedef struct playerState_s {
 } playerState_t;
 
 
-// Max local clients for splitscreen.
+// Max local clients for splitscreen
+// Also see CL_MAX_SPLITVIEW in client.h for lowering max supported splitview
+// clients in client/renderer, while still keep network and mod compatibility.
 #define MAX_SPLITVIEW 4
 
 //====================================================================
@@ -1381,7 +1383,8 @@ typedef struct {
 } fontInfo_t;
 
 #ifndef QAGAME
-char *Com_LocalClientCvarName(int localClient, char *in_cvarName);
+char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
+int Com_LocalClientForCvarName(const char *in_cvarName);
 #endif
 
 #define Square(x) ((x)*(x))

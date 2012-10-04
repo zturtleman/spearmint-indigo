@@ -132,12 +132,9 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 	s_setupplayers.frame.width				= 466;//359;
 	s_setupplayers.frame.height				= 332;//256;
 
-	y = 96;
-	//y = 88;
+	y = (SCREEN_HEIGHT - (1+UI_MaxSplitView())*INGAME_MENU_VERTICAL_SPACING) * 0.5f;
 
-	y += INGAME_MENU_VERTICAL_SPACING*2;
-
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < UI_MaxSplitView(); i++) {
 		Com_sprintf(s_setupplayers.playerString[i], sizeof (s_setupplayers.playerString[i]), "Player %d", i+1);
 
 		s_setupplayers.player[i].generic.type		= MTYPE_PTEXT;
@@ -166,7 +163,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		y += INGAME_MENU_VERTICAL_SPACING;
 	}
 
-	y += INGAME_MENU_VERTICAL_SPACING*2;
+	y += INGAME_MENU_VERTICAL_SPACING;
 	s_setupplayers.back.generic.type		= MTYPE_PTEXT;
 	s_setupplayers.back.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_setupplayers.back.generic.x			= 320;
@@ -179,7 +176,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 
 	Menu_AddItem( &s_setupplayers.menu, &s_setupplayers.frame );
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < UI_MaxSplitView(); i++) {
 		Menu_AddItem( &s_setupplayers.menu, &s_setupplayers.player[i] );
 	}
 

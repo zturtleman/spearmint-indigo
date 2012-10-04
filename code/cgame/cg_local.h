@@ -1051,6 +1051,8 @@ typedef struct {
 	float			screenXScaleStretch;
 	float			screenYScaleStretch;
 
+	int				maxSplitView;
+
 	int				serverCommandSequence;	// reliable command stream counter
 	int				processedSnapshotNum;// the number of snapshots cgame has requested
 
@@ -1249,6 +1251,8 @@ extern	vmCvar_t		cg_obeliskRespawnDelay;
 //
 const char *CG_ConfigString( int index );
 const char *CG_Argv( int arg );
+
+int CG_MaxSplitView(void);
 
 void QDECL CG_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL CG_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));

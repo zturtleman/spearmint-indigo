@@ -222,8 +222,11 @@ void InGame_MenuInit( void ) {
 	s_ingame.frame.width				= 466;//359;
 	s_ingame.frame.height				= 332;//256;
 
-	//y = 96;
-	y = 88;
+	if (UI_MaxSplitView() > 1) {
+		y = 88;
+	} else {
+		y = 96;
+	}
 	s_ingame.team.generic.type			= MTYPE_PTEXT;
 	s_ingame.team.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	s_ingame.team.generic.x				= 320;
@@ -284,20 +287,22 @@ void InGame_MenuInit( void ) {
 		}
 	}
 
-	y += INGAME_MENU_VERTICAL_SPACING;
-	s_ingame.localPlayers.generic.type		= MTYPE_PTEXT;
-	s_ingame.localPlayers.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
-	s_ingame.localPlayers.generic.x			= 320;
-	s_ingame.localPlayers.generic.y			= y;
-	s_ingame.localPlayers.generic.id		= ID_LOCALPLAYERS;
-	s_ingame.localPlayers.generic.callback	= InGame_Event;
-	s_ingame.localPlayers.string			= "LOCAL PLAYERS";
-	s_ingame.localPlayers.color				= color_red;
-	s_ingame.localPlayers.style				= UI_CENTER|UI_SMALLFONT;
+	if (UI_MaxSplitView() > 1) {
+		y += INGAME_MENU_VERTICAL_SPACING;
+		s_ingame.localPlayers.generic.type		= MTYPE_PTEXT;
+		s_ingame.localPlayers.generic.flags		= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
+		s_ingame.localPlayers.generic.x			= 320;
+		s_ingame.localPlayers.generic.y			= y;
+		s_ingame.localPlayers.generic.id		= ID_LOCALPLAYERS;
+		s_ingame.localPlayers.generic.callback	= InGame_Event;
+		s_ingame.localPlayers.string			= "LOCAL PLAYERS";
+		s_ingame.localPlayers.color				= color_red;
+		s_ingame.localPlayers.style				= UI_CENTER|UI_SMALLFONT;
 
-	if (trap_Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER)
-	{
-		s_ingame.localPlayers.generic.flags |= QMF_GRAYED;
+		if (trap_Cvar_VariableValue( "g_gametype" ) == GT_SINGLE_PLAYER)
+		{
+			s_ingame.localPlayers.generic.flags |= QMF_GRAYED;
+		}
 	}
 
 	y += INGAME_MENU_VERTICAL_SPACING;
@@ -374,7 +379,9 @@ void InGame_MenuInit( void ) {
 	Menu_AddItem( &s_ingame.menu, &s_ingame.addbots );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.removebots );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.teamorders );
-	Menu_AddItem( &s_ingame.menu, &s_ingame.localPlayers);
+	if (UI_MaxSplitView() > 1) {
+		Menu_AddItem( &s_ingame.menu, &s_ingame.localPlayers);
+	}
 	Menu_AddItem( &s_ingame.menu, &s_ingame.setup );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.server );
 	Menu_AddItem( &s_ingame.menu, &s_ingame.restart );

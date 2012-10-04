@@ -1015,16 +1015,16 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.clientFrame++;
 
 	// Use single camera/viewport at intermission
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[i].pm_type != PM_INTERMISSION) {
 			// client present and not at intermission, keep viewports separate.
 			break;
 		}
 	}
-	cg.singleCamera = (cg.snap->numPSs > 1) && (i == MAX_SPLITVIEW);
+	cg.singleCamera = (cg.snap->numPSs > 1) && (i == CG_MaxSplitView());
 
 	cg.numViewports = 0;
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		if (cg.snap->lcIndex[i] == -1) {
 			renderClientViewport[i] = qfalse;
 			continue;
@@ -1054,7 +1054,7 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 		renderClientViewport[0] = qtrue;
 	}
 
-	for (i = 0, cg.viewport = -1; i < MAX_SPLITVIEW; i++) {
+	for (i = 0, cg.viewport = -1; i < CG_MaxSplitView(); i++) {
 		if (!renderClientViewport[i]) {
 			continue;
 		}

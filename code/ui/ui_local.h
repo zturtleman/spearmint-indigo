@@ -834,6 +834,7 @@ typedef struct {
 	int effectsColor;
 
 	qboolean inGameLoad;
+	int		maxSplitView;
 
 }	uiInfo_t;
 

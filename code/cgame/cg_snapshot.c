@@ -98,7 +98,8 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	cg.snap = snap;
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	// ZTM: FIXME: Pass all clientNums to CG_INIT
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		if (cg.snap->lcIndex[i] != -1) {
 			// Set clientNum as extra local client don't have it yet.
 			cg.localClients[i].clientNum = cg.snap->pss[cg.snap->lcIndex[i]].clientNum;
@@ -190,7 +191,7 @@ static void CG_TransitionSnapshot( void ) {
 	if ( oldFrame ) {
 		playerState_t	*ops, *ps;
 
-		for (i = 0; i < MAX_SPLITVIEW; i++) {
+		for (i = 0; i < CG_MaxSplitView(); i++) {
 			if (oldFrame->lcIndex[i] == -1 || cg.snap->lcIndex[i] == -1) {
 				continue;
 			}
@@ -443,7 +444,7 @@ CG_LocalClientPlayerStateForClientNum
 playerState_t *CG_LocalClientPlayerStateForClientNum(int clientNum) {
 	int i;
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		if (cg.snap->lcIndex[i] != -1 && cg.snap->pss[cg.snap->lcIndex[i]].clientNum == clientNum) {
 			return &cg.snap->pss[cg.snap->lcIndex[i]];
 		}

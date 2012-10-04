@@ -1567,7 +1567,7 @@ void CG_NextWeapon( int localClient ) {
 		return;
 	}
 
-	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
+	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
 		return;
 	}
 
@@ -1613,7 +1613,7 @@ void CG_PrevWeapon( int localClient ) {
 		return;
 	}
 
-	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
+	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
 		return;
 	}
 
@@ -1658,7 +1658,7 @@ void CG_Weapon( int localClient ) {
 		return;
 	}
 
-	if (localClient >= MAX_SPLITVIEW || cg.snap->lcIndex[localClient] == -1) {
+	if (localClient >= CG_MaxSplitView() || cg.snap->lcIndex[localClient] == -1) {
 		return;
 	}
 

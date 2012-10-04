@@ -89,6 +89,15 @@ float UI_ClampCvar( float min, float max, float value )
 
 /*
 =================
+UI_MaxSplitView
+=================
+*/
+int UI_MaxSplitView(void) {
+	return uis.maxSplitView;
+}
+
+/*
+=================
 UI_StartDemoLoop
 =================
 */
@@ -1066,7 +1075,9 @@ void UI_Shutdown( void ) {
 UI_Init
 =================
 */
-void UI_Init( void ) {
+void UI_Init( qboolean inGameLoad, int maxSplitView ) {
+	uis.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
+	
 	UI_RegisterCvars();
 
 	UI_InitGameinfo();
@@ -1228,7 +1239,7 @@ void UI_Refresh( int realtime )
 		if( uis.firstdraw ) {
 			int i;
 
-			for (i = 0; i < MAX_SPLITVIEW; ++i) {
+			for (i = 0; i < UI_MaxSplitView(); ++i) {
 				UI_MouseEvent( i, 0, 0 );
 			}
 			uis.firstdraw = qfalse;

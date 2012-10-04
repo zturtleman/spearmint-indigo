@@ -1064,7 +1064,7 @@ void CL_InitUI( void ) {
 	}
 	else {
 		// init for this gamestate
-		VM_Call( uivm, UI_INIT, (clc.state >= CA_CONNECTING && clc.state < CA_ACTIVE) );
+		VM_Call( uivm, UI_INIT, (clc.state >= CA_CONNECTING && clc.state < CA_ACTIVE), CL_MAX_SPLITVIEW );
 	}
 }
 

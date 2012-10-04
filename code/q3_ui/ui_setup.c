@@ -192,7 +192,7 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.setupplayers.generic.y				= y;
 	setupMenuInfo.setupplayers.generic.id			= ID_CUSTOMIZEPLAYER;
 	setupMenuInfo.setupplayers.generic.callback		= UI_SetupMenu_Event; 
-	setupMenuInfo.setupplayers.string				= "PLAYERS";
+	setupMenuInfo.setupplayers.string				= (UI_MaxSplitView() == 1) ? "PLAYER": "PLAYERS";
 	setupMenuInfo.setupplayers.color					= color_red;
 	setupMenuInfo.setupplayers.style					= UI_CENTER;
 

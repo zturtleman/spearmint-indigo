@@ -43,7 +43,7 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum );
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum );
 void CG_Shutdown( void );
 
 
@@ -61,7 +61,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return CG_API_VERSION;
 	case CG_INIT:
-		CG_Init( arg0, arg1, arg2 );
+		CG_Init( arg0, arg1, arg2, arg3 );
 		return 0;
 	case CG_SHUTDOWN:
 		CG_Shutdown();
@@ -364,6 +364,10 @@ void CG_RegisterCvars( void ) {
 	char		var[MAX_TOKEN_CHARS];
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
+			continue;
+		}
+
 		trap_Cvar_Register( cv->vmCvar, cv->cvarName,
 			cv->defaultString, cv->cvarFlags );
 	}
@@ -414,6 +418,10 @@ void CG_UpdateCvars( void ) {
 	cvarTable_t	*cv;
 
 	for ( i = 0, cv = cvarTable ; i < cvarTableSize ; i++, cv++ ) {
+		if (Com_LocalClientForCvarName(cv->cvarName) >= CG_MaxSplitView()) {
+			continue;
+		}
+
 		trap_Cvar_Update( cv->vmCvar );
 	}
 
@@ -453,7 +461,7 @@ void CG_UpdateCvars( void ) {
 }
 
 int CG_CrosshairPlayer( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -465,7 +473,7 @@ int CG_CrosshairPlayer( int localClientNum ) {
 }
 
 int CG_LastAttacker( int localClientNum ) {
-	if (localClientNum < 0 || localClientNum >= MAX_SPLITVIEW) {
+	if (localClientNum < 0 || localClientNum >= CG_MaxSplitView()) {
 		return -1;
 	}
 
@@ -561,6 +569,14 @@ const char *CG_Argv( int arg ) {
 	return buffer;
 }
 
+/*
+================
+CG_MaxSplitView
+================
+*/
+int CG_MaxSplitView(void) {
+	return cgs.maxSplitView;
+}
 
 //========================================================================
 
@@ -1938,7 +1954,7 @@ Called after every level change or subsystem restart
 Will perform callbacks to make the loading info screen update.
 =================
 */
-void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum ) {
 	const char	*s;
 	int			i;
 
@@ -1949,9 +1965,10 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 	memset( cg_weapons, 0, sizeof(cg_weapons) );
 	memset( cg_items, 0, sizeof(cg_items) );
 
+	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		cg.localClients[i].clientNum = clientNum;
 	}
 
@@ -1969,7 +1986,7 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int clientNum ) {
 
 	CG_InitConsoleCommands();
 
-	for (i = 0; i < MAX_SPLITVIEW; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
 		cg.localClients[i].weaponSelect = WP_MACHINEGUN;
 	}
 

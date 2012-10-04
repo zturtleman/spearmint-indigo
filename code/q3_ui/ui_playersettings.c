@@ -377,7 +377,11 @@ static void PlayerSettings_MenuInit( int localClient )
 	memset(&s_playersettings,0,sizeof(playersettings_t));
 
 	s_playersettings.localClient = localClient;
-	Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localClient+1);
+	if (UI_MaxSplitView() == 1) {
+		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER SETTINGS");
+	} else {
+		Com_sprintf(s_playersettings.bannerString, sizeof (s_playersettings.bannerString), "PLAYER %d SETTINGS", s_playersettings.localClient+1);
+	}
 
 	PlayerSettings_Cache();
 
@@ -385,15 +389,16 @@ static void PlayerSettings_MenuInit( int localClient )
 	s_playersettings.menu.wrapAround = qtrue;
 	s_playersettings.menu.fullscreen = qtrue;
 
-#if 1 // ZTM: Q3's BTEXT doesn't have number sadly.
-	s_playersettings.banner.generic.type  = MTYPE_PTEXT;
-#else
-	s_playersettings.banner.generic.type  = MTYPE_BTEXT;
-#endif
+	if (UI_MaxSplitView() == 1) {
+		s_playersettings.banner.generic.type  = MTYPE_BTEXT;
+	} else {
+		// ZTM: Q3's BTEXT doesn't have numbers sadly.
+		s_playersettings.banner.generic.type  = MTYPE_PTEXT;
+	}
 	s_playersettings.banner.generic.x     = 320;
 	s_playersettings.banner.generic.y     = 16;
 	s_playersettings.banner.string = s_playersettings.bannerString;
-	s_playersettings.banner.color         = color_white;
+	s_playersettings.banner.color         = color_red;
 	s_playersettings.banner.style         = UI_CENTER;
 
 	s_playersettings.framel.generic.type  = MTYPE_BITMAP;

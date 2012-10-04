@@ -1434,14 +1434,14 @@ Com_LocalClientCvarName
 Used by client, cgame, and q3_ui. (In the future ui will probably use it too.)
 =================
 */
-char *Com_LocalClientCvarName(int localClient, char *in_cvarName) {
+char *Com_LocalClientCvarName(int localClient, const char *in_cvarName) {
 	static char localClientCvarName[MAX_CVAR_VALUE_STRING];
 
 	if (localClient == 0) {
 		Q_strncpyz(localClientCvarName, in_cvarName, MAX_CVAR_VALUE_STRING);
 	} else {
 		char prefix[2];
-		char *cvarName;
+		const char *cvarName;
 
 		prefix[1] = '\0';
 
@@ -1458,6 +1458,20 @@ char *Com_LocalClientCvarName(int localClient, char *in_cvarName) {
 	}
 
 	return localClientCvarName;
+}
+
+int Com_LocalClientForCvarName(const char *in_cvarName) {
+	const char *p = in_cvarName;
+	
+	if (p && (*p == '-' || *p == '+')) {
+		p++;
+	}
+
+	if (p && *p && *p >= '2' && *p < '2'+MAX_SPLITVIEW-1) {
+		return *p-'1';
+	}
+
+	return 0;
 }
 #endif
 
