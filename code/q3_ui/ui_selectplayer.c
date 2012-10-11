@@ -134,7 +134,7 @@ static void UI_SelectPlayer_MenuInit( const char *banner ) {
 	selectPlayerMenu.framer.width  					= 256;
 	selectPlayerMenu.framer.height  				= 334;
 
-	y = (SCREEN_HEIGHT - UI_MaxSplitView()*SETUP_MENU_VERTICAL_SPACING) * 0.5f;
+	y = (SCREEN_HEIGHT - UI_MaxSplitView()*SETUP_MENU_VERTICAL_SPACING) / 2;
 
 	for (i = 0; i < UI_MaxSplitView(); i++) {
 		Com_sprintf(selectPlayerMenu.playerString[i], sizeof (selectPlayerMenu.playerString[i]), "Player %d", i+1);

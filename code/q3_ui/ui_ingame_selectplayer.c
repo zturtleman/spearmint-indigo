@@ -132,7 +132,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 	s_setupplayers.frame.width				= 466;//359;
 	s_setupplayers.frame.height				= 332;//256;
 
-	y = (SCREEN_HEIGHT - (1+UI_MaxSplitView())*INGAME_MENU_VERTICAL_SPACING) * 0.5f;
+	y = (SCREEN_HEIGHT - (1+UI_MaxSplitView())*INGAME_MENU_VERTICAL_SPACING) / 2;
 
 	for (i = 0; i < UI_MaxSplitView(); i++) {
 		Com_sprintf(s_setupplayers.playerString[i], sizeof (s_setupplayers.playerString[i]), "Player %d", i+1);

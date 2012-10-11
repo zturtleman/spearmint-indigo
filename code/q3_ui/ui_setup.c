@@ -187,12 +187,12 @@ static void UI_SetupMenu_Init( void ) {
 	setupMenuInfo.framer.height  					= 334;
 
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
-		numItems = 5;
+		numItems = 5; // 7
 	} else {
 		numItems = 4;
 	}
 
-	y = (SCREEN_HEIGHT - numItems*SETUP_MENU_VERTICAL_SPACING) * 0.5f;
+	y = (SCREEN_HEIGHT - numItems*SETUP_MENU_VERTICAL_SPACING) / 2;
 	setupMenuInfo.setupplayers.generic.type			= MTYPE_PTEXT;
 	setupMenuInfo.setupplayers.generic.flags			= QMF_CENTER_JUSTIFY|QMF_PULSEIFFOCUS;
 	setupMenuInfo.setupplayers.generic.x				= 320;
@@ -291,9 +291,9 @@ static void UI_SetupMenu_Init( void ) {
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupcontrols );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.setupsystem );
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.game );
-//	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.load );
-//	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.save );
 	if( !trap_Cvar_VariableValue( "cl_paused" ) ) {
+//		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.load );
+//		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.save );
 		Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.defaults );
 	}
 	Menu_AddItem( &setupMenuInfo.menu, &setupMenuInfo.back );
