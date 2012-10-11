@@ -1351,6 +1351,26 @@ void CL_ClearState (void) {
 }
 
 /*
+=====================
+CL_InitConnection
+=====================
+*/
+void CL_InitConnection (qboolean clear) {
+	int i;
+
+	if (clear) {
+		// wipe the client connection
+		Com_Memset( &clc, 0, sizeof( clc ) );
+	}
+
+	clc.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		clc.clientNums[i] = -1;
+	}
+}
+
+/*
 ====================
 CL_UpdateGUID
 
@@ -1467,11 +1487,7 @@ void CL_Disconnect( qboolean showMainMenu ) {
 	FS_PureServerSetLoadedPaks("", "");
 	
 	CL_ClearState ();
-
-	// wipe the client connection
-	Com_Memset( &clc, 0, sizeof( clc ) );
-
-	clc.state = CA_DISCONNECTED;
+	CL_InitConnection (qtrue);
 
 	// allow cheats locally
 	Cvar_Set( "sv_cheats", "1" );
@@ -3459,7 +3475,7 @@ void CL_Init( void ) {
 	if(!com_fullyInitialized)
 	{
 		CL_ClearState();
-		clc.state = CA_DISCONNECTED;	// no longer CA_UNINITIALIZED
+		CL_InitConnection(qfalse);
 		cls.oldGameSet = qfalse;
 	}
 

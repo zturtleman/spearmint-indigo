@@ -1832,8 +1832,8 @@ static void UI_BuildPlayerList( void ) {
 	char	info[MAX_INFO_STRING];
 
 	trap_GetClientState( &cs );
-	trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
-	uiInfo.playerNumber = cs.clientNum;
+	trap_GetConfigString( CS_PLAYERS + cs.psClientNums[0], info, MAX_INFO_STRING );
+	uiInfo.playerNumber = cs.psClientNums[0];
 	uiInfo.teamLeader = atoi(Info_ValueForKey(info, "tl"));
 	team = atoi(Info_ValueForKey(info, "t"));
 	trap_GetConfigString( CS_SERVERINFO, info, sizeof(info) );

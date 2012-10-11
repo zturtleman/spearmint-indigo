@@ -1202,6 +1202,29 @@ static void CG_RegisterGraphics( void ) {
 }
 
 
+/*
+==================
+CG_LocalClientAdded
+==================
+*/
+void CG_LocalClientAdded(int localClientNum, int clientNum) {
+	if (clientNum < 0 || clientNum >= MAX_CLIENTS)
+		return;
+
+	cg.localClients[localClientNum].clientNum = clientNum;
+}
+
+/*
+==================
+CG_LocalClientRemoved
+==================
+*/
+void CG_LocalClientRemoved(int localClientNum) {
+	if (cg.localClients[localClientNum].clientNum == -1)
+		return;
+
+	cg.localClients[localClientNum].clientNum = -1;
+}
 
 #ifdef MISSIONPACK
 /*																																			
@@ -1977,7 +2000,12 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	clientNums[3] = clientNum3;
 
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		cg.localClients[i].clientNum = clientNums[i];
+		if (clientNums[i] < 0 || clientNums[i] >= MAX_CLIENTS) {
+			cg.localClients[i].clientNum = -1;
+			continue;
+		}
+
+		CG_LocalClientAdded(i, clientNums[i]);
 	}
 
 	cgs.processedSnapshotNum = serverMessageNum;

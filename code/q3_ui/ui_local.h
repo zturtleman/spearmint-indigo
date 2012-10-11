@@ -624,6 +624,7 @@ extern char			*UI_Argv( int arg );
 extern char			*UI_Cvar_VariableString( const char *var_name );
 extern void			UI_Refresh( int time );
 extern int			UI_MaxSplitView(void);
+extern int			UI_NumLocalClients(uiClientState_t *cs);
 extern void			UI_StartDemoLoop( void );
 extern qboolean		m_entersound;
 extern uiStatic_t	uis;

@@ -98,6 +98,24 @@ int UI_MaxSplitView(void) {
 
 /*
 =================
+UI_NumLocalClients
+=================
+*/
+int UI_NumLocalClients(uiClientState_t *cs) {
+	int numLocalClients = 0;
+	int i;
+
+	for (i = 0; i < UI_MaxSplitView(); i++) {
+		if (cs->clientNums[i] >= 0 && cs->clientNums[i] < MAX_CLIENTS) {
+			numLocalClients++;
+		}
+	}
+
+	return numLocalClients;
+}
+
+/*
+=================
 UI_StartDemoLoop
 =================
 */

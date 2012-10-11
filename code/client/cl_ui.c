@@ -49,14 +49,14 @@ static void GetClientState( uiClientState_t *state ) {
 	Q_strncpyz( state->servername, clc.servername, sizeof( state->servername ) );
 	Q_strncpyz( state->updateInfoString, cls.updateInfoString, sizeof( state->updateInfoString ) );
 	Q_strncpyz( state->messageString, clc.serverMessage, sizeof( state->messageString ) );
-	state->clientNum = cl.snap.pss[0].clientNum;
 
-	state->numLocalClients = 0;
 	for (i = 0; i < MAX_SPLITVIEW; i++) {
-		state->lcIndex[i] = cl.snap.lcIndex[i];
-		if (state->lcIndex[i] != -1) {
-			state->numLocalClients++;
-		}
+		state->clientNums[i] = clc.clientNums[i];
+
+		if (cl.snap.lcIndex[i] != -1)
+			state->psClientNums[i] = cl.snap.pss[cl.snap.lcIndex[i]].clientNum;
+		else
+			state->psClientNums[i] = clc.clientNums[i];
 	}
 }
 

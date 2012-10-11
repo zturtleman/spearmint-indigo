@@ -512,6 +512,7 @@ void CL_InitInput(void);
 void CL_ShutdownInput(void);
 void CL_SendCmd (void);
 void CL_ClearState (void);
+void CL_InitConnection (qboolean clear);
 void CL_ReadPackets (void);
 
 void CL_WritePacket( void );

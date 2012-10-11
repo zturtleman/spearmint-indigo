@@ -120,7 +120,7 @@ void UI_TogglePlayerIngame(int localClientNum)
 	trap_GetClientState( &cs );
 
 	if (localClientNum == 0) {
-		trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cs.clientNums[localClientNum], info, MAX_INFO_STRING );
 
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
@@ -129,7 +129,7 @@ void UI_TogglePlayerIngame(int localClientNum)
 		} else {
 			trap_Cmd_ExecuteText( EXEC_APPEND, "cmd team hide\n" );
 		}
-	} else if (cs.lcIndex[localClientNum] == -1) {
+	} else if (cs.clientNums[localClientNum] == -1) {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropin")) );
 	} else {
 		trap_Cmd_ExecuteText( EXEC_APPEND, va("%s\n", Com_LocalClientCvarName(localClientNum, "dropout")) );
@@ -280,7 +280,7 @@ void InGame_MenuInit( void ) {
 	}
 	else {
 		trap_GetClientState( &cs );
-		trap_GetConfigString( CS_PLAYERS + cs.clientNum, info, MAX_INFO_STRING );
+		trap_GetConfigString( CS_PLAYERS + cs.clientNums[0], info, MAX_INFO_STRING );
 		team = atoi( Info_ValueForKey( info, "t" ) );
 		if( team == TEAM_SPECTATOR ) {
 			s_ingame.teamorders.generic.flags |= QMF_GRAYED;

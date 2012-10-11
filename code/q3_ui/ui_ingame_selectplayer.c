@@ -146,7 +146,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		s_setupplayers.player[i].string				= s_setupplayers.playerString[i];
 		if (!disableMissingPlayers) {
 			// Have players in game be red and not ingame be white.
-			if (cs->lcIndex[i] == -1) {
+			if (cs->clientNums[i] == -1) {
 				s_setupplayers.player[i].color		= color_white;
 			} else {
 				s_setupplayers.player[i].color		= color_red;
@@ -156,7 +156,7 @@ void InSelectPlayer_MenuInit( uiClientState_t *cs, const char *banner, qboolean 
 		}
 		s_setupplayers.player[i].style				= UI_CENTER|UI_SMALLFONT;
 
-		if (disableMissingPlayers && cs->lcIndex[i] == -1) {
+		if (disableMissingPlayers && cs->clientNums[i] == -1) {
 			s_setupplayers.player[i].generic.flags |= QMF_GRAYED;
 		}
 
@@ -193,7 +193,6 @@ void InSelectPlayer_Cache( void ) {
 	trap_R_RegisterShaderNoMip( INGAME_FRAME );
 }
 
-
 /*
 =================
 InSelectPlayerMenu
@@ -205,7 +204,7 @@ void InSelectPlayerMenu( void (*playerfunc)(int), const char *banner, qboolean d
 	trap_GetClientState( &cs );
 
 	// If there is only one local client skip this menu.
-	if (cs.numLocalClients <= 1 && disableMissingPlayers) {
+	if (UI_NumLocalClients(&cs) <= 1 && disableMissingPlayers) {
 		playerfunc(0);
 		return;
 	}

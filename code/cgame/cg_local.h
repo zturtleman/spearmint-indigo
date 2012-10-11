@@ -1258,6 +1258,9 @@ void QDECL CG_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1,
 void QDECL CG_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL CG_Error( const char *msg, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
 
+void CG_LocalClientAdded(int localClientNum, int clientNum);
+void CG_LocalClientRemoved(int localClientNum);
+
 void CG_StartMusic( void );
 
 void CG_UpdateCvars( void );
@@ -1537,6 +1540,7 @@ localEntity_t *CG_MakeExplosion( vec3_t origin, vec3_t dir,
 //
 void CG_ProcessSnapshots( void );
 playerState_t *CG_LocalClientPlayerStateForClientNum( int clientNum );
+
 
 //
 // cg_spawn.c

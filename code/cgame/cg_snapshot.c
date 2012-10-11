@@ -34,7 +34,6 @@ Suite 120, Rockville, Maryland 20850 USA.
 #include "cg_local.h"
 
 
-
 /*
 ==================
 CG_ResetEntity
@@ -163,6 +162,19 @@ static void CG_TransitionSnapshot( void ) {
 	// move nextSnap to snap and do the transitions
 	oldFrame = cg.snap;
 	cg.snap = cg.nextSnap;
+
+	for (i = 0; i < MAX_SPLITVIEW; i++) {
+		// Server added local client
+		if (oldFrame && oldFrame->lcIndex[i] == -1 && cg.snap->lcIndex[i] != -1) {
+			// ZTM: FIXME: Not the most reliable way to get clientNum, ps could be a followed client.
+			CG_LocalClientAdded(i, cg.snap->pss[cg.snap->lcIndex[i]].clientNum);
+		}
+
+		// Server removed local client
+		if (oldFrame && oldFrame->lcIndex[i] != -1 && cg.snap->lcIndex[i] == -1) {
+			CG_LocalClientRemoved(i);
+		}
+	}
 
 	for (i = 0; i < cg.snap->numPSs; i++) {
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
