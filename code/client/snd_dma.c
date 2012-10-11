@@ -784,7 +784,7 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	loopSounds[entityNum].sfx = sfx;
 
 	// ZTM: FIXME: Support doppler effect for all listeners
-	mainListener = S_ListenerNumForEntity(clc.clientNum, qfalse);
+	mainListener = S_ListenerNumForEntity(clc.clientNums[0], qfalse);
 
 	if (mainListener >= 0 && s_doppler->integer && VectorLengthSquared(velocity)>0.0) {
 		vec3_t	out;

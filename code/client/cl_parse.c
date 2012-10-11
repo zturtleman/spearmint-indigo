@@ -549,7 +549,9 @@ void CL_ParseGamestate( msg_t *msg ) {
 		}
 	}
 
-	clc.clientNum = MSG_ReadLong(msg);
+	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
+		clc.clientNums[i] = MSG_ReadLong(msg);
+	}
 	// read the checksum feed
 	clc.checksumFeed = MSG_ReadLong( msg );
 
@@ -686,16 +688,23 @@ void CL_ParseDownload ( msg_t *msg ) {
 static
 qboolean CL_ShouldIgnoreVoipSender(int sender)
 {
+	int i;
+
 	if (!cl_voip->integer)
 		return qtrue;  // VoIP is disabled.
-	else if ((sender == clc.clientNum) && (!clc.demoplaying))
-		return qtrue;  // ignore own voice (unless playing back a demo).
 	else if (clc.voipMuteAll)
 		return qtrue;  // all channels are muted with extreme prejudice.
 	else if (clc.voipIgnore[sender])
 		return qtrue;  // just ignoring this guy.
 	else if (clc.voipGain[sender] == 0.0f)
 		return qtrue;  // too quiet to play.
+
+	if (!clc.demoplaying) {
+		for ( i = 0; i < CL_MAX_SPLITVIEW; i++ ) {
+			if (sender == clc.clientNums[i])
+				return qtrue;  // ignore own voice (unless playing back a demo).
+		}
+	}
 
 	return qfalse;
 }

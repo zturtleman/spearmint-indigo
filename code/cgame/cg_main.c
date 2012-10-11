@@ -43,7 +43,7 @@ int redTeamNameModificationCount = -1;
 int blueTeamNameModificationCount = -1;
 #endif
 
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum );
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
 
 
@@ -61,7 +61,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_GETAPIVERSION:
 		return CG_API_VERSION;
 	case CG_INIT:
-		CG_Init( arg0, arg1, arg2, arg3 );
+		CG_Init( arg0, arg1, arg2, arg3, arg4, arg5, arg6 );
 		return 0;
 	case CG_SHUTDOWN:
 		CG_Shutdown();
@@ -1230,9 +1230,11 @@ CG_RegisterClients
 static void CG_RegisterClients( void ) {
 	int		i;
 	int		j;
-	int		numLocalClients = 1; // cg.snap->numPSs; ZTM: FIXME?: cg.snap is NULL here, how can we get number?
 
-	for (i = 0; i < numLocalClients; i++) {
+	for (i = 0; i < CG_MaxSplitView(); i++) {
+		if (cg.localClients[i].clientNum == -1) {
+			continue;
+		}
 		CG_LoadingClient(cg.localClients[i].clientNum);
 		CG_NewClientInfo(cg.localClients[i].clientNum);
 	}
@@ -1240,12 +1242,12 @@ static void CG_RegisterClients( void ) {
 	for (i=0 ; i<MAX_CLIENTS ; i++) {
 		const char		*clientInfo;
 
-		for (j = 0; j < numLocalClients; j++) {
+		for (j = 0; j < CG_MaxSplitView(); j++) {
 			if (cg.localClients[j].clientNum == i) {
 				break;
 			}
 		}
-		if (j != numLocalClients) {
+		if (j != CG_MaxSplitView()) {
 			continue;
 		}
 
@@ -1954,7 +1956,8 @@ Called after every level change or subsystem restart
 Will perform callbacks to make the loading info screen update.
 =================
 */
-void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum ) {
+void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 ) {
+	int	clientNums[MAX_SPLITVIEW];
 	const char	*s;
 	int			i;
 
@@ -1968,8 +1971,13 @@ void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView,
 	cgs.maxSplitView = Com_Clamp(1, MAX_SPLITVIEW, maxSplitView);
 	cg.numViewports = 1;
 
+	clientNums[0] = clientNum0;
+	clientNums[1] = clientNum1;
+	clientNums[2] = clientNum2;
+	clientNums[3] = clientNum3;
+
 	for (i = 0; i < CG_MaxSplitView(); i++) {
-		cg.localClients[i].clientNum = clientNum;
+		cg.localClients[i].clientNum = clientNums[i];
 	}
 
 	cgs.processedSnapshotNum = serverMessageNum;

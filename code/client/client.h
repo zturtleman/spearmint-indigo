@@ -187,7 +187,7 @@ typedef struct {
 
 	connstate_t	state;				// connection status
 
-	int			clientNum;
+	int			clientNums[MAX_SPLITVIEW];
 	int			lastPacketSentTime;			// for retransmits during connection
 	int			lastPacketTime;				// for timeouts
 

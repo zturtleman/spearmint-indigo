@@ -1045,7 +1045,7 @@ void CL_WritePacket( void ) {
 				MSG_Bitstream (&fakemsg);
 				MSG_WriteLong (&fakemsg, clc.reliableAcknowledge);
 				MSG_WriteByte (&fakemsg, svc_voip);
-				MSG_WriteShort (&fakemsg, clc.clientNum);
+				MSG_WriteShort (&fakemsg, clc.clientNums[0]);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingGeneration);
 				MSG_WriteLong (&fakemsg, clc.voipOutgoingSequence);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingDataFrames);

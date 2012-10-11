@@ -98,14 +98,6 @@ void CG_SetInitialSnapshot( snapshot_t *snap ) {
 
 	cg.snap = snap;
 
-	// ZTM: FIXME: Pass all clientNums to CG_INIT
-	for (i = 0; i < CG_MaxSplitView(); i++) {
-		if (cg.snap->lcIndex[i] != -1) {
-			// Set clientNum as extra local client don't have it yet.
-			cg.localClients[i].clientNum = cg.snap->pss[cg.snap->lcIndex[i]].clientNum;
-		}
-	}
-
 	for (i = 0; i < cg.snap->numPSs; i++) {
 		BG_PlayerStateToEntityState( &cg.snap->pss[i], &cg_entities[ cg.snap->pss[i].clientNum ].currentState, qfalse );
 	}
