@@ -3137,6 +3137,60 @@ void CL_ShutdownRef( void ) {
 }
 
 /*
+==========
+CL_DrawCenteredPic
+
+In widescreen, center shader.
+==========
+*/
+void CL_DrawCenteredPic(qhandle_t hShader)
+{
+	float x = 0, y = 0, w = SCREEN_WIDTH, h = SCREEN_HEIGHT;
+
+	SCR_AdjustFrom640( &x, &y, &w, &h );
+	// adjust for wide screens
+	if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
+		x += 0.5 * ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * 640 / 480 ) );
+		w -= ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * 640 / 480 ) );
+	}
+
+	re.DrawStretchPic( x, y, w, h, 0, 0, 1, 1, hShader );
+}
+
+/*
+============
+CL_DrawLoadingScreen
+============
+*/
+void CL_DrawLoadingScreen(void)
+{
+	qhandle_t hShader;
+
+	re.BeginFrame( STEREO_CENTER );
+
+	// Need to draw extra stuff or screen is completely white for some shaders.
+	re.SetColor( g_color_table[0] );
+	re.DrawStretchPic( 0, 0, cls.glconfig.vidWidth, cls.glconfig.vidHeight, 0, 0, 0, 0, cls.whiteShader );
+	re.SetColor( NULL );
+
+	// Q3A menu background logo
+	if (cls.glconfig.hardwareType == GLHW_RAGEPRO ) {
+		// the blend effect turns to shit with the normal 
+		hShader = re.RegisterShaderNoMip("menubackRagePro");
+	} else {
+		hShader = re.RegisterShaderNoMip("menuback");
+	}
+
+	CL_DrawCenteredPic(hShader);
+
+	if ( com_speeds->integer ) {
+		re.EndFrame( &time_frontend, &time_backend );
+	} else {
+		re.EndFrame( NULL, NULL );
+	}
+}
+
+/*
 ============
 CL_InitRenderer
 ============
@@ -3145,9 +3199,16 @@ void CL_InitRenderer( void ) {
 	// this sets up the renderer and calls R_Init
 	re.BeginRegistration( &cls.glconfig );
 
+	cls.whiteShader = re.RegisterShader( "white" );
+
+	// draw loading screen when the game is starting up
+	if (!cls.drawnLoadingScreen) {
+		CL_DrawLoadingScreen();
+		cls.drawnLoadingScreen = qtrue;
+	}
+
 	// load character sets
 	cls.charSetShader = re.RegisterShader( "gfx/2d/bigchars" );
-	cls.whiteShader = re.RegisterShader( "white" );
 	cls.consoleShader = re.RegisterShader( "console" );
 	g_console_field_width = cls.glconfig.vidWidth / SMALLCHAR_WIDTH - 2;
 	g_consoleField.widthInChars = g_console_field_width;
@@ -3477,6 +3538,7 @@ void CL_Init( void ) {
 		CL_ClearState();
 		CL_InitConnection(qfalse);
 		cls.oldGameSet = qfalse;
+		cls.drawnLoadingScreen = qfalse;
 	}
 
 	cls.realtime = 0;
