@@ -394,11 +394,10 @@ int ArenaServers_GametypeForGames(int games) {
 	case GAMES_OBELISK:
 		gametype = GT_OBELISK;
 		break;
-#ifdef MISSIONPACK_HARVESTER
+
 	case GAMES_HARVESTER:
 		gametype = GT_HARVESTER;
 		break;
-#endif
 #endif
 	}
 
