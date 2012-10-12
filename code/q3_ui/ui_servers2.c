@@ -358,6 +358,55 @@ int ArenaServers_SourceForLAN(void) {
 
 /*
 =================
+ArenaServers_GametypeForGames
+=================
+*/
+int ArenaServers_GametypeForGames(int games) {
+	int gametype;
+
+	switch( games ) {
+	default:
+	case GAMES_ALL:
+		gametype = -1;
+		break;
+
+	case GAMES_FFA:
+		gametype = GT_FFA;
+		break;
+
+	case GAMES_TOURNEY:
+		gametype = GT_TOURNAMENT;
+		break;
+
+	case GAMES_TEAMPLAY:
+		gametype = GT_TEAM;
+		break;
+
+	case GAMES_CTF:
+		gametype = GT_CTF;
+		break;
+
+#ifdef MISSIONPACK
+	case GAMES_1FCTF:
+		gametype = GT_1FCTF;
+		break;
+
+	case GAMES_OBELISK:
+		gametype = GT_OBELISK;
+		break;
+#ifdef MISSIONPACK_HARVESTER
+	case GAMES_HARVESTER:
+		gametype = GT_HARVESTER;
+		break;
+#endif
+#endif
+	}
+
+	return gametype;
+}
+
+/*
+=================
 ArenaServers_Go
 =================
 */
@@ -408,6 +457,7 @@ static void ArenaServers_UpdateMenu( void ) {
 	servernode_t*	servernodeptr;
 	table_t*		tableptr;
 	char			*pingColor;
+	int				gametype;
 
 	if( g_arenaservers.numqueriedservers > 0 ) {
 		// servers found
@@ -508,53 +558,9 @@ static void ArenaServers_UpdateMenu( void ) {
 			continue;
 		}
 
-		switch( g_gametype ) {
-		case GAMES_ALL:
-			break;
-
-		case GAMES_FFA:
-			if( servernodeptr->gametype != GT_FFA ) {
-				continue;
-			}
-			break;
-
-		case GAMES_TEAMPLAY:
-			if( servernodeptr->gametype != GT_TEAM ) {
-				continue;
-			}
-			break;
-
-		case GAMES_TOURNEY:
-			if( servernodeptr->gametype != GT_TOURNAMENT ) {
-				continue;
-			}
-			break;
-
-		case GAMES_CTF:
-			if( servernodeptr->gametype != GT_CTF ) {
-				continue;
-			}
-			break;
-
-#ifdef MISSIONPACK
-		case GAMES_1FCTF:
-			if( servernodeptr->gametype != GT_1FCTF ) {
-				continue;
-			}
-			break;
-
-		case GAMES_OBELISK:
-			if( servernodeptr->gametype != GT_OBELISK ) {
-				continue;
-			}
-			break;
-
-		case GAMES_HARVESTER:
-			if( servernodeptr->gametype != GT_HARVESTER ) {
-				continue;
-			}
-			break;
-#endif
+		gametype = ArenaServers_GametypeForGames(g_gametype);
+		if( gametype != -1 && servernodeptr->gametype != gametype ) {
+			continue;
 		}
 
 		if( servernodeptr->pingtime < servernodeptr->minPing ) {
@@ -1029,6 +1035,7 @@ ArenaServers_StartRefresh
 static void ArenaServers_StartRefresh( void )
 {
 	int		i;
+	int		gametype;
 	char	myargs[32], protocol[32];
 
 	memset( g_arenaservers.serverlist, 0, g_arenaservers.maxservers*sizeof(table_t) );
@@ -1057,29 +1064,14 @@ static void ArenaServers_StartRefresh( void )
 	}
 
 	if( g_servertype >= UIAS_GLOBAL1 && g_servertype <= UIAS_GLOBAL5 ) {
-		switch( g_arenaservers.gametype.curvalue ) {
-		default:
-		case GAMES_ALL:
-			myargs[0] = 0;
-			break;
+		gametype = ArenaServers_GametypeForGames(g_arenaservers.gametype.curvalue);
 
-		case GAMES_FFA:
-			strcpy( myargs, " ffa" );
-			break;
-
-		case GAMES_TEAMPLAY:
-			strcpy( myargs, " team" );
-			break;
-
-		case GAMES_TOURNEY:
-			strcpy( myargs, " tourney" );
-			break;
-
-		case GAMES_CTF:
-			strcpy( myargs, " ctf" );
-			break;
+		// add requested gametype to args for dpmaster protocol
+		if (gametype != -1) {
+			Com_sprintf( myargs, sizeof (myargs), " gametype=%i", gametype );
+		} else {
+			myargs[0] = '\0';
 		}
-
 
 		if (g_emptyservers) {
 			strcat(myargs, " empty");
