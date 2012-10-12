@@ -685,7 +685,8 @@ typedef struct {
 	qboolean			multiplayer;
 	int					gametype;
 	char				mapnamebuffer[32];
-	char				playerNameBuffers[PLAYER_SLOTS][16];
+	char				playerNameBuffers[MAX_SPLITVIEW][16];
+	char				botNameBuffers[PLAYER_SLOTS][16];
 
 	qboolean			newBot;
 	int					newBotIndex;
@@ -694,22 +695,22 @@ typedef struct {
 
 static serveroptions_t s_serveroptions;
 
-#define PT_OPEN 0
-#define PT_BOT 1
-#define PT_CLOSED 2
+#define PT_BOT 0
+#define PT_CLOSED 1
+#define PT_OPEN 2
 #define PT_HUMAN 3
 
 static const char *playerType_list[] = {
-	"Open",
 	"Bot",
 	"----",
+	"Open",
 	NULL
 };
 
 static const char *humanPlayerType_list[] = {
-	"Open",
 	"Bot",
 	"----",
+	"Open",
 	"Human",
 	NULL
 };
@@ -746,7 +747,7 @@ static qboolean BotAlreadySelected( const char *checkName ) {
 			(s_serveroptions.playerTeam[n].curvalue != s_serveroptions.playerTeam[s_serveroptions.newBotIndex].curvalue ) ) {
 			continue;
 		}
-		if( Q_stricmp( checkName, s_serveroptions.playerNameBuffers[n] ) == 0 ) {
+		if( Q_stricmp( checkName, s_serveroptions.botNameBuffers[n] ) == 0 ) {
 			return qtrue;
 		}
 	}
@@ -789,7 +790,7 @@ static void ServerOptions_Start( void ) {
 		if( s_serveroptions.playerType[n].curvalue == PT_CLOSED ) {
 			continue;
 		}
-		if( (s_serveroptions.playerType[n].curvalue == PT_BOT) && (s_serveroptions.playerNameBuffers[n][0] == 0) ) {
+		if( (s_serveroptions.playerType[n].curvalue == PT_BOT) && (s_serveroptions.botNameBuffers[n][0] == 0) ) {
 			continue;
 		}
 		maxclients++;
@@ -870,18 +871,15 @@ static void ServerOptions_Start( void ) {
 		if( s_serveroptions.playerType[n].curvalue != PT_BOT ) {
 			continue;
 		}
-		if( s_serveroptions.playerNameBuffers[n][0] == 0 ) {
-			continue;
-		}
-		if( s_serveroptions.playerNameBuffers[n][0] == '-' ) {
+		if( s_serveroptions.botNameBuffers[n][0] == 0 ) {
 			continue;
 		}
 		if( s_serveroptions.gametype >= GT_TEAM ) {
-			Com_sprintf( buf, sizeof(buf), "addbot %s %i %s\n", s_serveroptions.playerNameBuffers[n], skill,
+			Com_sprintf( buf, sizeof(buf), "addbot %s %i %s\n", s_serveroptions.botNameBuffers[n], skill,
 				playerTeam_list[s_serveroptions.playerTeam[n].curvalue] );
 		}
 		else {
-			Com_sprintf( buf, sizeof(buf), "addbot %s %i\n", s_serveroptions.playerNameBuffers[n], skill );
+			Com_sprintf( buf, sizeof(buf), "addbot %s %i\n", s_serveroptions.botNameBuffers[n], skill );
 		}
 		trap_Cmd_ExecuteText( EXEC_APPEND, buf );
 	}
@@ -928,14 +926,16 @@ static void ServerOptions_InitPlayerItems( void ) {
 
 	// if not a dedicated server, first slot is reserved for the human on the server
 	if( s_serveroptions.dedicated.curvalue == 0 ) {
-		// human
-		s_serveroptions.playerType[0].generic.flags |= QMF_INACTIVE;
-		s_serveroptions.playerType[0].curvalue = PT_OPEN;
-		trap_Cvar_VariableStringBuffer( "name", s_serveroptions.playerNameBuffers[0], sizeof(s_serveroptions.playerNameBuffers[0]) );
-		Q_CleanStr( s_serveroptions.playerNameBuffers[0] );
+		for (n = 0; n < UI_MaxSplitView(); n++) {
+			trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(n, "name"), s_serveroptions.playerNameBuffers[n], sizeof(s_serveroptions.playerNameBuffers[n]) );
+			Q_CleanStr( s_serveroptions.playerNameBuffers[n] );
 
-		for (n = 1; n < UI_MaxSplitView(); n++) {
-			s_serveroptions.playerType[n].curvalue = PT_CLOSED;
+			s_serveroptions.playerType[n].curvalue = PT_OPEN;
+
+			if (n == 0) {
+				// human
+				s_serveroptions.playerType[n].generic.flags |= QMF_INACTIVE;
+			}
 		}
 	}
 
@@ -978,17 +978,18 @@ static void ServerOptions_SetPlayerItems( int playerType ) {
 		s_serveroptions.playerName[0].generic.flags &= ~QMF_HIDDEN;
 
 		for (n = 1; n < UI_MaxSplitView(); n++) {
+			s_serveroptions.playerType[n].numitems = ARRAY_LEN(humanPlayerType_list) - 1;
+
 			if (playerType != n && playerType != -1) {
 				continue;
 			}
 
-			if (s_serveroptions.playerType[n].curvalue != PT_HUMAN) {
-				Q_strncpyz(s_serveroptions.playerNameBuffers[n], "--------", sizeof(s_serveroptions.playerNameBuffers[n]));
-				continue;
+			if (s_serveroptions.playerType[n].curvalue == PT_BOT) {
+				s_serveroptions.playerName[n].string = s_serveroptions.botNameBuffers[n];
 			}
-
-			trap_Cvar_VariableStringBuffer( Com_LocalClientCvarName(n, "name"), s_serveroptions.playerNameBuffers[n], sizeof(s_serveroptions.playerNameBuffers[n]) );
-
+			else if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
+				s_serveroptions.playerName[n].string = s_serveroptions.playerNameBuffers[n];
+			}
 		}
 
 		start = 1;
@@ -996,6 +997,14 @@ static void ServerOptions_SetPlayerItems( int playerType ) {
 	else {
 		s_serveroptions.player0.string = "Open";
 		start = 0;
+
+		for (n = 0; n < UI_MaxSplitView(); n++) {
+			s_serveroptions.playerType[n].numitems = ARRAY_LEN(playerType_list) - 1;
+
+			if (s_serveroptions.playerType[n].curvalue == PT_HUMAN) {
+				s_serveroptions.playerType[n].curvalue = PT_OPEN;
+			}
+		}
 	}
 	for( n = start; n < PLAYER_SLOTS; n++ ) {
 		if( s_serveroptions.playerType[n].curvalue == PT_HUMAN ) {
@@ -1078,7 +1087,7 @@ static void ServerOptions_PlayerNameEvent( void* ptr, int event ) {
 	}
 	n = ((menutext_s*)ptr)->generic.id;
 	s_serveroptions.newBotIndex = n;
-	UI_BotSelectMenu( s_serveroptions.playerNameBuffers[n] );
+	UI_BotSelectMenu( s_serveroptions.botNameBuffers[n] );
 }
 
 
@@ -1108,7 +1117,7 @@ static void ServerOptions_LevelshotDraw( void *self ) {
 
 	// strange place for this, but it works
 	if( s_serveroptions.newBot ) {
-		Q_strncpyz( s_serveroptions.playerNameBuffers[s_serveroptions.newBotIndex], s_serveroptions.newBotName, 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[s_serveroptions.newBotIndex], s_serveroptions.newBotName, 16 );
 		s_serveroptions.newBot = qfalse;
 	}
 
@@ -1131,7 +1140,6 @@ static void ServerOptions_LevelshotDraw( void *self ) {
 
 static void ServerOptions_InitBotNames( void ) {
 	int			count;
-	int			start;
 	int			n;
 	const char	*arenaInfo;
 	const char	*botInfo;
@@ -1139,11 +1147,16 @@ static void ServerOptions_InitBotNames( void ) {
 	char		*bot;
 	char		bots[MAX_INFO_STRING];
 
+	// set the bot slots to random
+	for( n = 1; n < PLAYER_SLOTS; n++ ) {
+		strcpy( s_serveroptions.botNameBuffers[n], "Random" );
+	}
+
 	if( s_serveroptions.gametype >= GT_TEAM ) {
-		Q_strncpyz( s_serveroptions.playerNameBuffers[1], "grunt", 16 );
-		Q_strncpyz( s_serveroptions.playerNameBuffers[2], "major", 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[1], "Grunt", 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[2], "Major", 16 );
 		if( s_serveroptions.gametype == GT_TEAM ) {
-			Q_strncpyz( s_serveroptions.playerNameBuffers[3], "visor", 16 );
+			Q_strncpyz( s_serveroptions.botNameBuffers[3], "Visor", 16 );
 		}
 		else {
 			s_serveroptions.playerType[3].curvalue = PT_CLOSED;
@@ -1151,11 +1164,11 @@ static void ServerOptions_InitBotNames( void ) {
 		s_serveroptions.playerType[4].curvalue = PT_CLOSED;
 		s_serveroptions.playerType[5].curvalue = PT_CLOSED;
 
-		Q_strncpyz( s_serveroptions.playerNameBuffers[6], "sarge", 16 );
-		Q_strncpyz( s_serveroptions.playerNameBuffers[7], "grunt", 16 );
-		Q_strncpyz( s_serveroptions.playerNameBuffers[8], "major", 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[6], "Sarge", 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[7], "Grunt", 16 );
+		Q_strncpyz( s_serveroptions.botNameBuffers[8], "Major", 16 );
 		if( s_serveroptions.gametype == GT_TEAM ) {
-			Q_strncpyz( s_serveroptions.playerNameBuffers[9], "visor", 16 );
+			Q_strncpyz( s_serveroptions.botNameBuffers[9], "Visor", 16 );
 		}
 		else {
 			s_serveroptions.playerType[9].curvalue = PT_CLOSED;
@@ -1166,7 +1179,7 @@ static void ServerOptions_InitBotNames( void ) {
 		return;
 	}
 
-	start = count = UI_MaxSplitView();	// skip the first few slots, reserved for humans
+	count = UI_MaxSplitView();	// skip the first few slots, reserved for humans
 
 	// get info for this map
 	arenaInfo = UI_GetArenaInfoByMap( s_serveroptions.mapnamebuffer );
@@ -1201,17 +1214,12 @@ static void ServerOptions_InitBotNames( void ) {
 		}
 		bot = Info_ValueForKey( botInfo, "name" );
 
-		Q_strncpyz( s_serveroptions.playerNameBuffers[count], bot, sizeof(s_serveroptions.playerNameBuffers[count]) );
+		Q_strncpyz( s_serveroptions.botNameBuffers[count], bot, sizeof(s_serveroptions.botNameBuffers[count]) );
 		count++;
 	}
 
-	// set the rest of the bot slots to "---"
-	for( n = count; n < PLAYER_SLOTS; n++ ) {
-		strcpy( s_serveroptions.playerNameBuffers[n], "--------" );
-	}
-
 	// pad up to #8 as open slots
-	for( ;count < start+7; count++ ) {
+	for( ;count < 8; count++ ) {
 		s_serveroptions.playerType[count].curvalue = PT_OPEN;
 	}
 
@@ -1514,7 +1522,10 @@ static void ServerOptions_MenuInit( qboolean multiplayer ) {
 		s_serveroptions.playerName[n].generic.ownerdraw	= PlayerName_Draw;
 		s_serveroptions.playerName[n].color				= color_orange;
 		s_serveroptions.playerName[n].style				= UI_SMALLFONT;
-		s_serveroptions.playerName[n].string			= s_serveroptions.playerNameBuffers[n];
+		if (n == 0)
+			s_serveroptions.playerName[n].string		= s_serveroptions.playerNameBuffers[n];
+		else
+			s_serveroptions.playerName[n].string		= s_serveroptions.botNameBuffers[n];
 		s_serveroptions.playerName[n].generic.top		= s_serveroptions.playerName[n].generic.y;
 		s_serveroptions.playerName[n].generic.bottom	= s_serveroptions.playerName[n].generic.y + SMALLCHAR_HEIGHT;
 		s_serveroptions.playerName[n].generic.left		= s_serveroptions.playerName[n].generic.x - SMALLCHAR_HEIGHT/ 2;
@@ -1702,6 +1713,14 @@ static int QDECL UI_BotSelectMenu_SortCompare( const void *arg1, const void *arg
 	name1 = Info_ValueForKey( info1, "name" );
 	name2 = Info_ValueForKey( info2, "name" );
 
+	// put random option first
+	if (Q_stricmp(name1, "Random") == 0) {
+		return -1;
+	}
+	if (Q_stricmp(name2, "Random") == 0) {
+		return 1;
+	}
+
 	return Q_stricmp( name1, name2 );
 }
 
@@ -1739,6 +1758,20 @@ ServerPlayerIcon
 static void ServerPlayerIcon( const char *modelAndSkin, char *iconName, int iconNameMaxSize ) {
 	char	*skin;
 	char	model[MAX_QPATH];
+
+	// icon for random bot option
+	if (Q_stricmp(modelAndSkin, "random") == 0)
+	{
+		Com_sprintf(iconName, iconNameMaxSize, "menu/art/randombot_icon.tga");
+
+		if (!trap_R_RegisterShaderNoMip( iconName ))
+		{
+			// If missing random bot icon fallback to unknown map icon
+			Com_sprintf(iconName, iconNameMaxSize, "menu/art/unknownmap.tga");
+			trap_R_RegisterShaderNoMip( iconName );
+		}
+		return;
+	}
 
 	Q_strncpyz( model, modelAndSkin, sizeof(model));
 	skin = strrchr( model, '/' );
