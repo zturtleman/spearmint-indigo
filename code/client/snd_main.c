@@ -142,7 +142,7 @@ int S_ListenerNumForEntity(int entityNum, qboolean create)
 		if (listeners[i].valid)
 		{
 			if (listeners[i].number == entityNum)
-				return entityNum;
+				return i;
 		}
 		else if (create && freeListener == -1)
 			freeListener = i;
