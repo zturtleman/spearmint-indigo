@@ -518,7 +518,7 @@ void CG_DrawTeamBackground( int x, int y, int w, int h, float alpha, int team )
 		return;
 	}
 	trap_R_SetColor( hcolor );
-	CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+	CG_SetScreenPlacement(PLACE_STRETCH, CG_GetScreenVerticalPlacement());
 	CG_DrawPic( x, y, w, h, cgs.media.teamStatusBar );
 	CG_PopScreenPlacement();
 	trap_R_SetColor( NULL );
