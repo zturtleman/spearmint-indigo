@@ -503,14 +503,14 @@ void S_SpatializeOrigin (vec3_t origin, int master_vol, int *left_vol, int *righ
 
 /*
 ====================
-S_StartSound
+S_Base_StartSoundEx
 
 Validates the parms and ques the sound up
-if pos is NULL, the sound will be dynamically sourced from the entity
+if origin is NULL, the sound will be dynamically sourced from the entity
 Entchannel 0 will never override a playing sound
 ====================
 */
-void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle ) {
+static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle, qboolean localSound ) {
 	channel_t	*ch;
 	sfx_t		*sfx;
 	int			i, oldest, chosen, time;
@@ -545,24 +545,18 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 //	Com_Printf("playing %s\n", sfx->soundName);
 	// pick a channel to play on
 
-	if (origin) {
-		allowed = 4;
-		fullVolume = qfalse;
+	if (localSound) {
+		allowed = 4 * CL_MAX_SPLITVIEW;
+	} else if (S_EntityIsListener(entityNum)) {
+		allowed = 8;
 	} else {
-		if (entityNum == MAX_GENTITIES) {
-			// Special case for sounds started using StartLocalSound
-			allowed = 4 * CL_MAX_SPLITVIEW;
-			fullVolume = qtrue;
-		} else if (S_HearingThroughEntity(entityNum)) {
-			allowed = 8;
-			fullVolume = qtrue;
-		} else if (S_EntityIsListener(entityNum)) {
-			allowed = 8;
-			fullVolume = qfalse;
-		} else {
-			allowed = 4;
-			fullVolume = qfalse;
-		}
+		allowed = 4;
+	}
+
+	if (localSound || (!origin && S_HearingThroughEntity(entityNum))) {
+		fullVolume = qtrue;
+	} else {
+		fullVolume = qfalse;
 	}
 
 	ch = s_channels;
@@ -643,6 +637,16 @@ void S_Base_StartSound(vec3_t origin, int entityNum, int entchannel, sfxHandle_t
 	ch->fullVolume = fullVolume;
 }
 
+/*
+====================
+S_StartSound
+
+if origin is NULL, the sound will be dynamically sourced from the entity
+====================
+*/
+void S_Base_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfxHandle ) {
+	S_Base_StartSoundEx( origin, entityNum, entchannel, sfxHandle, qfalse );
+}
 
 /*
 ==================
@@ -659,7 +663,7 @@ void S_Base_StartLocalSound( sfxHandle_t sfxHandle, int channelNum ) {
 		return;
 	}
 
-	S_Base_StartSound (NULL, MAX_GENTITIES, channelNum, sfxHandle );
+	S_Base_StartSoundEx( NULL, MAX_GENTITIES, channelNum, sfxHandle, qtrue );
 }
 
 
@@ -1176,7 +1180,7 @@ void S_Base_Update( void ) {
 				continue;
 			}
 
-			// anything coming from the view entity will always be full volume
+			// local and first person sounds will always be full volume
 			if (ch->fullVolume) {
 				ch->leftvol = ch->master_vol;
 				ch->rightvol = ch->master_vol;
