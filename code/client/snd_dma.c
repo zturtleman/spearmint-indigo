@@ -753,7 +753,7 @@ Include velocity in case I get around to doing doppler...
 */
 void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfxHandle ) {
 	sfx_t *sfx;
-	int mainListener;
+	int listener;
 
 	if ( !s_soundStarted || s_soundMuted ) {
 		return;
@@ -783,17 +783,16 @@ void S_Base_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t ve
 	loopSounds[entityNum].dopplerScale = 1.0;
 	loopSounds[entityNum].sfx = sfx;
 
-	// ZTM: FIXME: Support doppler effect for all listeners
-	mainListener = S_ListenerNumForEntity(clc.clientNums[0], qfalse);
+	listener = S_ClosestListener(loopSounds[entityNum].origin);
 
-	if (mainListener >= 0 && mainListener < MAX_LISTENERS && s_doppler->integer && VectorLengthSquared(velocity)>0.0) {
+	if (listener >= 0 && listener < MAX_LISTENERS && s_doppler->integer && VectorLengthSquared(velocity)>0.0) {
 		vec3_t	out;
 		float	lena, lenb;
 
 		loopSounds[entityNum].doppler = qtrue;
-		lena = DistanceSquared(loopSounds[listeners[mainListener].number].origin, loopSounds[entityNum].origin);
+		lena = DistanceSquared(listeners[listener].origin, loopSounds[entityNum].origin);
 		VectorAdd(loopSounds[entityNum].origin, loopSounds[entityNum].velocity, out);
-		lenb = DistanceSquared(loopSounds[listeners[mainListener].number].origin, out);
+		lenb = DistanceSquared(listeners[listener].origin, out);
 		if ((loopSounds[entityNum].framenum+1) != cls.framecount) {
 			loopSounds[entityNum].oldDopplerScale = 1.0;
 		} else {
@@ -1107,7 +1106,7 @@ void S_Base_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], in
 		return;
 	}
 
-	S_UpdateListener(entityNum, origin, axis, inwater, firstPerson);
+	S_UpdateListener(entityNum, origin, (const vec3_t *)axis, inwater, firstPerson);
 	respatialize = qtrue;
 }
 
@@ -1217,8 +1216,6 @@ void S_Base_Update( void ) {
 
 	// mix some sound
 	S_Update_();
-
-	S_ListenersEndFrame();
 }
 
 void S_GetSoundtime(void)
@@ -1563,8 +1560,6 @@ qboolean S_Base_Init( soundInterface_t *si ) {
 		s_paintedtime = 0;
 
 		respatialize = 0;
-
-		S_ListenersInit();
 
 		S_Base_StopAllSounds( );
 	} else {
