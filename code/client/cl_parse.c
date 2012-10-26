@@ -591,8 +591,6 @@ void CL_ParseGamestate( msg_t *msg ) {
 		else
 			CL_LocalClientRemoved(i);
 	}
-	// read the checksum feed
-	clc.checksumFeed = MSG_ReadLong( msg );
 
 	// save old gamedir
 	Cvar_VariableStringBuffer("fs_game", oldGame, sizeof(oldGame));
@@ -614,7 +612,7 @@ void CL_ParseGamestate( msg_t *msg ) {
 		Q_strncpyz(cls.oldGame, oldGame, sizeof(cls.oldGame));
 	}
 
-	FS_ConditionalRestart(clc.checksumFeed, qfalse);
+	FS_ConditionalRestart(qfalse);
 
 	// This used to call CL_StartHunkUsers, but now we enter the download state before loading the
 	// cgame

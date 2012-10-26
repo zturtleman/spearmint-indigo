@@ -823,8 +823,6 @@ void CL_Record_f( void ) {
 	for ( i = 0; i < MAX_SPLITVIEW; i++ ) {
 		MSG_WriteLong(&buf, clc.clientNums[i]);
 	}
-	// write the checksum feed
-	MSG_WriteLong(&buf, clc.checksumFeed);
 
 	// finished writing the client packet
 	MSG_WriteByte( &buf, svc_EOF );
@@ -1399,7 +1397,7 @@ static void CL_OldGame(void)
 		// change back to previous fs_game
 		cls.oldGameSet = qfalse;
 		Cvar_Set2("fs_game", cls.oldGame, qtrue);
-		FS_ConditionalRestart(clc.checksumFeed, qfalse);
+		FS_ConditionalRestart(qfalse);
 	}
 }
 
@@ -1858,29 +1856,6 @@ void CL_Rcon_f( void ) {
 
 /*
 =================
-CL_SendPureChecksums
-=================
-*/
-void CL_SendPureChecksums( void ) {
-	char cMsg[MAX_INFO_VALUE];
-
-	// if we are pure we need to send back a command with our referenced pk3 checksums
-	Com_sprintf(cMsg, sizeof(cMsg), "cp %d %s", cl.serverId, FS_ReferencedPakPureChecksums());
-
-	CL_AddReliableCommand(cMsg, qfalse);
-}
-
-/*
-=================
-CL_ResetPureClientAtServer
-=================
-*/
-void CL_ResetPureClientAtServer( void ) {
-	CL_AddReliableCommand("vdr", qfalse);
-}
-
-/*
-=================
 CL_Vid_Restart_f
 
 Restart the video subsystem
@@ -1902,7 +1877,7 @@ void CL_Vid_Restart_f( void ) {
 	// don't let them loop during the restart
 	S_StopAllSounds();
 
-	if(!FS_ConditionalRestart(clc.checksumFeed, qtrue))
+	if(!FS_ConditionalRestart(qtrue))
 	{
 		// if not running a server clear the whole hunk
 		if(com_sv_running->integer)
@@ -1922,11 +1897,9 @@ void CL_Vid_Restart_f( void ) {
 		CL_ShutdownCGame();
 		// shutdown the renderer and clear the renderer interface
 		CL_ShutdownRef();
-		// client is no longer pure untill new checksums are sent
-		CL_ResetPureClientAtServer();
 		// clear pak references
 		FS_ClearPakReferences( FS_UI_REF | FS_CGAME_REF );
-		// reinitialize the filesystem if the game directory or checksum has changed
+		// reinitialize the filesystem if the game directory has changed
 
 		cls.rendererStarted = qfalse;
 		cls.uiStarted = qfalse;
@@ -1947,8 +1920,6 @@ void CL_Vid_Restart_f( void ) {
 		{
 			cls.cgameStarted = qtrue;
 			CL_InitCGame();
-			// send pure checksums
-			CL_SendPureChecksums();
 		}
 	}
 }
@@ -2057,7 +2028,7 @@ void CL_DownloadsComplete( void ) {
 		CL_cURL_Shutdown();
 		if( clc.cURLDisconnected ) {
 			if(clc.downloadRestart) {
-				FS_Restart(clc.checksumFeed);
+				FS_Restart();
 				clc.downloadRestart = qfalse;
 			}
 			clc.cURLDisconnected = qfalse;
@@ -2071,7 +2042,7 @@ void CL_DownloadsComplete( void ) {
 	if (clc.downloadRestart) {
 		clc.downloadRestart = qfalse;
 
-		FS_Restart(clc.checksumFeed); // We possibly downloaded a pak, restart the file system to load it
+		FS_Restart(); // We possibly downloaded a pak, restart the file system to load it
 
 		// inform the server so we get new gamestate info
 		CL_AddReliableCommand("donedl", qfalse);
@@ -2105,9 +2076,6 @@ void CL_DownloadsComplete( void ) {
 	// initialize the CGame
 	cls.cgameStarted = qtrue;
 	CL_InitCGame();
-
-	// set pure checksums
-	CL_SendPureChecksums();
 
 	CL_WritePacket();
 	CL_WritePacket();
@@ -3344,7 +3312,6 @@ void CL_InitRef( void ) {
 	ri.FS_WriteFile = FS_WriteFile;
 	ri.FS_FreeFileList = FS_FreeFileList;
 	ri.FS_ListFiles = FS_ListFiles;
-	ri.FS_FileIsInPAK = FS_FileIsInPAK;
 	ri.FS_FileExists = FS_FileExists;
 	ri.Cvar_Get = Cvar_Get;
 	ri.Cvar_Set = Cvar_Set;
