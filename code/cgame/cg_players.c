@@ -423,7 +423,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 			}
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
-				filename[strlen(filename)-strlen(ext)-1] = 0;
+				COM_StripExtension(filename, filename, length);
 				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
@@ -449,7 +449,7 @@ static qboolean	CG_FindClientHeadFile( char *filename, int length, clientInfo_t 
 			}
 
 			if (Q_stricmpn(ext, "$image", 6) == 0) {
-				filename[strlen(filename)-strlen(ext)-1] = 0;
+				COM_StripExtension(filename, filename, length);
 				if (trap_R_RegisterShaderNoMip(filename)) {
 					return qtrue;
 				}
