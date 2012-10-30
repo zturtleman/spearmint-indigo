@@ -92,7 +92,7 @@ void RE_ClearScene( void ) {
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneEntity = r_numentities;
 	r_firstScenePoly = r_numpolys;
-	r_firstScenePoly = r_numpolybuffers;
+	r_firstScenePolybuffer = r_numpolybuffers;
 }
 
 /*
