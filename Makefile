@@ -912,13 +912,13 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
     TARGETS += \
 	$(B)/$(BASEGAME)/cgame$(SHLIBNAME) \
-	$(B)/$(BASEGAME)/qagame$(SHLIBNAME) \
+	$(B)/$(BASEGAME)/game$(SHLIBNAME) \
 	$(B)/$(BASEGAME)/ui$(SHLIBNAME)
   endif
   ifneq ($(BUILD_MISSIONPACK),0)
     TARGETS += \
     $(B)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
-    $(B)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+    $(B)/$(MISSIONPACK)/game$(SHLIBNAME) \
     $(B)/$(MISSIONPACK)/ui$(SHLIBNAME)
   endif
 endif
@@ -928,12 +928,12 @@ ifneq ($(BUILD_GAME_QVM),0)
     ifneq ($(BUILD_BASEGAME),0)
       TARGETS += \
       $(B)/$(BASEGAME)/vm/cgame.qvm \
-      $(B)/$(BASEGAME)/vm/qagame.qvm \
+      $(B)/$(BASEGAME)/vm/game.qvm \
       $(B)/$(BASEGAME)/vm/ui.qvm
 	endif
     ifneq ($(BUILD_MISSIONPACK),0)
       TARGETS += \
-      $(B)/$(MISSIONPACK)/vm/qagame.qvm \
+      $(B)/$(MISSIONPACK)/vm/game.qvm \
       $(B)/$(MISSIONPACK)/vm/cgame.qvm \
       $(B)/$(MISSIONPACK)/vm/ui.qvm
     endif
@@ -1085,7 +1085,7 @@ endef
 
 define DO_GAME_CC
 $(echo_cmd) "GAME_CC $<"
-$(Q)$(CC) $(BASEGAME_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(BASEGAME_CFLAGS) -DGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1109,7 +1109,7 @@ endef
 
 define DO_GAME_CC_MISSIONPACK
 $(echo_cmd) "GAME_CC_MISSIONPACK $<"
-$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DQAGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
+$(Q)$(CC) $(MISSIONPACK_CFLAGS) -DGAME $(SHLIBCFLAGS) $(CFLAGS) $(OPTIMIZEVM) -o $@ -c $<
 $(Q)$(DO_QVM_DEP)
 endef
 
@@ -1380,7 +1380,7 @@ endef
 
 define DO_GAME_Q3LCC
 $(echo_cmd) "GAME_Q3LCC $<"
-$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(BASEGAME_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC
@@ -1400,7 +1400,7 @@ endef
 
 define DO_GAME_Q3LCC_MISSIONPACK
 $(echo_cmd) "GAME_Q3LCC_MISSIONPACK $<"
-$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DQAGAME $(BUILD_DEFINES) -o $@ $<
+$(Q)$(Q3LCC) $(MISSIONPACK_CFLAGS) -DGAME $(BUILD_DEFINES) -o $@ $<
 endef
 
 define DO_UI_Q3LCC_MISSIONPACK
@@ -2282,11 +2282,11 @@ Q3GOBJ_ = \
 Q3GOBJ = $(Q3GOBJ_) $(B)/$(BASEGAME)/game/g_syscalls.o
 Q3GVMOBJ = $(Q3GOBJ_:%.o=%.asm)
 
-$(B)/$(BASEGAME)/qagame$(SHLIBNAME): $(Q3GOBJ)
+$(B)/$(BASEGAME)/game$(SHLIBNAME): $(Q3GOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(Q3GOBJ)
 
-$(B)/$(BASEGAME)/vm/qagame.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(BASEGAME)/vm/game.qvm: $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(Q3GVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2334,11 +2334,11 @@ MPGOBJ_ = \
 MPGOBJ = $(MPGOBJ_) $(B)/$(MISSIONPACK)/game/g_syscalls.o
 MPGVMOBJ = $(MPGOBJ_:%.o=%.asm)
 
-$(B)/$(MISSIONPACK)/qagame$(SHLIBNAME): $(MPGOBJ)
+$(B)/$(MISSIONPACK)/game$(SHLIBNAME): $(MPGOBJ)
 	$(echo_cmd) "LD $@"
 	$(Q)$(CC) $(CFLAGS) $(SHLIBLDFLAGS) -o $@ $(MPGOBJ)
 
-$(B)/$(MISSIONPACK)/vm/qagame.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
+$(B)/$(MISSIONPACK)/vm/game.qvm: $(MPGVMOBJ) $(GDIR)/g_syscalls.asm $(Q3ASM)
 	$(echo_cmd) "Q3ASM $@"
 	$(Q)$(Q3ASM) -o $@ $(MPGVMOBJ) $(GDIR)/g_syscalls.asm
 
@@ -2731,7 +2731,7 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_BASEGAME),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/cgame$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/qagame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/game$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(BASEGAME)/ui$(SHLIBNAME) \
 					$(COPYDIR)/$(BASEGAME)/.
@@ -2739,7 +2739,7 @@ ifneq ($(BUILD_GAME_SO),0)
   ifneq ($(BUILD_MISSIONPACK),0)
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/cgame$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
-	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/qagame$(SHLIBNAME) \
+	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/game$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.
 	$(INSTALL) $(STRIP_FLAG) -m 0755 $(BR)/$(MISSIONPACK)/ui$(SHLIBNAME) \
 					$(COPYDIR)/$(MISSIONPACK)/.

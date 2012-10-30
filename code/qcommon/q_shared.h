@@ -1382,7 +1382,7 @@ typedef struct {
   char name[MAX_QPATH];
 } fontInfo_t;
 
-#ifndef QAGAME
+#ifndef GAME
 char *Com_LocalClientCvarName(int localClient, const char *in_cvarName);
 int Com_LocalClientForCvarName(const char *in_cvarName);
 #endif

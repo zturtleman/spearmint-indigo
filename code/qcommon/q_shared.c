@@ -1426,7 +1426,7 @@ char *Com_SkipTokens( char *s, int numTokens, char *sep )
 		return s;
 }
 
-#ifndef QAGAME
+#ifndef GAME
 /*
 =================
 Com_LocalClientCvarName
