@@ -301,6 +301,10 @@ static genFunc_t NameToGenFunc( const char *funcname )
 	{
 		return GF_NOISE;
 	}
+	else if ( !Q_stricmp( funcname, "random" ) )
+	{
+		return GF_RANDOM;
+	}
 
 	ri.Printf( PRINT_WARNING, "WARNING: invalid genfunc name '%s' in shader '%s'\n", funcname, shader.name );
 	return GF_SIN;
@@ -2533,6 +2537,7 @@ static void FixRenderCommandList( int newShader ) {
 				int i;
 				drawSurf_t	*drawSurf;
 				shader_t	*shader;
+				int			sortOrder;
 				int			fogNum;
 				int			entityNum;
 				int			dlightMap;
@@ -2541,11 +2546,12 @@ static void FixRenderCommandList( int newShader ) {
 				const drawSurfsCommand_t *ds_cmd =  (const drawSurfsCommand_t *)curCmd;
 
 				for( i = 0, drawSurf = ds_cmd->drawSurfs; i < ds_cmd->numDrawSurfs; i++, drawSurf++ ) {
-					R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlightMap, &pshadowMap );
-                    sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
+					R_DecomposeSort(drawSurf, &shader, &sortOrder, &entityNum, &fogNum, &dlightMap, &pshadowMap);
+					sortedIndex = (( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1));
 					if( sortedIndex >= newShader ) {
 						sortedIndex++;
-						drawSurf->sort = (sortedIndex << QSORT_SHADERNUM_SHIFT) | entityNum | ( fogNum << QSORT_FOGNUM_SHIFT ) | ( (int)pshadowMap << QSORT_PSHADOW_SHIFT) | (int)dlightMap;
+						R_ComposeSort(drawSurf, sortedIndex, sortOrder, (entityNum << QSORT_REFENTITYNUM_SHIFT),
+										fogNum, dlightMap, pshadowMap);
 					}
 				}
 				curCmd = (const void *)(ds_cmd + 1);
@@ -3042,6 +3048,61 @@ shader_t *R_FindShaderByName( const char *name ) {
 	return tr.defaultShader;
 }
 
+/*
+===============
+R_FindLightmap - ydnar
+given a (potentially erroneous) lightmap index, attempts to load
+an external lightmap image and/or sets the index to a valid number
+===============
+*/
+
+#define EXTERNAL_LIGHTMAP   "lm_%04d.tga"    // THIS MUST BE IN SYNC WITH Q3MAP2
+
+void R_FindLightmap( int *lightmapIndex ) {
+	image_t     *image;
+	char fileName[ MAX_QPATH ];
+
+	// don't fool with bogus lightmap indexes
+	if ( *lightmapIndex < 0 ) {
+		return;
+	}
+
+	// does this lightmap already exist?
+	if ( *lightmapIndex < tr.numLightmaps && tr.lightmaps[ *lightmapIndex ] != NULL ) {
+		return;
+	}
+
+	// bail if no world dir
+	if ( tr.worldDir == NULL ) {
+		*lightmapIndex = LIGHTMAP_BY_VERTEX;
+		return;
+	}
+
+	// bail if no free slot
+	if ( *lightmapIndex >= tr.maxLightmaps ) {
+		*lightmapIndex = LIGHTMAP_BY_VERTEX;
+		return;
+	}
+
+	// sync up render thread, because we're going to have to load an image
+	R_SyncRenderThread();
+
+	// attempt to load an external lightmap
+	Com_sprintf( fileName, sizeof (fileName), "%s/" EXTERNAL_LIGHTMAP, tr.worldDir, *lightmapIndex );
+	image = R_FindImageFile( fileName, IMGTYPE_COLORALPHA, IMGFLAG_CLAMPTOEDGE );
+	if ( image == NULL ) {
+		*lightmapIndex = LIGHTMAP_BY_VERTEX;
+		return;
+	}
+
+	// add it to the lightmap list
+	if ( *lightmapIndex >= tr.numLightmaps ) {
+		tr.numLightmaps = *lightmapIndex + 1;
+	}
+	tr.lightmaps[ *lightmapIndex ] = image;
+}
+
+
 
 /*
 ===============
@@ -3082,15 +3143,8 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 		return tr.defaultShader;
 	}
 
-	// use (fullbright) vertex lighting if the bsp file doesn't have
-	// lightmaps
-	if ( lightmapIndex >= 0 && lightmapIndex >= tr.numLightmaps ) {
-		lightmapIndex = LIGHTMAP_BY_VERTEX;
-	} else if ( lightmapIndex < LIGHTMAP_2D ) {
-		// negative lightmap indexes cause stray pointers (think tr.lightmaps[lightmapIndex])
-		ri.Printf( PRINT_WARNING, "WARNING: shader '%s' has invalid lightmap index of %d\n", name, lightmapIndex  );
-		lightmapIndex = LIGHTMAP_BY_VERTEX;
-	}
+	// ydnar: validate lightmap index
+	R_FindLightmap( &lightmapIndex );
 
 	COM_StripExtension(name, strippedName, sizeof(strippedName));
 
@@ -3724,7 +3778,7 @@ R_InitShaders
 ==================
 */
 void R_InitShaders( void ) {
-	ri.Printf( PRINT_ALL, "Initializing Shaders\n" );
+	ri.Printf(PRINT_DEVELOPER, "Initializing Shaders\n");
 
 	Com_Memset(hashTable, 0, sizeof(hashTable));
 

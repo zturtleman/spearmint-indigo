@@ -1603,6 +1603,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 	shader_t *shader;
 	int		fogNum;
 	int dlighted;
+	int sortOrder;
 	int pshadowed;
 	vec4_t clip, eye;
 	int i;
@@ -1615,7 +1616,7 @@ static qboolean SurfIsOffscreen( const drawSurf_t *drawSurf, vec4_t clipDest[128
 
 	R_RotateForViewer();
 
-	R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &pshadowed );
+	R_DecomposeSort( drawSurf, &shader, &sortOrder, &entityNum, &fogNum, &dlighted, &pshadowed );
 	RB_BeginSurface( shader, fogNum );
 	rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
 
@@ -1835,7 +1836,15 @@ static void R_RadixSort( drawSurf_t *source, int size )
   R_Radix( 1, size, scratch, source );
   R_Radix( 2, size, source, scratch );
   R_Radix( 3, size, scratch, source );
+  R_Radix( 4, size, source, scratch );
+  R_Radix( 5, size, scratch, source );
+  R_Radix( 6, size, source, scratch );
+  R_Radix( 7, size, scratch, source );
 #else
+  R_Radix( 7, size, source, scratch );
+  R_Radix( 6, size, scratch, source );
+  R_Radix( 5, size, source, scratch );
+  R_Radix( 4, size, scratch, source );
   R_Radix( 3, size, source, scratch );
   R_Radix( 2, size, scratch, source );
   R_Radix( 1, size, source, scratch );
@@ -1857,13 +1866,24 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 	// instead of checking for overflow, we just mask the index
 	// so it wraps around
 	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
-	// the sort data is packed into a single 32 bit value so it can be
+	// the sort data is packed into a single 64 bit value so it can be
 	// compared quickly during the qsorting process
-	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT) 
-		| tr.shiftedEntityNum | ( fogIndex << QSORT_FOGNUM_SHIFT ) 
-		| ((int)pshadowMap << QSORT_PSHADOW_SHIFT) | (int)dlightMap;
+	R_ComposeSort(&tr.refdef.drawSurfs[index], shader->sortedIndex, shader->sort,
+					tr.shiftedEntityNum, fogIndex, dlightMap, pshadowMap);
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
+}
+
+/*
+=================
+R_ComposeSort
+=================
+*/
+void R_ComposeSort( drawSurf_t *drawSurf, int sortedShaderIndex, int sortOrder,
+					 int shiftedEntityNum, int fogIndex, int dlightMap, int pshadowMap ) {
+	drawSurf->sort = ((uint64_t)sortedShaderIndex << QSORT_SHADERNUM_SHIFT) | ((uint64_t)sortOrder << QSORT_ORDER_SHIFT) 
+		| (uint64_t)shiftedEntityNum | ( (uint64_t)fogIndex << QSORT_FOGNUM_SHIFT )
+		| ((uint64_t)pshadowMap << QSORT_PSHADOW_SHIFT) | (uint64_t)dlightMap;
 }
 
 /*
@@ -1871,13 +1891,14 @@ void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader,
 R_DecomposeSort
 =================
 */
-void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader, 
-					 int *fogNum, int *dlightMap, int *pshadowMap ) {
-	*fogNum = ( sort >> QSORT_FOGNUM_SHIFT ) & 31;
-	*shader = tr.sortedShaders[ ( sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
-	*entityNum = ( sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
-	*pshadowMap = (sort & 2) >> 1;
-	*dlightMap = sort & 1;
+void R_DecomposeSort( const drawSurf_t *drawSurf, shader_t **shader, int *sortOrder,
+					 int *entityNum, int *fogNum, int *dlightMap, int *pshadowMap ) {
+	*shader = tr.sortedShaders[ ( drawSurf->sort >> QSORT_SHADERNUM_SHIFT ) & (MAX_SHADERS-1) ];
+	*sortOrder = ( drawSurf->sort >> QSORT_ORDER_SHIFT ) & 31;
+	*entityNum = ( drawSurf->sort >> QSORT_REFENTITYNUM_SHIFT ) & REFENTITYNUM_MASK;
+	*fogNum = ( drawSurf->sort >> QSORT_FOGNUM_SHIFT ) & 31;
+	*pshadowMap = (drawSurf->sort & 2) >> 1;
+	*dlightMap = drawSurf->sort & 1;
 }
 
 /*
@@ -1890,6 +1911,7 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int				fogNum;
 	int				entityNum;
 	int				dlighted;
+	int				sortOrder;
 	int             pshadowed;
 	int				i;
 
@@ -1922,15 +1944,19 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
 	for ( i = 0 ; i < numDrawSurfs ; i++ ) {
-		R_DecomposeSort( (drawSurfs+i)->sort, &entityNum, &shader, &fogNum, &dlighted, &pshadowed );
+		R_DecomposeSort( (drawSurfs+i), &shader, &sortOrder, &entityNum, &fogNum, &dlighted, &pshadowed );
 
-		if ( shader->sort > SS_PORTAL ) {
+		if ( sortOrder > SS_PORTAL ) {
 			break;
 		}
 
 		// no shader should ever have this sort type
-		if ( shader->sort == SS_BAD ) {
-			ri.Error (ERR_DROP, "Shader '%s'with sort == SS_BAD", shader->name );
+		if ( sortOrder == SS_BAD ) {
+			if ( shader->sort == SS_BAD ) {
+				ri.Error (ERR_DROP, "Shader '%s' with sort == SS_BAD", shader->name );
+			} else {
+				ri.Error (ERR_DROP, "Surface with shader '%s' has sort == SS_BAD", shader->name );
+			}
 		}
 
 		// if the mirror was completely clipped away, we may need to check another surface
@@ -1946,10 +1972,12 @@ void R_SortDrawSurfs( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_AddDrawSurfCmd( drawSurfs, numDrawSurfs );
 }
 
+// ZTM: TODO: Make sure shadows work correctly in Rend2 with my code changes from classic renderer!
 static void R_AddEntitySurface (int entityNum)
 {
 	trRefEntity_t	*ent;
 	shader_t		*shader;
+	qboolean		onlyRenderShadows;
 
 	tr.currentEntityNum = entityNum;
 
@@ -1962,12 +1990,27 @@ static void R_AddEntitySurface (int entityNum)
 
 	//
 	// the weapon model must be handled special --
-	// we don't want the hacked weapon position showing in 
+	// we don't want the hacked first person weapon position showing in 
 	// mirrors, because the true body position will already be drawn
 	//
-	if ( (ent->e.renderfx & RF_FIRST_PERSON) && (tr.viewParms.isPortal 
-	      || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW))) ) {
+	if ((ent->e.renderfx & RF_NO_MIRROR) && (tr.viewParms.isPortal 
+	      || (tr.viewParms.flags & (VPF_SHADOWMAP | VPF_DEPTHSHADOW)))) {
 		return;
+	}
+
+	onlyRenderShadows = qfalse;
+
+	//
+	// the player model must be handled special --
+	// we only want the player model shown in mirrors in first person mode,
+	// but may need to render shadow.
+	//
+	if ((ent->e.renderfx & RF_ONLY_MIRROR) && !tr.viewParms.isPortal) {
+		if (ent->e.reType == RT_MODEL && (ent->e.renderfx & RF_SHADOW_PLANE)) {
+			onlyRenderShadows = qtrue;
+		} else {
+			return;
+		}
 	}
 
 	// simple generated models, like sprites and beams, are not culled
@@ -1979,12 +2022,6 @@ static void R_AddEntitySurface (int entityNum)
 	case RT_LIGHTNING:
 	case RT_RAIL_CORE:
 	case RT_RAIL_RINGS:
-		// self blood sprites, talk balloons, etc should not be drawn in the primary
-		// view.  We can't just do this check for all entities, because md3
-		// entities may still want to cast shadows from them
-		if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
-			return;
-		}
 		shader = R_GetShaderByHandle( ent->e.customShader );
 		R_AddDrawSurf( &entitySurface, shader, R_SpriteFogNum( ent ), 0, 0 );
 		break;
@@ -1997,6 +2034,13 @@ static void R_AddEntitySurface (int entityNum)
 		if (!tr.currentModel) {
 			R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, 0 );
 		} else {
+			// Check if model format doesn't support only rendering shadows
+			if (onlyRenderShadows && (tr.currentModel->type == MOD_BAD
+				|| tr.currentModel->type == MOD_BRUSH
+				|| tr.currentModel->type == MOD_MD4)) {
+				break;
+			}
+
 			switch ( tr.currentModel->type ) {
 			case MOD_MESH:
 				R_AddMD3Surfaces( ent );
@@ -2016,9 +2060,6 @@ static void R_AddEntitySurface (int entityNum)
 				R_AddBrushModelSurfaces( ent );
 				break;
 			case MOD_BAD:		// null model axis
-				if ( (ent->e.renderfx & RF_THIRD_PERSON) && !tr.viewParms.isPortal) {
-					break;
-				}
 				R_AddDrawSurf( &entitySurface, tr.defaultShader, 0, 0, 0 );
 				break;
 			default:
@@ -2058,6 +2099,8 @@ void R_GenerateDrawSurfs( void ) {
 	R_AddWorldSurfaces ();
 
 	R_AddPolygonSurfaces();
+
+	R_AddPolygonBufferSurfaces();
 
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded
@@ -2260,10 +2303,12 @@ void R_RenderPshadowMaps(const refdef_t *fd)
 	{
 		trRefEntity_t *ent = &tr.refdef.entities[i];
 
-		if((ent->e.renderfx & (RF_FIRST_PERSON | RF_NOSHADOW)))
+		// ZTM: FIXME: Need to know if rendering in a mirror for these checks.
+
+		if((ent->e.renderfx & (RF_NO_MIRROR | RF_NOSHADOW)))
 			continue;
 
-		//if((ent->e.renderfx & RF_THIRD_PERSON))
+		//if((ent->e.renderfx & RF_ONLY_MIRROR))
 			//continue;
 
 		if (ent->e.reType == RT_MODEL)
