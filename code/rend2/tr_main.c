@@ -1,22 +1,30 @@
 /*
 ===========================================================================
-Copyright (C) 1999-2005 Id Software, Inc.
+Copyright (C) 1999-2010 id Software LLC, a ZeniMax Media company.
 
-This file is part of Quake III Arena source code.
+This file is part of Spearmint Source Code.
 
-Quake III Arena source code is free software; you can redistribute it
+Spearmint Source Code is free software; you can redistribute it
 and/or modify it under the terms of the GNU General Public License as
-published by the Free Software Foundation; either version 2 of the License,
+published by the Free Software Foundation; either version 3 of the License,
 or (at your option) any later version.
 
-Quake III Arena source code is distributed in the hope that it will be
+Spearmint Source Code is distributed in the hope that it will be
 useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with Quake III Arena source code; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+along with Spearmint Source Code.  If not, see <http://www.gnu.org/licenses/>.
+
+In addition, Spearmint Source Code is also subject to certain additional terms.
+You should have received a copy of these additional terms immediately following
+the terms and conditions of the GNU General Public License.  If not, please
+request a copy in writing from id Software at the address below.
+
+If you have questions concerning this license or the applicable additional
+terms, you may contact in writing id Software LLC, c/o ZeniMax Media Inc.,
+Suite 120, Rockville, Maryland 20850 USA.
 ===========================================================================
 */
 // tr_main.c -- main control flow for each frame
@@ -368,10 +376,10 @@ void R_CalcTBN2(vec3_t tangent, vec3_t bitangent, vec3_t normal,
 	VectorSubtract(v3, v1, v3v1);
 
 	// The equation presented in the article states that:
-	// c2c1_T = V2.texcoord.x – V1.texcoord.x
-	// c2c1_B = V2.texcoord.y – V1.texcoord.y
-	// c3c1_T = V3.texcoord.x – V1.texcoord.x
-	// c3c1_B = V3.texcoord.y – V1.texcoord.y
+	// c2c1_T = V2.texcoord.x \96 V1.texcoord.x
+	// c2c1_B = V2.texcoord.y \96 V1.texcoord.y
+	// c3c1_T = V3.texcoord.x \96 V1.texcoord.x
+	// c3c1_B = V3.texcoord.y \96 V1.texcoord.y
 
 	// Calculate c2c1_T and c2c1_B
 	c2c1_T = t2[0] - t1[0];
@@ -1227,7 +1235,7 @@ void R_SetupProjectionZ(viewParms_t *dest)
 		plane2[2] = -DotProduct (dest->or.axis[0], plane);
 		plane2[3] = DotProduct (plane, dest->or.origin) - plane[3];
 
-		// Lengyel, Eric. “Modifying the Projection Matrix to Perform Oblique Near-plane Clipping”.
+		// Lengyel, Eric. \93Modifying the Projection Matrix to Perform Oblique Near-plane Clipping\94.
 		// Terathon Software 3D Graphics Library, 2004. http://www.terathon.com/code/oblique.html
 		q[0] = (SGN(plane2[0]) + dest->projectionMatrix[8]) / dest->projectionMatrix[0];
 		q[1] = (SGN(plane2[1]) + dest->projectionMatrix[9]) / dest->projectionMatrix[5];
