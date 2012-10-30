@@ -3578,12 +3578,6 @@ void CL_Init( void ) {
 
 	cl_serverStatusResendTime = Cvar_Get ("cl_serverStatusResendTime", "750", 0);
 
-	// init autoswitch so the ui will have it correctly even
-	// if the cgame hasn't been started
-	for (i = 0; i < CL_MAX_SPLITVIEW; i++) {
-		Cvar_Get (Com_LocalClientCvarName(i, "cg_autoswitch"), "1", CVAR_ARCHIVE);
-	}
-
 	m_pitch = Cvar_Get ("m_pitch", "0.022", CVAR_ARCHIVE);
 	m_yaw = Cvar_Get ("m_yaw", "0.022", CVAR_ARCHIVE);
 	m_forward = Cvar_Get ("m_forward", "0.25", CVAR_ARCHIVE);
@@ -3634,57 +3628,6 @@ void CL_Init( void ) {
 	Cvar_Get ("snaps", "20", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 	Cvar_Get ("cl_anonymous", "0", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
 	Cvar_Get ("password", "", CVAR_USERINFO_ALL);
-	Cvar_Get ("cg_predictItems", "1", CVAR_USERINFO_ALL | CVAR_ARCHIVE );
-
-	// Main local client userinfo
-	Cvar_Get ("name", "UnnamedPlayer", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("model", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("headmodel", "sarge", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("team_model", "james", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("team_headmodel", "*james", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("color1",  "4", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("color2", "5", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("handicap", "100", CVAR_USERINFO | CVAR_ARCHIVE );
-	Cvar_Get ("teamtask", "0", CVAR_USERINFO );
-
-#if CL_MAX_SPLITVIEW > 1
-	// Second local client userinfo
-	Cvar_Get ("2name", "UnnamedPlayer2", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2model", "grunt", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2headmodel", "grunt", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2team_model", "james", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2team_headmodel", "*james", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2color1", "4", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2color2", "5", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2handicap", "100", CVAR_USERINFO2 | CVAR_ARCHIVE );
-	Cvar_Get ("2teamtask", "0", CVAR_USERINFO2 );
-#endif
-
-#if CL_MAX_SPLITVIEW > 2
-	// Third local client userinfo
-	Cvar_Get ("3name", "UnnamedPlayer3", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3model", "major", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3headmodel", "major", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3team_model", "janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3team_headmodel", "*janet", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3color1", "4", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3color2", "5", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3handicap", "100", CVAR_USERINFO3 | CVAR_ARCHIVE );
-	Cvar_Get ("3teamtask", "0", CVAR_USERINFO3 );
-#endif
-
-#if CL_MAX_SPLITVIEW > 3
-	// Fourth local client userinfo
-	Cvar_Get ("4name", "UnnamedPlayer4", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4model", "visor", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4headmodel", "visor", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4team_model", "janet", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4team_headmodel", "*janet", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4color1", "4", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4color2", "5", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4handicap", "100", CVAR_USERINFO4 | CVAR_ARCHIVE );
-	Cvar_Get ("4teamtask", "0", CVAR_USERINFO4 );
-#endif
 
 #ifdef USE_MUMBLE
 	cl_useMumble = Cvar_Get ("cl_useMumble", "0", CVAR_ARCHIVE | CVAR_LATCH);
@@ -3716,12 +3659,6 @@ void CL_Init( void ) {
 		Cvar_Set("cl_voip", "0");
 	}
 #endif
-
-
-	// cgame might not be initialized before menu is used
-	Cvar_Get ("cg_viewsize", "100", CVAR_ARCHIVE );
-	// Make sure cg_stereoSeparation is zero as that variable is deprecated and should not be used anymore.
-	Cvar_Get ("cg_stereoSeparation", "0", CVAR_ROM);
 
 	//
 	// register our commands

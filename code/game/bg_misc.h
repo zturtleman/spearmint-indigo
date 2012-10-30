@@ -556,6 +556,52 @@ typedef struct animation_s {
 #define	ANIM_TOGGLEBIT		128
 
 
+#define DEFAULT_CLIENT_NAME		"UnnamedPlayer"
+#define DEFAULT_CLIENT_COLOR1	4
+#define DEFAULT_CLIENT_COLOR2	5
+
+// Default player model names for the splitscreen clients
+#define DEFAULT_MODEL			"sarge"
+#define DEFAULT_HEAD			"sarge"
+
+#define DEFAULT_MODEL2			"grunt"
+#define DEFAULT_HEAD2			"grunt"
+
+#define DEFAULT_MODEL3			"major"
+#define DEFAULT_HEAD3			"major"
+
+#define DEFAULT_MODEL4			"visor"
+#define DEFAULT_HEAD4			"visor"
+
+#ifdef MISSIONPACK
+// Default team player model names
+#define DEFAULT_TEAM_MODEL		"james"
+#define DEFAULT_TEAM_HEAD		"*james"
+
+#define DEFAULT_TEAM_MODEL2		"james"
+#define DEFAULT_TEAM_HEAD2		"*james"
+
+#define DEFAULT_TEAM_MODEL3		"janet"
+#define DEFAULT_TEAM_HEAD3		"*janet"
+
+#define DEFAULT_TEAM_MODEL4		"janet"
+#define DEFAULT_TEAM_HEAD4		"*janet"
+#else
+// Default team player model names
+#define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
+#define DEFAULT_TEAM_HEAD		DEFAULT_HEAD
+
+#define DEFAULT_TEAM_MODEL2		DEFAULT_MODEL2
+#define DEFAULT_TEAM_HEAD2		DEFAULT_HEAD2
+
+#define DEFAULT_TEAM_MODEL3		DEFAULT_MODEL3
+#define DEFAULT_TEAM_HEAD3		DEFAULT_HEAD3
+
+#define DEFAULT_TEAM_MODEL4		DEFAULT_MODEL4
+#define DEFAULT_TEAM_HEAD4		DEFAULT_HEAD4
+#endif
+
+
 #define DEFAULT_REDTEAM_NAME		"Pagans"
 #define DEFAULT_BLUETEAM_NAME		"Stroggs"
 
@@ -763,6 +809,10 @@ typedef struct
   const char *name;
 } dummyCmd_t;
 int cmdcmp( const void *a, const void *b );
+
+#if defined CGAME || defined UI
+void BG_RegisterClientCvars(int maxSplitview);
+#endif
 
 #define MAX_MAP_SIZE 65536
 
