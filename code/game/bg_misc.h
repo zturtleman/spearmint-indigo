@@ -573,6 +573,10 @@ typedef struct animation_s {
 #define DEFAULT_MODEL4			"visor"
 #define DEFAULT_HEAD4			"visor"
 
+// For fallback sounds
+#define DEFAULT_MODEL_MALE		"sarge"
+#define DEFAULT_MODEL_FEMALE	"major"
+
 #ifdef MISSIONPACK
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		"james"
@@ -586,6 +590,10 @@ typedef struct animation_s {
 
 #define DEFAULT_TEAM_MODEL4		"janet"
 #define DEFAULT_TEAM_HEAD4		"*janet"
+
+// For team fallback sounds
+#define DEFAULT_TEAM_MODEL_MALE		"james"
+#define DEFAULT_TEAM_MODEL_FEMALE	"janet"
 #else
 // Default team player model names
 #define DEFAULT_TEAM_MODEL		DEFAULT_MODEL
@@ -599,6 +607,10 @@ typedef struct animation_s {
 
 #define DEFAULT_TEAM_MODEL4		DEFAULT_MODEL4
 #define DEFAULT_TEAM_HEAD4		DEFAULT_HEAD4
+
+// For team fallback sounds
+#define DEFAULT_TEAM_MODEL_MALE		DEFAULT_MODEL_MALE
+#define DEFAULT_TEAM_MODEL_FEMALE	DEFAULT_MODEL_FEMALE
 #endif
 
 
