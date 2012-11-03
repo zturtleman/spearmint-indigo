@@ -597,6 +597,7 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	char			*model;
 	char			*headmodel;
 	char			userinfo[MAX_INFO_STRING];
+	qboolean		modelSet;
 
 	// have the server allocate a client slot
 	clientNum = trap_BotAllocateClient();
@@ -672,8 +673,9 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 
 	key = "model";
 	model = Info_ValueForKey( botinfo, key );
-	if ( !*model ) {
-		model = "visor/default";
+	modelSet = ( *model );
+	if ( !modelSet ) {
+		model = DEFAULT_MODEL;
 	}
 	Info_SetValueForKey( userinfo, key, model );
 	key = "team_model";
@@ -682,7 +684,11 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "headmodel";
 	headmodel = Info_ValueForKey( botinfo, key );
 	if ( !*headmodel ) {
-		headmodel = model;
+		if (!modelSet) {
+			headmodel = DEFAULT_HEAD;
+		} else {
+			headmodel = model;
+		}
 	}
 	Info_SetValueForKey( userinfo, key, headmodel );
 	key = "team_headmodel";
@@ -691,14 +697,14 @@ static void G_AddBot( const char *name, float skill, const char *team, int delay
 	key = "color1";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = "4";
+		s = va("%d", DEFAULT_CLIENT_COLOR1);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
 	key = "color2";
 	s = Info_ValueForKey( botinfo, key );
 	if ( !*s ) {
-		s = "5";
+		s = va("%d", DEFAULT_CLIENT_COLOR2);
 	}
 	Info_SetValueForKey( userinfo, key, s );
 
