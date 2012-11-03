@@ -3451,6 +3451,10 @@ qboolean Display_KeyBindPending(void) {
 	return g_waitingForKey;
 }
 
+qboolean Display_WantsBindKeys( void ) {
+	return ( g_waitingForKey && g_bindItem );
+}
+
 qboolean Item_Bind_HandleKey(itemDef_t *item, int key, qboolean down) {
 	int			id;
 	int			i;
