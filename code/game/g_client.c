@@ -696,6 +696,29 @@ static void ClientCleanName(const char *in, char *out, int outSize)
 		Q_strncpyz(out, "UnnamedPlayer", outSize );
 }
 
+/*
+===========
+ClientHandicap
+============
+*/
+float ClientHandicap( gclient_t *client ) {
+	char	userinfo[MAX_INFO_STRING];
+	float	handicap;
+
+	if (!client) {
+		return 100;
+	}
+
+	trap_GetUserinfo( client - level.clients, userinfo, sizeof(userinfo) );
+
+	handicap = atof( Info_ValueForKey( userinfo, "handicap" ) );
+	if ( handicap < 1 || handicap > 100) {
+		handicap = 100;
+	}
+
+	return handicap;
+}
+
 
 /*
 ===========
@@ -710,7 +733,7 @@ if desired.
 */
 void ClientUserinfoChanged( int clientNum ) {
 	gentity_t *ent;
-	int		teamTask, teamLeader, team, health;
+	int		teamTask, teamLeader, team;
 	char	*s;
 	char	model[MAX_QPATH];
 	char	headModel[MAX_QPATH];
@@ -769,18 +792,10 @@ void ClientUserinfoChanged( int clientNum ) {
 	if (client->ps.powerups[PW_GUARD]) {
 		client->pers.maxHealth = 200;
 	} else {
-		health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-		client->pers.maxHealth = health;
-		if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-			client->pers.maxHealth = 100;
-		}
+		client->pers.maxHealth = ClientHandicap( client );
 	}
 #else
-	health = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	client->pers.maxHealth = health;
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
-	}
+	client->pers.maxHealth = ClientHandicap( client );
 #endif
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 
@@ -1089,7 +1104,6 @@ void ClientSpawn(gentity_t *ent) {
 //	char	*savedAreaBits;
 	int		accuracy_hits, accuracy_shots;
 	int		eventSequence;
-	char	userinfo[MAX_INFO_STRING];
 
 	index = ent - g_entities;
 	client = ent->client;
@@ -1170,12 +1184,8 @@ void ClientSpawn(gentity_t *ent) {
 
 	client->airOutTime = level.time + 12000;
 
-	trap_GetUserinfo( index, userinfo, sizeof(userinfo) );
 	// set max health
-	client->pers.maxHealth = atoi( Info_ValueForKey( userinfo, "handicap" ) );
-	if ( client->pers.maxHealth < 1 || client->pers.maxHealth > 100 ) {
-		client->pers.maxHealth = 100;
-	}
+	client->pers.maxHealth = ClientHandicap( client );
 	// clear entity values
 	client->ps.stats[STAT_MAX_HEALTH] = client->pers.maxHealth;
 	client->ps.eFlags = flags;
