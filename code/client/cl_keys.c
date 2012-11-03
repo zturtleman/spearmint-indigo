@@ -547,6 +547,7 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 
 	switch ( key ) {
 		case K_DEL:
+		case K_KP_DEL:
 			if ( edit->cursor < len ) {
 				memmove( edit->buffer + edit->cursor, 
 					edit->buffer + edit->cursor + 1, len - edit->cursor );
@@ -554,26 +555,31 @@ void Field_KeyDownEvent( field_t *edit, int key ) {
 			break;
 
 		case K_RIGHTARROW:
+		case K_KP_RIGHTARROW:
 			if ( edit->cursor < len ) {
 				edit->cursor++;
 			}
 			break;
 
 		case K_LEFTARROW:
+		case K_KP_LEFTARROW:
 			if ( edit->cursor > 0 ) {
 				edit->cursor--;
 			}
 			break;
 
 		case K_HOME:
+		case K_KP_HOME:
 			edit->cursor = 0;
 			break;
 
 		case K_END:
+		case K_KP_END:
 			edit->cursor = len;
 			break;
 
 		case K_INS:
+		case K_KP_INS:
 			key_overstrikeMode = !key_overstrikeMode;
 			break;
 
@@ -771,12 +777,12 @@ void Console_Key (int key) {
 	}
 
 	// console scrolling
-	if ( key == K_PGUP ) {
+	if ( key == K_PGUP || key == K_KP_PGUP ) {
 		Con_PageUp();
 		return;
 	}
 
-	if ( key == K_PGDN) {
+	if ( key == K_PGDN || key == K_KP_PGDN ) {
 		Con_PageDown();
 		return;
 	}
@@ -800,13 +806,13 @@ void Console_Key (int key) {
 	}
 
 	// ctrl-home = top of console
-	if ( key == K_HOME && keys[K_CTRL].down ) {
+	if ( ( key == K_HOME || key == K_KP_HOME ) && keys[K_CTRL].down ) {
 		Con_Top();
 		return;
 	}
 
 	// ctrl-end = bottom of console
-	if ( key == K_END && keys[K_CTRL].down ) {
+	if ( ( key == K_END || key == K_KP_END ) && keys[K_CTRL].down ) {
 		Con_Bottom();
 		return;
 	}
