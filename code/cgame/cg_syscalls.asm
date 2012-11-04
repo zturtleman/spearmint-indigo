@@ -112,3 +112,6 @@ equ	ceil						-109
 equ Q_acos						-110
 equ Q_asin						-111
 
+equ trap_CM_BiSphereTrace				-131
+equ trap_CM_TransformedBiSphereTrace	-132
+
