@@ -339,11 +339,15 @@ void CM_TestCapsuleInCapsule( traceWork_t *tw, clipHandle_t model ) {
 	if ( VectorLengthSquared(tmp) < r ) {
 		tw->trace.startsolid = tw->trace.allsolid = qtrue;
 		tw->trace.fraction = 0;
+		tw->trace.contents = capsule_contents;
+		return;
 	}
 	VectorSubtract(p1, bottom, tmp);
 	if ( VectorLengthSquared(tmp) < r ) {
 		tw->trace.startsolid = tw->trace.allsolid = qtrue;
 		tw->trace.fraction = 0;
+		tw->trace.contents = capsule_contents;
+		return;
 	}
 	VectorCopy(offset, p2);
 	p2[2] -= offs;
@@ -351,11 +355,15 @@ void CM_TestCapsuleInCapsule( traceWork_t *tw, clipHandle_t model ) {
 	if ( VectorLengthSquared(tmp) < r ) {
 		tw->trace.startsolid = tw->trace.allsolid = qtrue;
 		tw->trace.fraction = 0;
+		tw->trace.contents = capsule_contents;
+		return;
 	}
 	VectorSubtract(p2, bottom, tmp);
 	if ( VectorLengthSquared(tmp) < r ) {
 		tw->trace.startsolid = tw->trace.allsolid = qtrue;
 		tw->trace.fraction = 0;
+		tw->trace.contents = capsule_contents;
+		return;
 	}
 	// if between cylinder up and lower bounds
 	if ( (top[2] >= p1[2] && top[2] <= p2[2]) ||
@@ -367,6 +375,8 @@ void CM_TestCapsuleInCapsule( traceWork_t *tw, clipHandle_t model ) {
 		if ( VectorLengthSquared(tmp) < r ) {
 			tw->trace.startsolid = tw->trace.allsolid = qtrue;
 			tw->trace.fraction = 0;
+			tw->trace.contents = capsule_contents;
+			return;
 		}
 	}
 }
@@ -940,7 +950,7 @@ CM_TraceThroughSphere
 get the first intersection of the ray with the sphere
 ================
 */
-void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t start, vec3_t end ) {
+void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t start, vec3_t end, int contents ) {
 	float l1, l2, length, fraction;
 	//float a;
 	float b, c, d, sqrtd;
@@ -952,6 +962,8 @@ void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t
 	if (l1 < Square(radius)) {
 		tw->trace.fraction = 0;
 		tw->trace.startsolid = qtrue;
+		tw->trace.contents = contents;
+
 		// test for allsolid
 		VectorSubtract(end, origin, dir);
 		l1 = VectorLengthSquared(dir);
@@ -1018,7 +1030,7 @@ void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t
 #endif
 			VectorAdd( tw->modelOrigin, intersection, intersection);
 			tw->trace.plane.dist = DotProduct(tw->trace.plane.normal, intersection);
-			tw->trace.contents = CONTENTS_BODY; // ZTM: FIXME: Don't hard code contents here!
+			tw->trace.contents = contents;
 		}
 	}
 	else if (d == 0) {
@@ -1036,7 +1048,7 @@ get the first intersection of the ray with the cylinder
 the cylinder extends halfheight above and below the origin
 ================
 */
-void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radius, float halfheight, vec3_t start, vec3_t end) {
+void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radius, float halfheight, vec3_t start, vec3_t end, int contents) {
 	float length, fraction, l1, l2;
 	//float a;
 	float b, c, d, sqrtd;
@@ -1055,6 +1067,9 @@ void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radi
 		if (l1 < Square(radius)) {
 			tw->trace.fraction = 0;
 			tw->trace.startsolid = qtrue;
+			tw->trace.contents = contents;
+
+			// test for allsolid
 			VectorSubtract(end2d, org2d, dir);
 			l1 = VectorLengthSquared(dir);
 			if (l1 < Square(radius)) {
@@ -1129,7 +1144,7 @@ void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radi
 #endif
 				VectorAdd( tw->modelOrigin, intersection, intersection);
 				tw->trace.plane.dist = DotProduct(tw->trace.plane.normal, intersection);
-				tw->trace.contents = CONTENTS_BODY; // ZTM: FIXME: Don't hard code contents here!
+				tw->trace.contents = contents;
 			}
 		}
 	}
@@ -1194,12 +1209,12 @@ void CM_TraceCapsuleThroughCapsule( traceWork_t *tw, clipHandle_t model ) {
 		// if the cylinder has a height
 		if ( h > 0 ) {
 			// test for collisions between the cylinders
-			CM_TraceThroughVerticalCylinder(tw, offset, radius, h, tw->start, tw->end);
+			CM_TraceThroughVerticalCylinder(tw, offset, radius, h, tw->start, tw->end, capsule_contents);
 		}
 	}
 	// test for collision between the spheres
-	CM_TraceThroughSphere(tw, top, radius, startbottom, endbottom);
-	CM_TraceThroughSphere(tw, bottom, radius, starttop, endtop);
+	CM_TraceThroughSphere(tw, top, radius, startbottom, endbottom, capsule_contents);
+	CM_TraceThroughSphere(tw, bottom, radius, starttop, endtop, capsule_contents);
 }
 
 /*
