@@ -941,7 +941,7 @@ get the first intersection of the ray with the sphere
 ================
 */
 void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t start, vec3_t end ) {
-	float l1, l2, length, scale, fraction;
+	float l1, l2, length, fraction;
 	//float a;
 	float b, c, d, sqrtd;
 	vec3_t v1, dir, intersection;
@@ -1006,9 +1006,16 @@ void CM_TraceThroughSphere( traceWork_t *tw, vec3_t origin, float radius, vec3_t
 					int bah = 1;
 				}
 			#endif
-			scale = 1 / (radius+RADIUS_EPSILON);
-			VectorScale(dir, scale, dir);
-			VectorCopy(dir, tw->trace.plane.normal);
+#if 1 // ZTM: NOTE: Old method caused CM_Trace to fail assert at bottom of CM_Trace sometimes.
+			VectorNormalize2(dir, tw->trace.plane.normal);
+#else
+			{
+				float scale;
+				scale = 1 / (radius+RADIUS_EPSILON);
+				VectorScale(dir, scale, dir);
+				VectorCopy(dir, tw->trace.plane.normal);
+			}
+#endif
 			VectorAdd( tw->modelOrigin, intersection, intersection);
 			tw->trace.plane.dist = DotProduct(tw->trace.plane.normal, intersection);
 			tw->trace.contents = CONTENTS_BODY; // ZTM: FIXME: Don't hard code contents here!
@@ -1030,7 +1037,7 @@ the cylinder extends halfheight above and below the origin
 ================
 */
 void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radius, float halfheight, vec3_t start, vec3_t end) {
-	float length, scale, fraction, l1, l2;
+	float length, fraction, l1, l2;
 	//float a;
 	float b, c, d, sqrtd;
 	vec3_t v1, dir, start2d, end2d, org2d, intersection;
@@ -1110,9 +1117,16 @@ void CM_TraceThroughVerticalCylinder( traceWork_t *tw, vec3_t origin, float radi
 						int bah = 1;
 					}
 				#endif
-				scale = 1 / (radius+RADIUS_EPSILON);
-				VectorScale(dir, scale, dir);
-				VectorCopy(dir, tw->trace.plane.normal);
+#if 1 // ZTM: NOTE: Old method caused CM_Trace to fail assert at bottom of CM_Trace sometimes.
+				VectorNormalize2(dir, tw->trace.plane.normal);
+#else
+				{
+					float scale;
+					scale = 1 / (radius+RADIUS_EPSILON);
+					VectorScale(dir, scale, dir);
+					VectorCopy(dir, tw->trace.plane.normal);
+				}
+#endif
 				VectorAdd( tw->modelOrigin, intersection, intersection);
 				tw->trace.plane.dist = DotProduct(tw->trace.plane.normal, intersection);
 				tw->trace.contents = CONTENTS_BODY; // ZTM: FIXME: Don't hard code contents here!
