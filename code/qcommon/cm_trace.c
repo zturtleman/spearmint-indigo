@@ -389,10 +389,14 @@ bounding box inside capsule check
 ==================
 */
 void CM_TestBoundingBoxInCapsule( traceWork_t *tw, clipHandle_t model ) {
-	vec3_t mins, maxs, offset, size[2];
+	vec3_t mins, maxs, offset, bboxSize[2];
 	clipHandle_t h;
 	cmodel_t *cmod;
 	int i;
+
+	// save size of the bounding box
+	VectorCopy(tw->size[0], bboxSize[0]);
+	VectorCopy(tw->size[1], bboxSize[1]);
 
 	// mins maxs of the capsule
 	CM_ModelBounds(model, mins, maxs);
@@ -400,20 +404,28 @@ void CM_TestBoundingBoxInCapsule( traceWork_t *tw, clipHandle_t model ) {
 	// offset for capsule center
 	for ( i = 0 ; i < 3 ; i++ ) {
 		offset[i] = ( mins[i] + maxs[i] ) * 0.5;
-		size[0][i] = mins[i] - offset[i];
-		size[1][i] = maxs[i] - offset[i];
+		tw->size[0][i] = mins[i] - offset[i];
+		tw->size[1][i] = maxs[i] - offset[i];
 		tw->start[i] -= offset[i];
 		tw->end[i] -= offset[i];
+
+		if ( tw->start[i] < tw->end[i] ) {
+			tw->bounds[0][i] = tw->start[i] + tw->size[0][i];
+			tw->bounds[1][i] = tw->end[i] + tw->size[1][i];
+		} else {
+			tw->bounds[0][i] = tw->end[i] + tw->size[0][i];
+			tw->bounds[1][i] = tw->start[i] + tw->size[1][i];
+		}
 	}
 
 	// replace the bounding box with the capsule
 	tw->type = TT_CAPSULE;
-	tw->sphere.radius = ( size[1][0] > size[1][2] ) ? size[1][2]: size[1][0];
-	tw->sphere.halfheight = size[1][2];
-	VectorSet( tw->sphere.offset, 0, 0, size[1][2] - tw->sphere.radius );
+	tw->sphere.radius = ( tw->size[1][0] > tw->size[1][2] ) ? tw->size[1][2]: tw->size[1][0];
+	tw->sphere.halfheight = tw->size[1][2];
+	VectorSet( tw->sphere.offset, 0, 0, tw->size[1][2] - tw->sphere.radius );
 
 	// replace the capsule with the bounding box
-	h = CM_TempBoxModel(tw->size[0], tw->size[1], qfalse, capsule_contents);
+	h = CM_TempBoxModel(bboxSize[0], bboxSize[1], qfalse, capsule_contents);
 	// calculate collision
 	cmod = CM_ClipHandleToModel( h );
 	CM_TestInLeaf( tw, &cmod->leaf );
@@ -1225,10 +1237,14 @@ bounding box vs. capsule collision
 ================
 */
 void CM_TraceBoundingBoxThroughCapsule( traceWork_t *tw, clipHandle_t model ) {
-	vec3_t mins, maxs, offset, size[2];
+	vec3_t mins, maxs, offset, bboxSize[2];
 	clipHandle_t h;
 	cmodel_t *cmod;
 	int i;
+
+	// save size of the bounding box
+	VectorCopy(tw->size[0], bboxSize[0]);
+	VectorCopy(tw->size[1], bboxSize[1]);
 
 	// mins maxs of the capsule
 	CM_ModelBounds(model, mins, maxs);
@@ -1236,20 +1252,28 @@ void CM_TraceBoundingBoxThroughCapsule( traceWork_t *tw, clipHandle_t model ) {
 	// offset for capsule center
 	for ( i = 0 ; i < 3 ; i++ ) {
 		offset[i] = ( mins[i] + maxs[i] ) * 0.5;
-		size[0][i] = mins[i] - offset[i];
-		size[1][i] = maxs[i] - offset[i];
+		tw->size[0][i] = mins[i] - offset[i];
+		tw->size[1][i] = maxs[i] - offset[i];
 		tw->start[i] -= offset[i];
 		tw->end[i] -= offset[i];
+
+		if ( tw->start[i] < tw->end[i] ) {
+			tw->bounds[0][i] = tw->start[i] + tw->size[0][i];
+			tw->bounds[1][i] = tw->end[i] + tw->size[1][i];
+		} else {
+			tw->bounds[0][i] = tw->end[i] + tw->size[0][i];
+			tw->bounds[1][i] = tw->start[i] + tw->size[1][i];
+		}
 	}
 
 	// replace the bounding box with the capsule
 	tw->type = TT_CAPSULE;
-	tw->sphere.radius = ( size[1][0] > size[1][2] ) ? size[1][2]: size[1][0];
-	tw->sphere.halfheight = size[1][2];
-	VectorSet( tw->sphere.offset, 0, 0, size[1][2] - tw->sphere.radius );
+	tw->sphere.radius = ( tw->size[1][0] > tw->size[1][2] ) ? tw->size[1][2]: tw->size[1][0];
+	tw->sphere.halfheight = tw->size[1][2];
+	VectorSet( tw->sphere.offset, 0, 0, tw->size[1][2] - tw->sphere.radius );
 
 	// replace the capsule with the bounding box
-	h = CM_TempBoxModel(tw->size[0], tw->size[1], qfalse, capsule_contents);
+	h = CM_TempBoxModel(bboxSize[0], bboxSize[1], qfalse, capsule_contents);
 	// calculate collision
 	cmod = CM_ClipHandleToModel( h );
 	CM_TraceThroughLeaf( tw, &cmod->leaf );
