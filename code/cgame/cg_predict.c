@@ -130,6 +130,10 @@ static void CG_ClipMoveToEntities ( const vec3_t start, const vec3_t mins,
 			cmodel = trap_CM_InlineModel( ent->modelindex );
 			VectorCopy( cent->lerpAngles, angles );
 			BG_EvaluateTrajectory( &cent->currentState.pos, cg.physicsTime, origin );
+		} else if ( ent->capsule ) {
+			cmodel = trap_CM_TempCapsuleModel( ent->mins, ent->maxs, ent->contents );
+			VectorCopy( vec3_origin, angles );
+			VectorCopy( cent->lerpOrigin, origin );
 		} else {
 			cmodel = trap_CM_TempBoxModel( ent->mins, ent->maxs, ent->contents );
 			VectorCopy( vec3_origin, angles );
@@ -445,8 +449,13 @@ static void CG_TouchTriggerPrediction( void ) {
 			continue;
 		}
 
-		trap_CM_BoxTrace( &trace, cg.cur_lc->predictedPlayerState.origin, cg.cur_lc->predictedPlayerState.origin, 
-			cg.cur_lc->predictedPlayerState.mins, cg.cur_lc->predictedPlayerState.maxs, cmodel, -1 );
+		if ( cg.cur_lc->predictedPlayerState.capsule ) {
+			trap_CM_CapsuleTrace( &trace, cg.cur_lc->predictedPlayerState.origin, cg.cur_lc->predictedPlayerState.origin,
+					cg.cur_lc->predictedPlayerState.mins, cg.cur_lc->predictedPlayerState.maxs, cmodel, -1 );
+		} else {
+			trap_CM_BoxTrace( &trace, cg.cur_lc->predictedPlayerState.origin, cg.cur_lc->predictedPlayerState.origin,
+					cg.cur_lc->predictedPlayerState.mins, cg.cur_lc->predictedPlayerState.maxs, cmodel, -1 );
+		}
 
 		if ( !trace.startsolid ) {
 			continue;
@@ -526,7 +535,11 @@ void CG_PredictPlayerState( void ) {
 
 	// prepare for pmove
 	cg_pmove.ps = &cg.cur_lc->predictedPlayerState;
-	cg_pmove.trace = CG_Trace;
+	if (cg.cur_lc->predictedPlayerState.capsule) {
+		cg_pmove.trace = CG_TraceCapsule;
+	} else {
+		cg_pmove.trace = CG_Trace;
+	}
 	cg_pmove.pointcontents = CG_PointContents;
 	if ( cg_pmove.ps->pm_type == PM_DEAD ) {
 		cg_pmove.tracemask = MASK_PLAYERSOLID & ~CONTENTS_BODY;

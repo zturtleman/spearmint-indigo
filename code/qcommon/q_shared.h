@@ -1213,6 +1213,7 @@ typedef struct playerState_s {
 
 	int			eFlags;			// copied to entityState_t->eFlags
 	int			contents;		// copied to entityState_t->contents
+	qboolean	capsule;		// copied to entityState_t->capsule
 
 	qboolean	linked;			// set by server
 
@@ -1359,6 +1360,8 @@ typedef struct entityState_s {
 	qboolean	bmodel;		// if true, modelindex is an inline model number
 							// if false, assume an explicit mins / maxs bounding box
 							// only set by trap_SetBrushModel
+
+	qboolean	capsule;	// if true, use capsule instead of bbox for clipping against this ent
 
 	vec3_t		mins, maxs;	// bounding box size
 

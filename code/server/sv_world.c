@@ -37,7 +37,7 @@ SV_ClipHandleForEntity
 
 Returns a headnode that can be used for testing or clipping to a
 given entity.  If the entity is a bsp model, the headnode will
-be returned, otherwise a custom box tree will be constructed.
+be returned, otherwise a custom box tree or capsule will be constructed.
 ================
 */
 clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
@@ -45,13 +45,9 @@ clipHandle_t SV_ClipHandleForEntity( const sharedEntity_t *ent ) {
 		// explicit hulls in the BSP model
 		return CM_InlineModel( ent->s.modelindex );
 	}
-	if ( ent->r.svFlags & SVF_CAPSULE ) {
-		// create a temp capsule from bounding box sizes
-		return CM_TempBoxModel( ent->s.mins, ent->s.maxs, qtrue, ent->s.contents );
-	}
 
-	// create a temp tree from bounding box sizes
-	return CM_TempBoxModel( ent->s.mins, ent->s.maxs, qfalse, ent->s.contents );
+	// create a temp tree or capsule from bounding box sizes
+	return CM_TempBoxModel( ent->s.mins, ent->s.maxs, ent->s.capsule, ent->s.contents );
 }
 
 
