@@ -914,6 +914,7 @@ void CM_AddFacetBevels( facet_t *facet ) {
 
 				// if all the points of the facet winding are
 				// behind this plane, it is a proper edge bevel
+				minBack = 0.0f;
 				for ( l = 0 ; l < w->numpoints ; l++ )
 				{
 					d = DotProduct (w->p[l], plane) - plane[3];
