@@ -851,7 +851,7 @@ void CL_InitCGame( void ) {
 	version = VM_SafeCall( cgvm, CG_GETAPIVERSION );
 	major = (version >> 16) & 0xFFFF;
 	minor = version & 0xFFFF;
-	Com_Printf("Loading cgame with version %x.%x\n", major, minor);
+	Com_DPrintf("Loading cgame with version %x.%x\n", major, minor);
 	if ( major != CG_API_MAJOR_VERSION || minor > CG_API_MINOR_VERSION ) {
 		// Free cgvm now, so CG_SHUTDOWN doesn't get called later.
 		VM_Free( cgvm );

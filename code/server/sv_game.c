@@ -894,7 +894,7 @@ static void SV_InitGameVM( qboolean restart ) {
 	version = VM_SafeCall( gvm, GAME_GETAPIVERSION );
 	major = (version >> 16) & 0xFFFF;
 	minor = version & 0xFFFF;
-	Com_Printf("Loading game with version %x.%x\n", major, minor);
+	Com_DPrintf("Loading game with version %x.%x\n", major, minor);
 	if (major != GAME_API_MAJOR_VERSION || minor > GAME_API_MINOR_VERSION) {
 		// Free gvm now, so GAME_SHUTDOWN doesn't get called later.
 		VM_Free( gvm );

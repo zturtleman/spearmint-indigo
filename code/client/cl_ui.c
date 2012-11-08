@@ -1091,7 +1091,7 @@ void CL_InitUI( void ) {
 	version = VM_SafeCall( uivm, UI_GETAPIVERSION );
 	major = (version >> 16) & 0xFFFF;
 	minor = version & 0xFFFF;
-	Com_Printf("Loading UI with version %x.%x\n", major, minor);
+	Com_DPrintf("Loading UI with version %x.%x\n", major, minor);
 	if (major != UI_API_MAJOR_VERSION || minor > UI_API_MINOR_VERSION) {
 		// Free uivm now, so UI_SHUTDOWN doesn't get called later.
 		VM_Free( uivm );
