@@ -1662,7 +1662,7 @@ int BotInitLibrary(void) {
 	if (strlen(buf)) trap_BotLibVarSet("homedir", buf);
 	//
 #ifdef MISSIONPACK
-	trap_BotLibDefine("MISSIONPACK");
+	trap_PC_AddGlobalDefine("MISSIONPACK");
 #endif
 	//setup the bot library
 	return trap_BotLibSetup();

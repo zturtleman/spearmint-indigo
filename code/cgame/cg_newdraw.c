@@ -1829,7 +1829,7 @@ void CG_KeyEvent(int key, qboolean down) {
 		return;
 	}
 
-  //if (key == trap_Key_GetKey("teamMenu") || !Display_CaptureItem(cgs.cursorX, cgs.cursorY)) {
+  //if (key == trap_Key_GetKey("teamMenu", 0) || !Display_CaptureItem(cgs.cursorX, cgs.cursorY)) {
     // if we see this then we should always be visible
   //  CG_EventHandling(CGAME_EVENT_NONE);
   //  trap_Key_SetCatcher(0);

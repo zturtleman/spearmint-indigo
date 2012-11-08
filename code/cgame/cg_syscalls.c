@@ -54,8 +54,7 @@ void	trap_Print( const char *fmt ) {
 	syscall( CG_PRINT, fmt );
 }
 
-void trap_Error(const char *fmt)
-{
+void	trap_Error(const char *fmt) {
 	syscall(CG_ERROR, fmt);
 	// shut up GCC warning about returning functions, because we know better
 	exit(1);
@@ -77,8 +76,30 @@ void	trap_Cvar_Set( const char *var_name, const char *value ) {
 	syscall( CG_CVAR_SET, var_name, value );
 }
 
-void trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
-	syscall( CG_CVAR_VARIABLESTRINGBUFFER, var_name, buffer, bufsize );
+void	trap_Cvar_SetValue( const char *var_name, float value ) {
+	syscall( CG_CVAR_SET_VALUE, var_name, PASSFLOAT( value ) );
+}
+
+void	trap_Cvar_Reset( const char *name ) {
+	syscall( CG_CVAR_RESET, name );
+}
+
+float	trap_Cvar_VariableValue( const char *var_name ) {
+	floatint_t fi;
+	fi.i = syscall( CG_CVAR_VARIABLE_VALUE, var_name );
+	return fi.f;
+}
+
+int		trap_Cvar_VariableIntegerValue( const char *var_name ) {
+	return syscall( CG_CVAR_VARIABLE_INTEGER_VALUE, var_name );
+}
+
+void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_VARIABLE_STRING_BUFFER, var_name, buffer, bufsize );
+}
+
+void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize ) {
+	syscall( CG_CVAR_INFO_STRING_BUFFER, bit, buffer, bufsize );
 }
 
 int		trap_Argc( void ) {
@@ -355,6 +376,10 @@ qboolean trap_R_inPVS( const vec3_t p1, const vec3_t p2 ) {
 	return syscall( CG_R_INPVS, p1, p2 );
 }
 
+void		trap_GetClipboardData( char *buf, int bufsize ) {
+	syscall( CG_GETCLIPBOARDDATA, buf, bufsize );
+}
+
 void		trap_GetGlconfig( glconfig_t *glconfig ) {
 	syscall( CG_GETGLCONFIG, glconfig );
 }
@@ -395,6 +420,10 @@ qboolean trap_Key_IsDown( int keynum ) {
 	return syscall( CG_KEY_ISDOWN, keynum );
 }
 
+void trap_Key_ClearStates( void ) {
+	syscall( CG_KEY_CLEARSTATES );
+}
+
 int trap_Key_GetCatcher( void ) {
 	return syscall( CG_KEY_GETCATCHER );
 }
@@ -403,8 +432,8 @@ void trap_Key_SetCatcher( int catcher ) {
 	syscall( CG_KEY_SETCATCHER, catcher );
 }
 
-int trap_Key_GetKey( const char *binding ) {
-	return syscall( CG_KEY_GETKEY, binding );
+int trap_Key_GetKey( const char *binding, int startKey ) {
+	return syscall( CG_KEY_GETKEY, binding, startKey );
 }
 
 void trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen ) {

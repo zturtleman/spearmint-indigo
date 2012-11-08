@@ -1644,8 +1644,6 @@ int cmdcmp( const void *a, const void *b ) {
 }
 
 #if defined CGAME || defined UI
-void trap_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
-
 /*
 ========================
 BG_RegisterClientCvars

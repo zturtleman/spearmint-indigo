@@ -1623,35 +1623,7 @@ int CG_NewParticleArea ( int num );
 // These functions are how the cgame communicates with the main game system
 //
 
-// print message on the local console
-void		trap_Print( const char *fmt );
-
-// abort the game
-void		trap_Error(const char *fmt) __attribute__((noreturn));
-
-// milliseconds should only be used for performance tuning, never
-// for anything game related.  Get time from the CG_DrawActiveFrame parameter
-int			trap_Milliseconds( void );
-
-// console variable interaction
-void		trap_Cvar_Register( vmCvar_t *vmCvar, const char *varName, const char *defaultValue, int flags );
-void		trap_Cvar_Update( vmCvar_t *vmCvar );
-void		trap_Cvar_Set( const char *var_name, const char *value );
-void		trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
-
-// ServerCommand and ConsoleCommand parameter access
-int			trap_Argc( void );
-void		trap_Argv( int n, char *buffer, int bufferLength );
-void		trap_Args( char *buffer, int bufferLength );
-
-// filesystem access
-// returns length of file
-int			trap_FS_FOpenFile( const char *qpath, fileHandle_t *f, fsMode_t mode );
-void		trap_FS_Read( void *buffer, int len, fileHandle_t f );
-void		trap_FS_Write( const void *buffer, int len, fileHandle_t f );
-void		trap_FS_FCloseFile( fileHandle_t f );
-int			trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf, int bufsize );
-int			trap_FS_Seek( fileHandle_t f, long offset, int origin ); // fsOrigin_t
+// Additional shared traps in ../game/bg_misc.h
 
 // add commands to the local console as if they were typed in
 // for map changing, etc.  The command is not executed immediately,
@@ -1659,15 +1631,50 @@ int			trap_FS_Seek( fileHandle_t f, long offset, int origin ); // fsOrigin_t
 // are processed
 void		trap_SendConsoleCommand( const char *text );
 
-// register a command name so the console can perform command completion.
-void		trap_AddCommand( const char *cmdName );
-void		trap_RemoveCommand( const char *cmdName );
+void		trap_GetClipboardData( char *buf, int bufsize );
+void		trap_GetGlconfig( glconfig_t *glconfig );
+// force a screen update, only used during gamestate load
+void		trap_UpdateScreen( void );
+int			trap_MemoryRemaining( void );
+
+
+// The glconfig_t will not change during the life of a cgame.
+// If it needs to change, the entire cgame will be restarted, because
+// all the qhandle_t are then invalid.
+void		trap_GetGlconfig( glconfig_t *glconfig );
+
+// the gamestate should be grabbed at startup, and whenever a
+// configstring changes
+void		trap_GetGameState( gameState_t *gamestate );
+
+// cgame will poll each frame to see if a newer snapshot has arrived
+// that it is interested in.  The time is returned seperately so that
+// snapshot latency can be calculated.
+void		trap_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime );
+
+// a snapshot get can fail if the snapshot (or the entties it holds) is so
+// old that it has fallen out of the client system queue
+qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
+
+// retrieve a text command from the server stream
+// the current snapshot will hold the number of the most recent command
+// qfalse can be returned if the client system handled the command
+// argc() / argv() can be used to examine the parameters of the command
+qboolean	trap_GetServerCommand( int serverCommandNumber );
+
+// returns the most recent command number that can be passed to GetUserCmd
+// this will always be at least one higher than the number in the current
+// snapshot, and it may be quite a few higher if it is a fast computer on
+// a lagged connection
+int			trap_GetCurrentCmdNumber( void );	
+
+qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
+
+// used for the weapon select and zoom
+void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum );
 
 // send a string to the server over the network
 void		trap_SendClientCommand( const char *s );
-
-// force a screen update, only used during gamestate load
-void		trap_UpdateScreen( void );
 
 // model collision
 void		trap_CM_LoadMap( const char *mapname );
@@ -1705,28 +1712,6 @@ int			trap_CM_MarkFragments( int numPoints, const vec3_t *points,
 			int maxPoints, vec3_t pointBuffer,
 			int maxFragments, markFragment_t *fragmentBuffer );
 
-// normal sounds will have their volume dynamically changed as their entity
-// moves and the listener moves
-void		trap_S_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );
-
-// a local sound is always played full volume
-void		trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum );
-
-void		trap_S_StopLoopingSound(int entnum);
-void		trap_S_ClearLoopingSounds( qboolean killall );
-void		trap_S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
-void		trap_S_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
-void		trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin );
-
-// respatialize recalculates the volumes of sound as they should be heard by the
-// given entityNum and position
-void		trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson );
-sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed );		// returns buzz if not found
-int			trap_S_SoundDuration( sfxHandle_t handle );
-void		trap_S_StartBackgroundTrack( const char *intro, const char *loop );	// empty name stops music
-void		trap_S_StopBackgroundTrack( void );
-
-
 void		trap_R_LoadWorldMap( const char *mapname );
 qboolean	trap_GetEntityToken( char *buffer, int bufferSize );
 
@@ -1762,63 +1747,37 @@ int			trap_R_LerpTag( orientation_t *tag, clipHandle_t mod, int startFrame, int 
 void		trap_R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 qboolean	trap_R_inPVS( const vec3_t p1, const vec3_t p2 );
 
-// The glconfig_t will not change during the life of a cgame.
-// If it needs to change, the entire cgame will be restarted, because
-// all the qhandle_t are then invalid.
-void		trap_GetGlconfig( glconfig_t *glconfig );
+// normal sounds will have their volume dynamically changed as their entity
+// moves and the listener moves
+void		trap_S_StartSound( vec3_t origin, int entityNum, int entchannel, sfxHandle_t sfx );
 
-// the gamestate should be grabbed at startup, and whenever a
-// configstring changes
-void		trap_GetGameState( gameState_t *gamestate );
+// a local sound is always played full volume
+void		trap_S_StartLocalSound( sfxHandle_t sfx, int channelNum );
 
-// cgame will poll each frame to see if a newer snapshot has arrived
-// that it is interested in.  The time is returned seperately so that
-// snapshot latency can be calculated.
-void		trap_GetCurrentSnapshotNumber( int *snapshotNumber, int *serverTime );
+void		trap_S_StopLoopingSound(int entnum);
+void		trap_S_ClearLoopingSounds( qboolean killall );
+void		trap_S_AddLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
+void		trap_S_AddRealLoopingSound( int entityNum, const vec3_t origin, const vec3_t velocity, sfxHandle_t sfx );
+void		trap_S_UpdateEntityPosition( int entityNum, const vec3_t origin );
 
-// a snapshot get can fail if the snapshot (or the entties it holds) is so
-// old that it has fallen out of the client system queue
-qboolean	trap_GetSnapshot( int snapshotNumber, snapshot_t *snapshot );
+// respatialize recalculates the volumes of sound as they should be heard by the
+// given entityNum and position
+void		trap_S_Respatialize( int entityNum, const vec3_t origin, vec3_t axis[3], int inwater, qboolean firstPerson );
+sfxHandle_t	trap_S_RegisterSound( const char *sample, qboolean compressed );		// returns buzz if not found
+int			trap_S_SoundDuration( sfxHandle_t handle );
+void		trap_S_StartBackgroundTrack( const char *intro, const char *loop );	// empty name stops music
+void		trap_S_StopBackgroundTrack( void );
 
-// retrieve a text command from the server stream
-// the current snapshot will hold the number of the most recent command
-// qfalse can be returned if the client system handled the command
-// argc() / argv() can be used to examine the parameters of the command
-qboolean	trap_GetServerCommand( int serverCommandNumber );
-
-// returns the most recent command number that can be passed to GetUserCmd
-// this will always be at least one higher than the number in the current
-// snapshot, and it may be quite a few higher if it is a fast computer on
-// a lagged connection
-int			trap_GetCurrentCmdNumber( void );	
-
-qboolean	trap_GetUserCmd( int cmdNumber, usercmd_t *ucmd, int localClientNum );
-
-// used for the weapon select and zoom
-void		trap_SetUserCmdValue( int stateValue, float sensitivityScale, int localClientNum );
-
-int			trap_MemoryRemaining( void );
-
-qboolean	trap_Key_IsDown( int keynum );
-int			trap_Key_GetCatcher( void );
-void		trap_Key_SetCatcher( int catcher );
-int			trap_Key_GetKey( const char *binding );
-
-void		trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
-void		trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
-void		trap_Key_SetBinding( int keynum, const char *binding );
-void		trap_Key_SetOverstrikeMode( qboolean state );
-qboolean	trap_Key_GetOverstrikeMode( void );
-
-int			trap_PC_AddGlobalDefine( char *define );
-int			trap_PC_LoadSource( const char *filename );
-int			trap_PC_FreeSource( int handle );
-int			trap_PC_ReadToken( int handle, pc_token_t *pc_token );
-int			trap_PC_SourceFileAndLine( int handle, char *filename, int *line );
-
-int			trap_RealTime(qtime_t *qtime);
-
-void		trap_SnapVector( float *v );
+void			trap_Key_KeynumToStringBuf( int keynum, char *buf, int buflen );
+void			trap_Key_GetBindingBuf( int keynum, char *buf, int buflen );
+void			trap_Key_SetBinding( int keynum, const char *binding );
+qboolean		trap_Key_IsDown( int keynum );
+qboolean		trap_Key_GetOverstrikeMode( void );
+void			trap_Key_SetOverstrikeMode( qboolean state );
+void			trap_Key_ClearStates( void );
+int				trap_Key_GetCatcher( void );
+void			trap_Key_SetCatcher( int catcher );
+int				trap_Key_GetKey( const char *binding, int startKey );
 
 // this returns a handle.  arg0 is the name in the format "idlogo.roq", set arg1 to NULL, alteredstates to qfalse (do not alter gamestate)
 int			trap_CIN_PlayCinematic( const char *arg0, int xpos, int ypos, int width, int height, int bits);

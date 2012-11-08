@@ -338,7 +338,7 @@ typedef enum {
 } vmInterpret_t;
 
 typedef enum {
-	TRAP_MEMSET = 100,
+	TRAP_MEMSET = 0,
 	TRAP_MEMCPY,
 	TRAP_STRNCPY,
 	TRAP_SIN,

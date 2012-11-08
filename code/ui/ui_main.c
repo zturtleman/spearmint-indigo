@@ -164,7 +164,7 @@ qboolean _UI_IsFullscreen( void );
 Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, int arg4, int arg5, int arg6, int arg7, int arg8, int arg9, int arg10, int arg11  ) {
   switch ( command ) {
 	  case UI_GETAPIVERSION:
-		  return UI_API_VERSION;
+		  return ( UI_API_MAJOR_VERSION << 16) | ( UI_API_MINOR_VERSION & 0xFFFF );
 
 	  case UI_INIT:
 		  _UI_Init(arg0, arg1);
@@ -3400,7 +3400,6 @@ static void UI_RunMenuScript(char **args) {
 			UI_StartSkirmish(qfalse);
 		} else if (Q_stricmp(name, "closeingame") == 0) {
 			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Key_ClearStates();
 			trap_Cvar_Set( "cl_paused", "0" );
 			Menus_CloseAll();
 		} else if (Q_stricmp(name, "voteMap") == 0) {
@@ -3506,7 +3505,6 @@ static void UI_RunMenuScript(char **args) {
 					}
 				}
 				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Key_ClearStates();
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
@@ -3519,7 +3517,6 @@ static void UI_RunMenuScript(char **args) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
 				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Key_ClearStates();
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
@@ -3533,7 +3530,6 @@ static void UI_RunMenuScript(char **args) {
 					trap_Cmd_ExecuteText( EXEC_APPEND, "\n" );
 				}
 				trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-				trap_Key_ClearStates();
 				trap_Cvar_Set( "cl_paused", "0" );
 				Menus_CloseAll();
 			}
@@ -4899,7 +4895,6 @@ static void UI_Pause(qboolean b) {
 	} else {
 		// unpause the game and clear the ui keycatcher
 		trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-		trap_Key_ClearStates();
 		trap_Cvar_Set( "cl_paused", "0" );
 	}
 }
@@ -5091,6 +5086,7 @@ void _UI_Init( qboolean inGameLoad, int maxSplitView ) {
 	uiInfo.uiDC.setBinding = &trap_Key_SetBinding;
 	uiInfo.uiDC.getBindingBuf = &trap_Key_GetBindingBuf;
 	uiInfo.uiDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
+	uiInfo.uiDC.getKey = &trap_Key_GetKey;
 	uiInfo.uiDC.executeText = &trap_Cmd_ExecuteText;
 	uiInfo.uiDC.Error = &Com_Error; 
 	uiInfo.uiDC.Print = &Com_Printf; 
@@ -5186,7 +5182,6 @@ void _UI_KeyEvent( int key, qboolean down ) {
 			}
 		} else {
 			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Key_ClearStates();
 			trap_Cvar_Set( "cl_paused", "0" );
 		}
   }
@@ -5285,7 +5280,6 @@ void _UI_SetActiveMenu( uiMenuCommand_t menu ) {
 	  switch ( menu ) {
 	  case UIMENU_NONE:
 			trap_Key_SetCatcher( trap_Key_GetCatcher() & ~KEYCATCH_UI );
-			trap_Key_ClearStates();
 			trap_Cvar_Set( "cl_paused", "0" );
 			Menus_CloseAll();
 
