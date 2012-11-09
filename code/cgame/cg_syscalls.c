@@ -138,8 +138,8 @@ int trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
 	return syscall( CG_FS_SEEK, f, offset, origin );
 }
 
-void	trap_SendConsoleCommand( const char *text ) {
-	syscall( CG_SENDCONSOLECOMMAND, text );
+void	trap_Cmd_ExecuteText( int exec_when, const char *text ) {
+	syscall( CG_CMD_EXECUTETEXT, exec_when, text );
 }
 
 void	trap_AddCommand( const char *cmdName ) {

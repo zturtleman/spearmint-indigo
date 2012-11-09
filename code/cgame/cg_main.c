@@ -1923,7 +1923,7 @@ void CG_LoadHudMenu( void ) {
 	cgDC.getBindingBuf = &trap_Key_GetBindingBuf;
 	cgDC.keynumToStringBuf = &trap_Key_KeynumToStringBuf;
 	cgDC.getKey = &trap_Key_GetKey;
-	//cgDC.executeText = &trap_Cmd_ExecuteText;
+	cgDC.executeText = &trap_Cmd_ExecuteText;
 	cgDC.Error = &Com_Error; 
 	cgDC.Print = &Com_Printf; 
 	cgDC.ownerDrawWidth = &CG_OwnerDrawWidth;

@@ -24,7 +24,7 @@ equ trap_Args							-28
 
 equ trap_AddCommand						-29
 equ trap_RemoveCommand					-30
-equ trap_SendConsoleCommand				-31
+equ trap_Cmd_ExecuteText				-31
 
 equ trap_Cvar_Register					-32
 equ trap_Cvar_Update					-33

@@ -1629,7 +1629,7 @@ int CG_NewParticleArea ( int num );
 // for map changing, etc.  The command is not executed immediately,
 // but will be executed in order the next time console commands
 // are processed
-void		trap_SendConsoleCommand( const char *text );
+void		trap_Cmd_ExecuteText( int exec_when, const char *text );
 
 void		trap_GetClipboardData( char *buf, int bufsize );
 void		trap_GetGlconfig( glconfig_t *glconfig );
