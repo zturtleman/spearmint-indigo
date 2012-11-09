@@ -135,7 +135,7 @@ typedef enum {
 	G_ADDCOMMAND,	// ( const char *cmdName );
 	G_REMOVECOMMAND,// ( const char *cmdName );
 
-	G_SEND_CONSOLE_COMMAND,	// ( int exec_when, const char *text );
+	G_CMD_EXECUTETEXT,	// ( int exec_when, const char *text );
 	// add commands to the console as if they were typed in
 	// for map changing, etc
 

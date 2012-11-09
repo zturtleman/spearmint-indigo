@@ -346,8 +346,8 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 	case G_REMOVECOMMAND:
 		Cmd_RemoveCommandSafe( VMA(1) );
 		return 0;
-	case G_SEND_CONSOLE_COMMAND:
-		Cbuf_ExecuteText( args[1], VMA(2) );
+	case G_CMD_EXECUTETEXT:
+		Cbuf_ExecuteTextSafe( args[1], VMA(2) );
 		return 0;
 
 	case G_CVAR_REGISTER:

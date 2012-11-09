@@ -662,7 +662,6 @@ void UI_SPSkillMenu_Cache( void );
 //
 
 // Additional shared traps in ../game/bg_misc.h
-void			trap_Cmd_ExecuteText( int exec_when, const char *text );	// don't use EXEC_NOW!
 
 void			trap_GetClipboardData( char *buf, int bufsize );
 void			trap_GetGlconfig( glconfig_t *glconfig );

@@ -1625,12 +1625,6 @@ int CG_NewParticleArea ( int num );
 
 // Additional shared traps in ../game/bg_misc.h
 
-// add commands to the local console as if they were typed in
-// for map changing, etc.  The command is not executed immediately,
-// but will be executed in order the next time console commands
-// are processed
-void		trap_Cmd_ExecuteText( int exec_when, const char *text );
-
 void		trap_GetClipboardData( char *buf, int bufsize );
 void		trap_GetGlconfig( glconfig_t *glconfig );
 // force a screen update, only used during gamestate load

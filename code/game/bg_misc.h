@@ -875,8 +875,7 @@ void	trap_Args( char *buffer, int bufferLength );
 void	trap_AddCommand( const char *cmdName );
 void	trap_RemoveCommand( const char *cmdName );
 
-// ZTM: FIXME: this command is not quite the same in game, cgame, and ui.
-//void	trap_SendConsoleCommand( int exec_when, const char *text );
+void	trap_Cmd_ExecuteText( int exec_when, const char *text );
 
 // console variable interaction
 void	trap_Cvar_Register( vmCvar_t *cvar, const char *var_name, const char *value, int flags );

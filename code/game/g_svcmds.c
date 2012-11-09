@@ -454,7 +454,7 @@ Svcmd_ListIPs_f
 ===================
 */
 void	Svcmd_ListIPs_f( void ) {
-	trap_SendConsoleCommand( EXEC_NOW, "g_banIPs\n" );
+	trap_Cmd_ExecuteText( EXEC_NOW, "g_banIPs\n" );
 }
 
 #if 0
