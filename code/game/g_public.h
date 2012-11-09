@@ -145,10 +145,11 @@ typedef enum {
 	G_CVAR_SET,			// ( const char *var_name, const char *value );
 	G_CVAR_SET_VALUE,	// ( const char *var_name, float value );
 	G_CVAR_RESET,		// ( const char *var_name );
-	G_CVAR_VARIABLE_VALUE,			// ( const char *var_name );
-	G_CVAR_VARIABLE_INTEGER_VALUE,	// ( const char *var_name );
-	G_CVAR_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
-	G_CVAR_INFO_STRING_BUFFER,		// ( int bit, char *buffer, int bufsize );
+	G_CVAR_VARIABLE_VALUE,					// ( const char *var_name );
+	G_CVAR_VARIABLE_INTEGER_VALUE,			// ( const char *var_name );
+	G_CVAR_VARIABLE_STRING_BUFFER,			// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_LATCHED_VARIABLE_STRING_BUFFER,	// ( const char *var_name, char *buffer, int bufsize );
+	G_CVAR_INFO_STRING_BUFFER,				// ( int bit, char *buffer, int bufsize );
 
 	G_FS_FOPEN_FILE,	// ( const char *qpath, fileHandle_t *file, fsMode_t mode );
 	G_FS_READ,			// ( void *buffer, int len, fileHandle_t f );

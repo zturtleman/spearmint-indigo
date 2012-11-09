@@ -886,6 +886,7 @@ void	trap_Cvar_Reset( const char *var_name );
 int		trap_Cvar_VariableIntegerValue( const char *var_name );
 float	trap_Cvar_VariableValue( const char *var_name );
 void	trap_Cvar_VariableStringBuffer( const char *var_name, char *buffer, int bufsize );
+void	trap_Cvar_LatchedVariableStringBuffer( const char *var_name, char *buffer, int bufsize );
 void	trap_Cvar_InfoStringBuffer( int bit, char *buffer, int bufsize );
 
 // filesystem access

@@ -53,14 +53,14 @@ typedef enum {
 	UI_ERROR,
 	UI_MILLISECONDS,
 	UI_REAL_TIME,
-	UI_SNAPVECTOR, // void trap_SnapVector( float *v );
+	UI_SNAPVECTOR,
 
 	UI_ARGC,
 	UI_ARGV,
-	UI_ARGS, // void trap_Args( char *buffer, int bufferLength )
+	UI_ARGS,
 
-	UI_ADDCOMMAND, // void trap_AddCommand( const char *cmdName );
-	UI_REMOVECOMMAND, // void trap_RemoveCommand( const char *cmdName );
+	UI_ADDCOMMAND,
+	UI_REMOVECOMMAND,
 	UI_CMD_EXECUTETEXT,
 
 	UI_CVAR_REGISTER,
@@ -69,8 +69,9 @@ typedef enum {
 	UI_CVAR_SET_VALUE,
 	UI_CVAR_RESET,
 	UI_CVAR_VARIABLE_VALUE,
-	UI_CVAR_VARIABLE_INTEGER_VALUE, // int trap_Cvar_VariableIntegerValue( const char *var_name )
+	UI_CVAR_VARIABLE_INTEGER_VALUE,
 	UI_CVAR_VARIABLE_STRING_BUFFER,
+	UI_CVAR_LATCHED_VARIABLE_STRING_BUFFER,
 	UI_CVAR_INFO_STRING_BUFFER,
 
 	UI_FS_FOPENFILE,
@@ -125,7 +126,7 @@ typedef enum {
 
 	UI_R_REGISTERMODEL = 300,
 	UI_R_REGISTERSKIN,
-	UI_R_REGISTERSHADER, // qhandle_t trap_R_RegisterShader( const char *name )
+	UI_R_REGISTERSHADER,
 	UI_R_REGISTERSHADERNOMIP,
 	UI_R_REGISTERFONT,
 	UI_R_CLEARSCENE,
@@ -157,7 +158,7 @@ typedef enum {
 	UI_KEY_CLEARSTATES,
 	UI_KEY_GETCATCHER,
 	UI_KEY_SETCATCHER,
-	UI_KEY_GETKEY, // int trap_Key_GetKey( const char *binding, int startKey );
+	UI_KEY_GETKEY,
 
 
 	UI_CIN_PLAYCINEMATIC = 600,

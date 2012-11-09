@@ -518,6 +518,9 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_CVAR_VARIABLE_STRING_BUFFER:
 		Cvar_VariableStringBuffer( VMA(1), VMA(2), args[3] );
 		return 0;
+	case CG_CVAR_LATCHED_VARIABLE_STRING_BUFFER:
+		Cvar_LatchedVariableStringBuffer( VMA( 1 ), VMA( 2 ), args[3] );
+		return 0;
 	case CG_CVAR_INFO_STRING_BUFFER:
 		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
 		return 0;

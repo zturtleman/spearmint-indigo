@@ -26,30 +26,31 @@ equ trap_AddCommand						-29
 equ trap_RemoveCommand					-30
 equ trap_Cmd_ExecuteText				-31
 
-equ trap_Cvar_Register					-32
-equ trap_Cvar_Update					-33
-equ trap_Cvar_Set						-34
-equ trap_Cvar_SetValue					-35
-equ trap_Cvar_Reset						-36
-equ trap_Cvar_VariableValue				-37
-equ trap_Cvar_VariableIntegerValue		-38
-equ trap_Cvar_VariableStringBuffer		-39
-equ trap_Cvar_InfoStringBuffer			-40
+equ trap_Cvar_Register						-32
+equ trap_Cvar_Update						-33
+equ trap_Cvar_Set							-34
+equ trap_Cvar_SetValue						-35
+equ trap_Cvar_Reset							-36
+equ trap_Cvar_VariableValue					-37
+equ trap_Cvar_VariableIntegerValue			-38
+equ trap_Cvar_VariableStringBuffer			-39
+equ trap_Cvar_LatchedVariableStringBuffer	-40
+equ trap_Cvar_InfoStringBuffer				-41
 
-equ trap_FS_FOpenFile					-41
-equ trap_FS_Read						-42
-equ trap_FS_Write						-43
-equ trap_FS_Seek						-44
-equ trap_FS_FCloseFile					-45
-equ trap_FS_GetFileList					-46
-equ trap_FS_Delete						-47
-equ trap_FS_Rename						-48
+equ trap_FS_FOpenFile					-42
+equ trap_FS_Read						-43
+equ trap_FS_Write						-44
+equ trap_FS_Seek						-45
+equ trap_FS_FCloseFile					-46
+equ trap_FS_GetFileList					-47
+equ trap_FS_Delete						-48
+equ trap_FS_Rename						-49
 
-equ trap_PC_AddGlobalDefine				-49
-equ trap_PC_LoadSource					-50
-equ trap_PC_FreeSource					-51
-equ trap_PC_ReadToken					-52
-equ trap_PC_SourceFileAndLine			-53
+equ trap_PC_AddGlobalDefine				-50
+equ trap_PC_LoadSource					-51
+equ trap_PC_FreeSource					-52
+equ trap_PC_ReadToken					-53
+equ trap_PC_SourceFileAndLine			-54
 
 
 equ	trap_LocateGameData					-101

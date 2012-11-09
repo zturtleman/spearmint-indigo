@@ -773,6 +773,10 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		Cvar_VariableStringBuffer( VMA(1), VMA(2), args[3] );
 		return 0;
 
+	case UI_CVAR_LATCHED_VARIABLE_STRING_BUFFER:
+		Cvar_LatchedVariableStringBuffer( VMA( 1 ), VMA( 2 ), args[3] );
+		return 0;
+
 	case UI_CVAR_INFO_STRING_BUFFER:
 		Cvar_InfoStringBuffer( args[1], VMA(2), args[3] );
 		return 0;
