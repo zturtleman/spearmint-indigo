@@ -161,9 +161,11 @@ typedef enum {
 	G_FS_RENAME,		// ( const void *from, const void *to );
 
 	G_PC_ADD_GLOBAL_DEFINE,
+	G_PC_REMOVE_ALL_GLOBAL_DEFINES,
 	G_PC_LOAD_SOURCE,
 	G_PC_FREE_SOURCE,
 	G_PC_READ_TOKEN,
+	G_PC_UNREAD_TOKEN,
 	G_PC_SOURCE_FILE_AND_LINE,
 
 	//=========== server specific functionality =============

@@ -472,6 +472,10 @@ int trap_PC_AddGlobalDefine( char *define ) {
 	return syscall( CG_PC_ADD_GLOBAL_DEFINE, define );
 }
 
+void trap_PC_RemoveAllGlobalDefines( void ) {
+	syscall( CG_PC_REMOVE_ALL_GLOBAL_DEFINES );
+}
+
 int trap_PC_LoadSource( const char *filename ) {
 	return syscall( CG_PC_LOAD_SOURCE, filename );
 }
@@ -482,6 +486,10 @@ int trap_PC_FreeSource( int handle ) {
 
 int trap_PC_ReadToken( int handle, pc_token_t *pc_token ) {
 	return syscall( CG_PC_READ_TOKEN, handle, pc_token );
+}
+
+void trap_PC_UnreadToken( int handle ) {
+	syscall( CG_PC_UNREAD_TOKEN, handle );
 }
 
 int trap_PC_SourceFileAndLine( int handle, char *filename, int *line ) {

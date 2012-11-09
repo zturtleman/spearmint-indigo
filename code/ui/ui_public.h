@@ -84,9 +84,11 @@ typedef enum {
 	UI_FS_RENAME,
 
 	UI_PC_ADD_GLOBAL_DEFINE,
+	UI_PC_REMOVE_ALL_GLOBAL_DEFINES,
 	UI_PC_LOAD_SOURCE,
 	UI_PC_FREE_SOURCE,
 	UI_PC_READ_TOKEN,
+	UI_PC_UNREAD_TOKEN,
 	UI_PC_SOURCE_FILE_AND_LINE,
 
 	//=========== client ui specific functionality =============

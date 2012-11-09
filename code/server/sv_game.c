@@ -410,12 +410,18 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 
 	case G_PC_ADD_GLOBAL_DEFINE:
 		return botlib_export->PC_AddGlobalDefine( VMA(1) );
+	case G_PC_REMOVE_ALL_GLOBAL_DEFINES:
+		botlib_export->PC_RemoveAllGlobalDefines();
+		return 0;
 	case G_PC_LOAD_SOURCE:
 		return botlib_export->PC_LoadSourceHandle( VMA(1) );
 	case G_PC_FREE_SOURCE:
 		return botlib_export->PC_FreeSourceHandle( args[1] );
 	case G_PC_READ_TOKEN:
 		return botlib_export->PC_ReadTokenHandle( args[1], VMA(2) );
+	case G_PC_UNREAD_TOKEN:
+		botlib_export->PC_UnreadLastTokenHandle( args[1] );
+		return 0;
 	case G_PC_SOURCE_FILE_AND_LINE:
 		return botlib_export->PC_SourceFileAndLine( args[1], VMA(2), VMA(3) );
 

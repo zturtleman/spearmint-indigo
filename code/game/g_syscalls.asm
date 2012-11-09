@@ -47,10 +47,12 @@ equ trap_FS_Delete						-48
 equ trap_FS_Rename						-49
 
 equ trap_PC_AddGlobalDefine				-50
-equ trap_PC_LoadSource					-51
-equ trap_PC_FreeSource					-52
-equ trap_PC_ReadToken					-53
-equ trap_PC_SourceFileAndLine			-54
+equ trap_PC_RemoveAllGlobalDefines		-51
+equ trap_PC_LoadSource					-52
+equ trap_PC_FreeSource					-53
+equ trap_PC_ReadToken					-54
+equ trap_PC_UnreadToken					-55
+equ trap_PC_SourceFileAndLine			-56
 
 
 equ	trap_LocateGameData					-101

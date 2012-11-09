@@ -121,9 +121,11 @@ typedef enum {
 	CG_FS_RENAME,
 
 	CG_PC_ADD_GLOBAL_DEFINE,
+	CG_PC_REMOVE_ALL_GLOBAL_DEFINES,
 	CG_PC_LOAD_SOURCE,
 	CG_PC_FREE_SOURCE,
 	CG_PC_READ_TOKEN,
+	CG_PC_UNREAD_TOKEN,
 	CG_PC_SOURCE_FILE_AND_LINE,
 
 	//=========== client game specific functionality =============
