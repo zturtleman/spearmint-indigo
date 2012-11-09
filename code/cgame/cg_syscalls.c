@@ -126,6 +126,10 @@ void	trap_FS_Write( const void *buffer, int len, fileHandle_t f ) {
 	syscall( CG_FS_WRITE, buffer, len, f );
 }
 
+int		trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
+	return syscall( CG_FS_SEEK, f, offset, origin );
+}
+
 void	trap_FS_FCloseFile( fileHandle_t f ) {
 	syscall( CG_FS_FCLOSEFILE, f );
 }
@@ -134,8 +138,12 @@ int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf
 	return syscall( CG_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
 
-int trap_FS_Seek( fileHandle_t f, long offset, int origin ) {
-	return syscall( CG_FS_SEEK, f, offset, origin );
+int trap_FS_Delete( const char *path ) {
+	return syscall( CG_FS_DELETE, path );
+}
+
+int trap_FS_Rename( const char *from, const char *to ) {
+	return syscall( CG_FS_RENAME, from, to );
 }
 
 void	trap_Cmd_ExecuteText( int exec_when, const char *text ) {

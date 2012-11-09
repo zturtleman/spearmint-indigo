@@ -653,6 +653,8 @@ long		FS_FOpenFileRead( const char *qpath, fileHandle_t *file, qboolean uniqueFI
 // It is generally safe to always set uniqueFILE to true, because the majority of
 // file IO goes through FS_ReadFile, which Does The Right Thing already.
 
+int     FS_Delete( char *filename );    // only works inside the 'save' directory (for deleting savegames/images)
+
 int		FS_Write( const void *buffer, int len, fileHandle_t f );
 
 int		FS_Read2( void *buffer, int len, fileHandle_t f );
@@ -724,10 +726,10 @@ qboolean FS_idPak(char *pak, char *base, int numPaks);
 qboolean FS_DefaultPak( char *pak );
 qboolean FS_ComparePaks( char *neededpaks, int len, qboolean dlstring );
 
-void FS_Rename( const char *from, const char *to );
+qboolean FS_Rename( const char *from, const char *to );
 
-void FS_Remove( const char *osPath );
-void FS_HomeRemove( const char *homePath );
+int FS_Remove( const char *osPath );
+int FS_HomeRemove( const char *homePath );
 
 void	FS_FilenameCompletion( const char *dir, const char *ext,
 		qboolean stripExt, void(*callback)(const char *s), qboolean allowNonPureFilesOnDisk );
@@ -1104,7 +1106,9 @@ qboolean	Sys_IsLANAddress (netadr_t adr);
 void		Sys_ShowIP(void);
 
 qboolean Sys_Mkdir( const char *path );
+qboolean Sys_Rmdir( const char *path );
 FILE	*Sys_Mkfifo( const char *ospath );
+int		Sys_StatFile( char *ospath );
 char	*Sys_Cwd( void );
 void	Sys_SetDefaultInstallPath(const char *path);
 char	*Sys_DefaultInstallPath(void);

@@ -42,12 +42,14 @@ equ trap_FS_Write						-43
 equ trap_FS_Seek						-44
 equ trap_FS_FCloseFile					-45
 equ trap_FS_GetFileList					-46
+equ trap_FS_Delete						-47
+equ trap_FS_Rename						-48
 
-equ trap_PC_AddGlobalDefine				-47
-equ trap_PC_LoadSource					-48
-equ trap_PC_FreeSource					-49
-equ trap_PC_ReadToken					-50
-equ trap_PC_SourceFileAndLine			-51
+equ trap_PC_AddGlobalDefine				-49
+equ trap_PC_LoadSource					-50
+equ trap_PC_FreeSource					-51
+equ trap_PC_ReadToken					-52
+equ trap_PC_SourceFileAndLine			-53
 
 
 equ	trap_LocateGameData					-101

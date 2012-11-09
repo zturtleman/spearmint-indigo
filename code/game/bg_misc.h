@@ -896,6 +896,8 @@ void	trap_FS_Write( const void *buffer, int len, fileHandle_t f );
 int		trap_FS_Seek( fileHandle_t f, long offset, int origin ); // fsOrigin_t
 void	trap_FS_FCloseFile( fileHandle_t f );
 int		trap_FS_GetFileList( const char *path, const char *extension, char *listbuf, int bufsize );
+int		trap_FS_Delete( const char *path );
+int		trap_FS_Rename( const char *from, const char *to );
 
 int		trap_PC_AddGlobalDefine( char *define );
 int		trap_PC_LoadSource( const char *filename );

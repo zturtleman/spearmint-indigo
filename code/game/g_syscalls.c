@@ -99,6 +99,14 @@ int trap_FS_GetFileList(  const char *path, const char *extension, char *listbuf
 	return syscall( G_FS_GETFILELIST, path, extension, listbuf, bufsize );
 }
 
+int trap_FS_Delete( const char *path ) {
+	return syscall( G_FS_DELETE, path );
+}
+
+int trap_FS_Rename( const char *from, const char *to ) {
+	return syscall( G_FS_RENAME, from, to );
+}
+
 void	trap_Cmd_ExecuteText( int exec_when, const char *text ) {
 	syscall( G_CMD_EXECUTETEXT, exec_when, text );
 }

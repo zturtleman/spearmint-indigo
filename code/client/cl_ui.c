@@ -788,6 +788,9 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		FS_Write( VMA(1), args[2], args[3] );
 		return 0;
 
+	case UI_FS_SEEK:
+		return FS_Seek( args[1], args[2], args[3] );
+
 	case UI_FS_FCLOSEFILE:
 		FS_FCloseFile( args[1] );
 		return 0;
@@ -795,8 +798,11 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_FS_GETFILELIST:
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
 
-	case UI_FS_SEEK:
-		return FS_Seek( args[1], args[2], args[3] );
+	case UI_FS_DELETE:
+		return FS_Delete( VMA(1) );
+
+	case UI_FS_RENAME:
+		return FS_Rename( VMA(1), VMA(2) );
 
 	case UI_PC_ADD_GLOBAL_DEFINE:
 		return botlib_export->PC_AddGlobalDefine( VMA(1) );

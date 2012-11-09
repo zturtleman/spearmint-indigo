@@ -400,6 +400,10 @@ intptr_t SV_GameSystemCalls( intptr_t *args ) {
 		return 0;
 	case G_FS_GETFILELIST:
 		return FS_GetFileList( VMA(1), VMA(2), VMA(3), args[4] );
+	case G_FS_DELETE:
+		return FS_Delete( VMA(1) );
+	case G_FS_RENAME:
+		return FS_Rename( VMA(1), VMA(2) );
 
 	case G_PC_ADD_GLOBAL_DEFINE:
 		return botlib_export->PC_AddGlobalDefine( VMA(1) );
