@@ -108,14 +108,14 @@ equ	trap_R_SetClipRegion				-316
 equ trap_R_DrawRotatedPic				-317
 equ trap_R_DrawStretchPicGradient		-318
 equ trap_R_Add2dPolys					-319
+equ	trap_R_AddPolysToScene				-320
+equ	trap_R_AddPolyBufferToScene			-321
 
 equ	trap_R_LoadWorldMap					-351
 equ trap_GetEntityToken					-352
 equ trap_R_LightForPoint				-353
 equ trap_R_inPVS						-354
 equ trap_R_AddAdditiveLightToScene		-355
-equ	trap_R_AddPolysToScene				-356
-equ	trap_R_AddPolyBufferToScene			-357
 
 
 

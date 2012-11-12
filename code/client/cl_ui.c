@@ -855,6 +855,14 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		re.AddPolyToScene( args[1], args[2], VMA(3), 1 );
 		return 0;
 
+	case UI_R_ADDPOLYSTOSCENE:
+		re.AddPolyToScene( args[1], args[2], VMA(3), args[4] );
+		return 0;
+
+	case UI_R_ADDPOLYBUFFERTOSCENE:
+		re.AddPolyBufferToScene( VMA( 1 ) );
+		break;
+
 	case UI_R_ADDLIGHTTOSCENE:
 		re.AddLightToScene( VMA(1), VMF(2), VMF(3), VMF(4), VMF(5) );
 		return 0;

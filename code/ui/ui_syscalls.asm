@@ -108,6 +108,8 @@ equ	trap_R_SetClipRegion				-316
 equ trap_R_DrawRotatedPic				-317
 equ trap_R_DrawStretchPicGradient		-318
 equ trap_R_Add2dPolys					-319
+equ	trap_R_AddPolysToScene				-320
+equ	trap_R_AddPolyBufferToScene			-321
 
 
 
