@@ -105,6 +105,9 @@ equ	trap_R_LerpTag						-313
 equ trap_R_ModelBounds					-314
 equ trap_R_RemapShader					-315
 equ	trap_R_SetClipRegion				-316
+equ trap_R_DrawRotatedPic				-317
+equ trap_R_DrawStretchPicGradient		-318
+equ trap_R_Add2dPolys					-319
 
 equ	trap_R_LoadWorldMap					-351
 equ trap_GetEntityToken					-352
