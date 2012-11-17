@@ -309,8 +309,6 @@ typedef struct {
 typedef struct {
 	qboolean		infoValid;
 
-	qboolean		localClient;
-
 	char			name[MAX_QPATH];
 	team_t			team;
 
