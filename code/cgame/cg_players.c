@@ -892,7 +892,7 @@ void CG_NewClientInfo( int clientNum ) {
 	memset( &newInfo, 0, sizeof( newInfo ) );
 
 	// check if client is a local client
-	newinfo.localClient = ( CG_LocalClientPlayerStateForClientNum( clientNum ) != NULL );
+	newInfo.localClient = ( CG_LocalClientPlayerStateForClientNum( clientNum ) != NULL );
 
 	// isolate the player's name
 	v = Info_ValueForKey(configstring, "n");
