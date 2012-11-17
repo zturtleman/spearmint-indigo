@@ -891,6 +891,9 @@ void CG_NewClientInfo( int clientNum ) {
 	// the old value
 	memset( &newInfo, 0, sizeof( newInfo ) );
 
+	// check if client is a local client
+	newinfo.localClient = ( CG_LocalClientPlayerStateForClientNum( clientNum ) != NULL );
+
 	// isolate the player's name
 	v = Info_ValueForKey(configstring, "n");
 	Q_strncpyz( newInfo.name, v, sizeof( newInfo.name ) );
@@ -1042,7 +1045,7 @@ void CG_NewClientInfo( int clientNum ) {
 		forceDefer = trap_MemoryRemaining() < 4000000;
 
 		// if we are defering loads, just have it pick the first valid
-		if ( forceDefer || (cg_deferPlayers.integer && !cg_buildScript.integer && !cg.loading ) ) {
+		if ( forceDefer || (cg_deferPlayers.integer && !cg_buildScript.integer && !cg.loading && !newInfo.localClient ) ) {
 			// keep whatever they had if it won't violate team skins
 			CG_SetDeferredClientInfo( clientNum, &newInfo );
 			// if we are low on memory, leave them with this model
