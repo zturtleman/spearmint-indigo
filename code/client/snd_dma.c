@@ -549,6 +549,7 @@ static void S_Base_StartSoundEx( vec3_t origin, int entityNum, int entchannel, s
 
 	if (localSound) {
 		allowed = 4 * CL_MAX_SPLITVIEW;
+		entityNum = MAX_GENTITIES;
 	} else if (S_EntityIsListener(entityNum)) {
 		allowed = 8;
 	} else {
@@ -665,7 +666,7 @@ void S_Base_StartLocalSound( sfxHandle_t sfxHandle, int channelNum ) {
 		return;
 	}
 
-	S_Base_StartSoundEx( NULL, MAX_GENTITIES, channelNum, sfxHandle, qtrue );
+	S_Base_StartSoundEx( NULL, 0, channelNum, sfxHandle, qtrue );
 }
 
 
