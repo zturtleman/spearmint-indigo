@@ -87,6 +87,7 @@ Section "${GAMENAME} ${VERSION}-${RELEASE} (required)"
   ; Set output path to the installation directory.
   SetOutPath $INSTDIR
 
+  File "SDL.dll"
 !ifndef USE_INTERNAL_SPEEX
   File "libspeex.dll"
 !endif
@@ -145,14 +146,6 @@ Section "Start Menu Shortcuts"
 
 SectionEnd
 
-Section "SDL library"
-
-  SetOutPath $INSTDIR
-
-  File "SDL.dll"
-
-SectionEnd
-
 !ifdef USE_OPENAL_DLOPEN
 Section "OpenAL-Soft library"
 
@@ -203,6 +196,7 @@ Section "Uninstall"
   Delete $INSTDIR\id-readme.txt
   Delete $INSTDIR\voip-readme.txt
 
+  Delete $INSTDIR\SDL.dll
 !ifndef USE_INTERNAL_SPEEX
   Delete $INSTDIR\libspeex.dll
 !endif
@@ -213,7 +207,6 @@ Section "Uninstall"
   Delete $INSTDIR\jpeg8c.dll
 !endif
 
-  Delete $INSTDIR\SDL.dll
 !ifdef USE_OPENAL_DLOPEN
   Delete $INSTDIR\OpenAL32.dll
 !endif
