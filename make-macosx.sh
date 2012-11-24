@@ -34,7 +34,7 @@ RENDER_OBJ="
 
 cd `dirname $0`
 if [ ! -f Makefile ]; then
-	echo "This script must be run from the spearmint build directory"
+	echo "This script must be run from the Spearmint build directory"
 	exit 1
 fi
 
@@ -83,7 +83,7 @@ fi
 if [ ! -d $DESTDIR/$APPBUNDLE/Contents/Resources ]; then
 	mkdir -p $DESTDIR/$APPBUNDLE/Contents/Resources
 fi
-cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/ioquake3.icns || exit 1;
+cp $ICNS $DESTDIR/$APPBUNDLE/Contents/Resources/spearmint.icns || exit 1;
 echo $PKGINFO > $DESTDIR/$APPBUNDLE/Contents/PkgInfo
 echo "
 	<?xml version=\"1.0\" encoding=\"UTF-8\"?>
@@ -97,15 +97,15 @@ echo "
 		<key>CFBundleExecutable</key>
 		<string>$BINARY</string>
 		<key>CFBundleGetInfoString</key>
-		<string>spearmint $Q3_VERSION</string>
+		<string>Spearmint $Q3_VERSION</string>
 		<key>CFBundleIconFile</key>
-		<string>ioquake3.icns</string>
+		<string>spearmint.icns</string>
 		<key>CFBundleIdentifier</key>
 		<string>org.ioquake.ioquake3</string>
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>spearmint</string>
+		<string>Spearmint</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
