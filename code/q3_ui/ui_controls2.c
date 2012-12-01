@@ -83,78 +83,92 @@ typedef struct
 #define ID_SAVEANDEXIT	106
 #define ID_EXIT			107
 
-// bindable actions
-#define ID_SHOWSCORES	0
-#define ID_USEITEM		1	
-#define ID_SPEED		2	
-#define ID_FORWARD		3	
-#define ID_BACKPEDAL	4
-#define ID_MOVELEFT		5
-#define ID_MOVERIGHT	6
-#define ID_MOVEUP		7	
-#define ID_MOVEDOWN		8
-#define ID_LEFT			9	
-#define ID_RIGHT		10	
-#define ID_STRAFE		11	
-#define ID_LOOKUP		12	
-#define ID_LOOKDOWN		13
-#define ID_MOUSELOOK	14
-#define ID_CENTERVIEW	15
-#define ID_ZOOMVIEW		16
-#define ID_WEAPON1		17	
-#define ID_WEAPON2		18	
-#define ID_WEAPON3		19	
-#define ID_WEAPON4		20	
-#define ID_WEAPON5		21	
-#define ID_WEAPON6		22	
-#define ID_WEAPON7		23	
-#define ID_WEAPON8		24	
-#define ID_WEAPON9		25	
-#define ID_ATTACK		26
-#define ID_WEAPPREV		27
-#define ID_WEAPNEXT		28
-#define ID_GESTURE		29
-#define ID_CHAT			30
-#define ID_CHAT2		31
-#define ID_CHAT3		32
-#define ID_CHAT4		33
+enum {
+	// bindable actions
+	ID_SHOWSCORES,
+	ID_USEITEM,
+	ID_SPEED,
+	ID_FORWARD,
+	ID_BACKPEDAL,
+	ID_MOVELEFT,
+	ID_MOVERIGHT,
+	ID_MOVEUP,
+	ID_MOVEDOWN,
+	ID_LEFT,
+	ID_RIGHT,
+	ID_STRAFE,
+	ID_LOOKUP,
+	ID_LOOKDOWN,
+	ID_MOUSELOOK,
+	ID_CENTERVIEW,
+	ID_ZOOMVIEW,
+	ID_WEAPON1,
+	ID_WEAPON2,
+	ID_WEAPON3,
+	ID_WEAPON4,
+	ID_WEAPON5,
+	ID_WEAPON6,
+	ID_WEAPON7,
+	ID_WEAPON8,
+	ID_WEAPON9,
+#ifdef MISSIONPACK
+	ID_WEAPON11,
+	ID_WEAPON12,
+	ID_WEAPON13,
+#endif
+	ID_ATTACK,
+	ID_WEAPPREV,
+	ID_WEAPNEXT,
+	ID_GESTURE,
+	ID_CHAT,
+	ID_CHAT2,
+	ID_CHAT3,
+	ID_CHAT4,
 
-// all others
-#define ID_FREELOOK		34
-#define ID_INVERTMOUSE	35
-#define ID_ALWAYSRUN	36
-#define ID_AUTOSWITCH	37
-#define ID_MOUSESPEED	38
-#define ID_SELECTJOY	39
-#define ID_JOYTHRESHOLD	40
-#define ID_SMOOTHMOUSE	41
+	// all others
+	ID_FREELOOK,
+	ID_INVERTMOUSE,
+	ID_ALWAYSRUN,
+	ID_AUTOSWITCH,
+	ID_MOUSESPEED,
+	ID_SELECTJOY,
+	ID_JOYTHRESHOLD,
+	ID_SMOOTHMOUSE
+};
 
-#define ANIM_IDLE		0
-#define ANIM_RUN		1
-#define ANIM_WALK		2
-#define ANIM_BACK		3
-#define ANIM_JUMP		4
-#define ANIM_CROUCH		5
-#define ANIM_STEPLEFT	6
-#define ANIM_STEPRIGHT	7
-#define ANIM_TURNLEFT	8
-#define ANIM_TURNRIGHT	9
-#define ANIM_LOOKUP		10
-#define ANIM_LOOKDOWN	11
-#define ANIM_WEAPON1	12
-#define ANIM_WEAPON2	13
-#define ANIM_WEAPON3	14
-#define ANIM_WEAPON4	15
-#define ANIM_WEAPON5	16
-#define ANIM_WEAPON6	17
-#define ANIM_WEAPON7	18
-#define ANIM_WEAPON8	19
-#define ANIM_WEAPON9	20
-#define ANIM_WEAPON10	21
-#define ANIM_ATTACK		22
-#define ANIM_GESTURE	23
-#define ANIM_DIE		24
-#define ANIM_CHAT		25
+enum {
+	ANIM_IDLE,
+	ANIM_RUN,
+	ANIM_WALK,
+	ANIM_BACK,
+	ANIM_JUMP,
+	ANIM_CROUCH,
+	ANIM_STEPLEFT,
+	ANIM_STEPRIGHT,
+	ANIM_TURNLEFT,
+	ANIM_TURNRIGHT,
+	ANIM_LOOKUP,
+	ANIM_LOOKDOWN,
+	ANIM_WEAPON1,
+	ANIM_WEAPON2,
+	ANIM_WEAPON3,
+	ANIM_WEAPON4,
+	ANIM_WEAPON5,
+	ANIM_WEAPON6,
+	ANIM_WEAPON7,
+	ANIM_WEAPON8,
+	ANIM_WEAPON9,
+	ANIM_WEAPON10,
+#ifdef MISSIONPACK
+	ANIM_WEAPON11,
+	ANIM_WEAPON12,
+	ANIM_WEAPON13,
+#endif
+	ANIM_ATTACK,
+	ANIM_GESTURE,
+	ANIM_DIE,
+	ANIM_CHAT
+};
 
 typedef struct
 {
@@ -189,6 +203,11 @@ typedef struct
 	menuaction_s		railgun;
 	menuaction_s		plasma;
 	menuaction_s		bfg;
+#ifdef MISSIONPACK
+	menuaction_s		nailgun;
+	menuaction_s		proxylauncher;
+	menuaction_s		chaingun;
+#endif
 	menuaction_s		attack;
 	menuaction_s		prevweapon;
 	menuaction_s		nextweapon;
@@ -215,7 +234,7 @@ typedef struct
 	menutext_s			selectjoy;
 	menuslider_s		joythreshold;
 	int					section;
-	char				playerModel[64];
+	char				playerModel[MAX_QPATH];
 	vec3_t				playerViewangles;
 	vec3_t				playerMoveangles;
 	int					playerLegs;
@@ -265,6 +284,11 @@ static bind_t g_bindings[] =
 	{"weapon 7",		"railgun",			ID_WEAPON7,		ANIM_WEAPON7,	'7',			-1,		-1, -1},
 	{"weapon 8",		"plasma gun",		ID_WEAPON8,		ANIM_WEAPON8,	'8',			-1,		-1, -1},
 	{"weapon 9",		"BFG",				ID_WEAPON9,		ANIM_WEAPON9,	'9',			-1,		-1, -1},
+#ifdef MISSIONPACK
+	{"weapon 11",		"nail gun",			ID_WEAPON11,	ANIM_WEAPON11,	-1,				-1,		-1, -1},
+	{"weapon 12",		"proximity mine",	ID_WEAPON12,	ANIM_WEAPON12,	-1,				-1,		-1, -1},
+	{"weapon 13",		"chain gun",		ID_WEAPON13,	ANIM_WEAPON13,	-1,				-1,		-1, -1},
+#endif
 	{"+attack", 		"attack",			ID_ATTACK,		ANIM_ATTACK,	K_CTRL,			-1,		-1, -1},
 	{"weapprev",		"prev weapon",		ID_WEAPPREV,	ANIM_IDLE,		'[',			-1,		-1, -1},
 	{"weapnext", 		"next weapon",		ID_WEAPNEXT,	ANIM_IDLE,		']',			-1,		-1, -1},
@@ -306,6 +330,11 @@ static bind_t g_bindings2[] =
 	MINIBIND(ID_WEAPON7, -1, -1),
 	MINIBIND(ID_WEAPON8, -1, -1),
 	MINIBIND(ID_WEAPON9, -1, -1),
+#ifdef MISSIONPACK
+	MINIBIND(ID_WEAPON11, -1, -1),
+	MINIBIND(ID_WEAPON12, -1, -1),
+	MINIBIND(ID_WEAPON13, -1, -1),
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
@@ -345,6 +374,11 @@ static bind_t g_bindings3[] =
 	MINIBIND(ID_WEAPON7, -1, -1),
 	MINIBIND(ID_WEAPON8, -1, -1),
 	MINIBIND(ID_WEAPON9, -1, -1),
+#ifdef MISSIONPACK
+	MINIBIND(ID_WEAPON11, -1, -1),
+	MINIBIND(ID_WEAPON12, -1, -1),
+	MINIBIND(ID_WEAPON13, -1, -1),
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
@@ -384,6 +418,11 @@ static bind_t g_bindings4[] =
 	MINIBIND(ID_WEAPON7, -1, -1),
 	MINIBIND(ID_WEAPON8, -1, -1),
 	MINIBIND(ID_WEAPON9, -1, -1),
+#ifdef MISSIONPACK
+	MINIBIND(ID_WEAPON11, -1, -1),
+	MINIBIND(ID_WEAPON12, -1, -1),
+	MINIBIND(ID_WEAPON13, -1, -1),
+#endif
 	MINIBIND(ID_ATTACK, -1, -1),
 	MINIBIND(ID_WEAPPREV, -1, -1),
 	MINIBIND(ID_WEAPNEXT, -1, -1),
@@ -454,6 +493,11 @@ static menucommon_s *g_weapons_controls[] = {
 	(menucommon_s *)&s_controls.railgun,          
 	(menucommon_s *)&s_controls.plasma,           
 	(menucommon_s *)&s_controls.bfg,              
+#ifdef MISSIONPACK
+	(menucommon_s *)&s_controls.nailgun,
+	(menucommon_s *)&s_controls.proxylauncher,
+	(menucommon_s *)&s_controls.chaingun,
+#endif
 	NULL,
 };
 
@@ -709,6 +753,20 @@ static void Controls_UpdateModel( int anim ) {
 	case ANIM_WEAPON10:
 		s_controls.playerWeapon = WP_GRAPPLING_HOOK;
 		break;
+
+#ifdef MISSIONPACK
+	case ANIM_WEAPON11:
+		s_controls.playerWeapon = WP_NAILGUN;
+		break;
+
+	case ANIM_WEAPON12:
+		s_controls.playerWeapon = WP_PROX_LAUNCHER;
+		break;
+
+	case ANIM_WEAPON13:
+		s_controls.playerWeapon = WP_CHAINGUN;
+		break;
+#endif
 
 	case ANIM_ATTACK:
 		s_controls.playerTorso = TORSO_ATTACK;
@@ -1678,6 +1736,26 @@ static void Controls_MenuInit( int localClient )
 	s_controls.bfg.generic.ownerdraw = Controls_DrawKeyBinding;
 	s_controls.bfg.generic.id        = ID_WEAPON9;
 
+#ifdef MISSIONPACK
+	s_controls.nailgun.generic.type	     = MTYPE_ACTION;
+	s_controls.nailgun.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.nailgun.generic.callback  = Controls_ActionEvent;
+	s_controls.nailgun.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.nailgun.generic.id        = ID_WEAPON11;
+
+	s_controls.proxylauncher.generic.type	   = MTYPE_ACTION;
+	s_controls.proxylauncher.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.proxylauncher.generic.callback  = Controls_ActionEvent;
+	s_controls.proxylauncher.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.proxylauncher.generic.id        = ID_WEAPON12;
+
+	s_controls.chaingun.generic.type	  = MTYPE_ACTION;
+	s_controls.chaingun.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
+	s_controls.chaingun.generic.callback  = Controls_ActionEvent;
+	s_controls.chaingun.generic.ownerdraw = Controls_DrawKeyBinding;
+	s_controls.chaingun.generic.id        = ID_WEAPON13;
+#endif
+
 	s_controls.attack.generic.type	    = MTYPE_ACTION;
 	s_controls.attack.generic.flags     = QMF_LEFT_JUSTIFY|QMF_PULSEIFFOCUS|QMF_GRAYED|QMF_HIDDEN;
 	s_controls.attack.generic.callback  = Controls_ActionEvent;
@@ -1894,6 +1972,11 @@ static void Controls_MenuInit( int localClient )
 	Menu_AddItem( &s_controls.menu, &s_controls.railgun );
 	Menu_AddItem( &s_controls.menu, &s_controls.plasma );
 	Menu_AddItem( &s_controls.menu, &s_controls.bfg );
+#ifdef MISSIONPACK
+	Menu_AddItem( &s_controls.menu, &s_controls.nailgun );
+	Menu_AddItem( &s_controls.menu, &s_controls.proxylauncher );
+	Menu_AddItem( &s_controls.menu, &s_controls.chaingun );
+#endif
 
 	Menu_AddItem( &s_controls.menu, &s_controls.showscores );
 	Menu_AddItem( &s_controls.menu, &s_controls.useitem );
