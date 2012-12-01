@@ -421,13 +421,13 @@ vmHeader_t *VM_LoadQVM( vm_t *vm, qboolean alloc, qboolean unpure)
 			return NULL;
 		}
 	} else if( LittleLong( header.h->vmMagic ) == VM_MAGIC || LittleLong( header.h->vmMagic ) == VM_MAGIC_VER2 ) {
-		VM_Free( vm );
-		FS_FreeFile( header.v );
-
 		Com_Printf( S_COLOR_YELLOW "Warning: Ignoring unsupported legacy qvm: " );
 
 		// show where the qvm was loaded from
 		FS_Which(filename, vm->searchPath);
+
+		VM_Free( vm );
+		FS_FreeFile( header.v );
 
 		return NULL;
 	} else {
