@@ -395,7 +395,6 @@ void CL_ParseSnapshot( msg_t *msg ) {
 
 //=====================================================================
 
-int cl_connectedToPureServer;
 int cl_connectedToCheatServer;
 
 /*
@@ -497,7 +496,6 @@ void CL_SystemInfoChanged( void ) {
 	if ( !gameSet && *Cvar_VariableString("fs_game") ) {
 		Cvar_Set( "fs_game", "" );
 	}
-	cl_connectedToPureServer = Cvar_VariableValue( "sv_pure" );
 }
 
 /*
