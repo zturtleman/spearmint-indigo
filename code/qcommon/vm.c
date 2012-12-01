@@ -628,7 +628,7 @@ vm_t *VM_Create( const char *module, intptr_t (*systemCalls)(intptr_t *),
 		else if(retval == VMI_COMPILED)
 		{
 			vm->searchPath = startSearch;
-			if((header = VM_LoadQVM(vm, qtrue, qfalse)))
+			if((header = VM_LoadQVM(vm, qtrue, qtrue)))
 				break;
 
 			// VM_Free overwrites the name on failed load
