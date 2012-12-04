@@ -599,7 +599,6 @@ static int CG_CalcFov( void ) {
 	float	fov_x, fov_y;
 	float	zoomFov;
 	float	f;
-	int		inwater;
 
 	if ( cg.cur_lc->predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		// if in intermission, use a fixed value
@@ -664,10 +663,10 @@ static int CG_CalcFov( void ) {
 		v = WAVE_AMPLITUDE * sin( phase );
 		fov_x += v;
 		fov_y -= v;
-		inwater = qtrue;
+		cg.refdef.rdflags |= RDF_UNDERWATER;
 	}
 	else {
-		inwater = qfalse;
+		cg.refdef.rdflags &= ~RDF_UNDERWATER;
 	}
 
 
@@ -681,7 +680,7 @@ static int CG_CalcFov( void ) {
 		cg.cur_lc->zoomSensitivity = cg.refdef.fov_y / 75.0;
 	}
 
-	return inwater;
+	return (cg.refdef.rdflags & RDF_UNDERWATER);
 }
 
 

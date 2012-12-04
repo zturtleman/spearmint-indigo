@@ -2934,6 +2934,8 @@ size_t RE_SaveJPGToBuffer(byte *buffer, size_t bufSize, int quality,
 		          int image_width, int image_height, byte *image_buffer, int padding);
 void RE_TakeVideoFrame( int width, int height,
 		byte *captureBuffer, byte *encodeBuffer, qboolean motionJpeg );
+void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
+void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density );
 
 // font stuff
 void R_InitFreeType( void );

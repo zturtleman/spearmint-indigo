@@ -1594,5 +1594,8 @@ refexport_t *GetRefAPI ( int apiVersion, refimport_t *rimp ) {
 
 	re.TakeVideoFrame = RE_TakeVideoFrame;
 
+	re.GetGlobalFog = RE_GetGlobalFog;
+	re.GetWaterFog = RE_GetWaterFog;
+
 	return &re;
 }

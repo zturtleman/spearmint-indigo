@@ -358,6 +358,16 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 
 	pStage = tess.xstages[stage];
 
+	if ( tess.shader->noFog && pStage->isFogged ) {
+		RB_FogOn();
+	} else if ( tess.shader->noFog && !pStage->isFogged ) {
+		// turn fog back off
+		R_FogOff();
+	} else {
+		// make sure fog is on
+		RB_FogOn();
+	}
+
 	GL_State( pStage->stateBits );
 
 	// this is an ugly hack to work around a GeForce driver
@@ -576,6 +586,7 @@ static void ProjectDlightTexture_altivec( void ) {
 		qglEnableClientState( GL_COLOR_ARRAY );
 		qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, colorArray );
 
+		R_FogOff();
 		GL_Bind( tr.dlightImage );
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
@@ -588,6 +599,7 @@ static void ProjectDlightTexture_altivec( void ) {
 		R_DrawElements( numIndexes, hitIndexes );
 		backEnd.pc.c_totalIndexes += numIndexes;
 		backEnd.pc.c_dlightIndexes += numIndexes;
+		RB_FogOn();
 	}
 }
 #endif
@@ -730,6 +742,7 @@ static void ProjectDlightTexture_scalar( void ) {
 		qglEnableClientState( GL_COLOR_ARRAY );
 		qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, colorArray );
 
+		R_FogOff();
 		GL_Bind( tr.dlightImage );
 		// include GLS_DEPTHFUNC_EQUAL so alpha tested surfaces don't add light
 		// where they aren't rendered
@@ -742,6 +755,7 @@ static void ProjectDlightTexture_scalar( void ) {
 		R_DrawElements( numIndexes, hitIndexes );
 		backEnd.pc.c_totalIndexes += numIndexes;
 		backEnd.pc.c_dlightIndexes += numIndexes;
+		RB_FogOn();
 	}
 }
 
@@ -766,7 +780,38 @@ Blends a fog texture on top of everything else
 */
 static void RB_FogPass( void ) {
 	fog_t		*fog;
+	unsigned	colorInt;
+	qboolean	linearFog;
 	int			i;
+
+	// no fog pass
+	if ( tess.shader->noFog ) {
+		return;
+	}
+
+	// no world, no fogging
+	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		return;
+	}
+
+	if ( r_useGlFog->integer ) {
+		return;
+	}
+
+	fog = tr.world->fogs + tess.fogNum;
+
+	// Global fog
+	if ( fog->originalBrushNumber < 0 ) {
+		if ( backEnd.refdef.fogType == FT_NONE ) {
+			return;
+		}
+
+		linearFog = ( backEnd.refdef.fogType == FT_LINEAR );
+		colorInt = backEnd.refdef.fogColorInt;
+	} else {
+		linearFog = ( fog->shader->fogParms.fogType == FT_LINEAR );
+		colorInt = fog->colorInt;
+	}
 
 	qglEnableClientState( GL_COLOR_ARRAY );
 	qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
@@ -774,17 +819,21 @@ static void RB_FogPass( void ) {
 	qglEnableClientState( GL_TEXTURE_COORD_ARRAY);
 	qglTexCoordPointer( 2, GL_FLOAT, 0, tess.svars.texcoords[0] );
 
-	fog = tr.world->fogs + tess.fogNum;
-
 	for ( i = 0; i < tess.numVertexes; i++ ) {
-		* ( int * )&tess.svars.colors[i] = fog->colorInt;
+		* ( int * )&tess.svars.colors[i] = colorInt;
 	}
 
 	RB_CalcFogTexCoords( ( float * ) tess.svars.texcoords[0] );
 
-	GL_Bind( tr.fogImage );
+	if ( linearFog ) {
+		GL_Bind( tr.linearFogImage );
+	} else {
+		GL_Bind( tr.fogImage );
+	}
 
 	if ( tess.shader->fogPass == FP_EQUAL ) {
+		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
+	} else if ( tess.shader->sort >= SS_BLEND0 ) {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA | GLS_DEPTHFUNC_EQUAL );
 	} else {
 		GL_State( GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
@@ -864,11 +913,25 @@ static void ComputeColors( shaderStage_t *pStage )
 		case CGEN_FOG:
 			{
 				fog_t		*fog;
+				unsigned	colorInt;
 
 				fog = tr.world->fogs + tess.fogNum;
 
+#if 0
+				if ( r_useGlFog->integer ) {
+					Com_Memset( tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4 );
+					break;
+				}
+#endif
+
+				if ( fog->originalBrushNumber < 0 ) {
+					colorInt = backEnd.refdef.fogColorInt;
+				} else {
+					colorInt = fog->colorInt;
+				}
+
 				for ( i = 0; i < tess.numVertexes; i++ ) {
-					* ( int * )&tess.svars.colors[i] = fog->colorInt;
+					* ( int * )&tess.svars.colors[i] = colorInt;
 				}
 			}
 			break;
@@ -968,7 +1031,7 @@ static void ComputeColors( shaderStage_t *pStage )
 	//
 	// fog adjustment for colors to fade out as fog increases
 	//
-	if ( tess.fogNum )
+	if ( tess.fogNum && !tess.shader->noFog )
 	{
 		switch ( pStage->adjustColorsForFog )
 		{
@@ -1112,6 +1175,26 @@ static void ComputeTexCoords( shaderStage_t *pStage ) {
 }
 
 /*
+==============
+SetIteratorFog
+
+Set the fog parameters for this pass.
+==============
+*/
+void SetIteratorFog( void ) {
+	if ( backEnd.refdef.rdflags & RDF_NOWORLDMODEL ) {
+		R_FogOff();
+		return;
+	}
+
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tess.shader->sort < SS_BLEND0 && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
+		RB_Fog( tess.fogNum );
+	} else {
+		R_FogOff();
+	}
+}
+
+/*
 ** RB_IterateStagesGeneric
 */
 static void RB_IterateStagesGeneric( shaderCommands_t *input )
@@ -1157,8 +1240,19 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input )
 			{
 				GL_Bind( tr.whiteImage );
 			}
-			else 
+			else
 				R_BindAnimatedImage( &pStage->bundle[0] );
+
+			// per stage fogging (detail textures)
+			if ( tess.shader->noFog && pStage->isFogged ) {
+				RB_FogOn();
+			} else if ( tess.shader->noFog && !pStage->isFogged ) {
+				// turn fog back off
+				R_FogOff();
+			} else {
+				// make sure fog is on
+				RB_FogOn();
+			}
 
 			GL_State( pStage->stateBits );
 
@@ -1198,6 +1292,11 @@ void RB_StageIteratorGeneric( void )
 		// a call to va() every frame!
 		GLimp_LogComment( va("--- RB_StageIteratorGeneric( %s ) ---\n", tess.shader->name) );
 	}
+
+	//
+	// set GL fog
+	//
+	SetIteratorFog();
 
 	//
 	// set face culling appropriately
@@ -1269,7 +1368,7 @@ void RB_StageIteratorGeneric( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && tess.shader->fogPass ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
 		RB_FogPass();
 	}
 
@@ -1319,6 +1418,11 @@ void RB_StageIteratorVertexLitTexture( void )
 	}
 
 	//
+	// set GL fog
+	//
+	SetIteratorFog();
+
+	//
 	// set face culling appropriately
 	//
 	GL_Cull( shader->cullType );
@@ -1356,7 +1460,7 @@ void RB_StageIteratorVertexLitTexture( void )
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && tess.shader->fogPass ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
 		RB_FogPass();
 	}
 
@@ -1387,6 +1491,11 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 		// a call to va() every frame!
 		GLimp_LogComment( va("--- RB_StageIteratorLightmappedMultitexture( %s ) ---\n", tess.shader->name) );
 	}
+
+	//
+	// set GL fog
+	//
+	SetIteratorFog();
 
 	//
 	// set face culling appropriately
@@ -1463,7 +1572,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	// now do fog
 	//
-	if ( tess.fogNum && tess.shader->fogPass ) {
+	if ( tess.fogNum && ( tess.shader->fogPass || ( tess.shader->sort > SS_OPAQUE && tr.world && tess.fogNum == tr.world->globalFog ) ) ) {
 		RB_FogPass();
 	}
 
