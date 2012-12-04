@@ -538,33 +538,29 @@ void RE_2DPolyies( polyVert_t* verts, int numverts, qhandle_t hShader ) {
 /*
 ====================
 RE_GetGlobalFog
-
-ZTM: TODO: add global fog support.
 ====================
 */
 void RE_GetGlobalFog( fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
 	if (type) {
-		*type = FT_NONE;
+		*type = tr.globalFogType;
 	}
 
 	if (color) {
-		VectorSet( color, 0, 0, 0 );
+		VectorCopy( tr.globalFogColor, color );
 	}
 
 	if (depthForOpaque) {
-		*depthForOpaque = 0;
+		*depthForOpaque = tr.globalFogDepthForOpaque;
 	}
 
 	if (density) {
-		*density = 0;
+		*density = tr.globalFogDensity;
 	}
 }
 
 /*
 ====================
 RE_GetWaterFog
-
-ZTM: TODO: add water fog support.
 ====================
 */
 void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *depthForOpaque, float *density ) {
@@ -573,19 +569,19 @@ void RE_GetWaterFog( const vec3_t origin, fogType_t *type, vec3_t color, float *
 	(void)origin;
 
 	if (type) {
-		*type = FT_NONE;
+		*type = tr.waterFogType;
 	}
 
 	if (color) {
-		VectorSet( color, 0, 0, 0 );
+		VectorCopy( tr.waterFogColor, color );
 	}
 
 	if (depthForOpaque) {
-		*depthForOpaque = 0;
+		*depthForOpaque = tr.waterFogDepthForOpaque;
 	}
 
 	if (density) {
-		*density = 0;
+		*density = tr.waterFogDensity;
 	}
 }
 
