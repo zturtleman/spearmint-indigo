@@ -441,6 +441,17 @@ typedef struct {
 } skulltrail_t;
 
 
+typedef enum {
+	LEAD_NONE,
+
+	LEAD_LOST,
+	LEAD_TIED,
+	LEAD_TAKEN,
+
+	LEAD_IGNORE // a client played a reward sound, so no lead change sfx this frame.
+} leadChange_t;
+
+
 #define MAX_REWARDSTACK		10
 #define MAX_SOUNDBUFFER		20
 
@@ -588,6 +599,7 @@ typedef struct {
 
 	int			physicsTime;	// either cg.snap->time or cg.nextSnap->time
 
+	leadChange_t bestLeadChange;
 	int			timelimitWarnings;	// 5 min, 1 min, overtime
 	int			fraglimitWarnings;
 
@@ -1590,6 +1602,7 @@ void CG_PlayBufferedVoiceChats( void );
 void CG_Respawn( int clientNum );
 void CG_TransitionPlayerState( playerState_t *ps, playerState_t *ops );
 void CG_CheckChangedPredictableEvents( playerState_t *ps );
+void CG_CheckGameSounds( void );
 
 
 //

@@ -311,7 +311,7 @@ CG_CheckLocalSounds
 ==================
 */
 void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
-	int			highScore, reward;
+	int			reward;
 #ifdef MISSIONPACK
 	int			health, armor;
 #endif
@@ -440,29 +440,61 @@ void CG_CheckLocalSounds( playerState_t *ps, playerState_t *ops ) {
 		}
 	}
 
-	// lead changes
-	if (!reward) {
+	if (reward) {
+		// ignore lead changes this frame because a reward sound was played.
+		cg.bestLeadChange = LEAD_IGNORE;
+	} else {
 		//
 		if ( !cg.warmup ) {
 			// never play lead changes during warmup
 			if ( ps->persistant[PERS_RANK] != ops->persistant[PERS_RANK] ) {
 				if ( cgs.gametype < GT_TEAM) {
-					if (  ps->persistant[PERS_RANK] == 0 ) {
-						CG_AddBufferedSound(cgs.media.takenLeadSound);
-					} else if (cg.snap->numPSs <= 1) {
-						// ZTM: Don't play tied or lost lead when there are multiple local clients
-						//      multiple sounds play and it's annoying.
+					leadChange_t leadChange = LEAD_NONE;
 
-						if ( ps->persistant[PERS_RANK] == RANK_TIED_FLAG ) {
-							CG_AddBufferedSound(cgs.media.tiedLeadSound);
-						} else if ( ( ops->persistant[PERS_RANK] & ~RANK_TIED_FLAG ) == 0 ) {
-							CG_AddBufferedSound(cgs.media.lostLeadSound);
-						}
+					if ( ps->persistant[PERS_RANK] == 0 ) {
+						leadChange = LEAD_TAKEN;
+					} else if ( ps->persistant[PERS_RANK] == RANK_TIED_FLAG ) {
+						leadChange = LEAD_TIED;
+					} else if ( ( ops->persistant[PERS_RANK] & ~RANK_TIED_FLAG ) == 0 ) {
+						leadChange = LEAD_LOST;
+					}
+
+					if ( leadChange > cg.bestLeadChange ) {
+						cg.bestLeadChange = leadChange;
 					}
 				}
 			}
 		}
 	}
+}
+
+/*
+===============
+CG_CheckGameSounds
+
+Sounds that use to be played in CG_CheckLocalSounds, but with splitscreen we only want these done once.
+===============
+*/
+void CG_CheckGameSounds( void ) {
+	int		highScore;
+
+	// lead changes
+	switch ( cg.bestLeadChange ) {
+		case LEAD_TAKEN:
+			CG_AddBufferedSound(cgs.media.takenLeadSound);
+			break;
+		case LEAD_TIED:
+			CG_AddBufferedSound(cgs.media.tiedLeadSound);
+			break;
+		case LEAD_LOST:
+			CG_AddBufferedSound(cgs.media.lostLeadSound);
+			break;
+		default:
+			break;
+	}
+
+	// reset lead change
+	cg.bestLeadChange = LEAD_NONE;
 
 	// timelimit warnings
 	if ( cgs.timelimit > 0 ) {
