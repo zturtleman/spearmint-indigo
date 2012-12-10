@@ -523,6 +523,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 	spectatorState_t	specState;
 	int					specClient;
 	int					teamLeader;
+	int					i;
 
 	//
 	// see what change is requested
@@ -549,6 +550,18 @@ void SetTeam( gentity_t *ent, char *s ) {
 	} else if ( !Q_stricmp( s, "hide" ) || !Q_stricmp( s, "h" ) ) {
 		team = TEAM_SPECTATOR;
 		specState = SPECTATOR_LOCAL_HIDE;
+
+		// check if client has any splitscreen clients.
+		for ( i = 0; i < MAX_SPLITVIEW-1; i++ ) {
+			if ( ent->r.localClientNums[i] != -1 ) {
+				break;
+			}
+		}
+
+		// Don't allow hiding viewport / fake disconnect if there are no splitscreen players.
+		if ( i == MAX_SPLITVIEW-1 ) {
+			return;
+		}
 	} else if ( g_gametype.integer >= GT_TEAM ) {
 		// if running a team game, assign player to one of the teams
 		specState = SPECTATOR_NOT;
@@ -608,6 +621,12 @@ void SetTeam( gentity_t *ent, char *s ) {
 	// execute the team change
 	//
 
+	// main client in splitscreen allow to fake drop out, as it currently not possible to drop main and keep splitscreen players
+	if ( ent->client->pers.connected == CON_CONNECTED && specState == SPECTATOR_LOCAL_HIDE ) {
+		ClientDisconnect( clientNum );
+		ent->client->pers.connected = CON_CONNECTED;
+	}
+
 	// if the player was dead leave the body
 	if ( client->ps.stats[STAT_HEALTH] <= 0 ) {
 		CopyToBodyQue(ent);
@@ -615,7 +634,7 @@ void SetTeam( gentity_t *ent, char *s ) {
 
 	// he starts at 'base'
 	client->pers.teamState.state = TEAM_BEGIN;
-	if ( oldTeam != TEAM_SPECTATOR ) {
+	if ( oldTeam != TEAM_SPECTATOR && specState != SPECTATOR_LOCAL_HIDE ) {
 		// Kill him (makes sure he loses flags, etc)
 		ent->flags &= ~FL_GODMODE;
 		ent->client->ps.stats[STAT_HEALTH] = ent->health = 0;
