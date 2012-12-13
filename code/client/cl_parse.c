@@ -787,7 +787,8 @@ void CL_ParseVoip ( msg_t *msg ) {
 	char encoded[1024];
 	int seqdiff = sequence - clc.voipIncomingSequence[sender];
 	int written = 0;
-	int i;
+	float voipPower = 0.0f;
+	int i, j;
 
 	Com_DPrintf("VoIP: %d-byte packet from client %d\n", packetsize, sender);
 
@@ -892,6 +893,15 @@ void CL_ParseVoip ( msg_t *msg ) {
 		if (decio != NULL) { fwrite(decoded+written, clc.speexFrameSize*2, 1, decio); fflush(decio); }
 		#endif
 
+		const int16_t *sampptr = (const int16_t *)decoded + written;
+
+		// calculate the "power" of this packet...
+		for (j = 0; j < clc.speexFrameSize; j++) {
+			const float flsamp = (float) sampptr[j];
+			const float s = fabs(flsamp);
+			voipPower += s * s;
+		}
+
 		written += clc.speexFrameSize;
 	}
 
@@ -900,6 +910,10 @@ void CL_ParseVoip ( msg_t *msg ) {
 
 	if(written > 0)
 		CL_PlayVoip(sender, written, (const byte *) decoded, flags);
+
+	clc.voipPower[sender] = (voipPower / (32768.0f * 32768.0f *
+			                 ((float) (clc.speexFrameSize * i)))) *
+			                 100.0f;
 
 	clc.voipIncomingSequence[sender] = sequence + frames;
 	clc.voipLastPacketTime[sender] = cl.serverTime;

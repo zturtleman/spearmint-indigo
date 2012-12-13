@@ -378,8 +378,10 @@ void SCR_DrawVoipMeter( void ) {
 		return;  // playing back a demo.
 	else if (!cl_voip->integer)
 		return;  // client has VoIP support disabled.
+	else if (clc.clientNums[0] == -1)
+		return;
 
-	limit = (int) (clc.voipPower * 10.0f);
+	limit = (int) (clc.voipPower[clc.clientNums[0]] * 10.0f);
 	if (limit > 10)
 		limit = 10;
 

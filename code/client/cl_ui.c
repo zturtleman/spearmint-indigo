@@ -974,6 +974,13 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 #endif
 		return 0;
 
+	case UI_GET_VOIP_POWER:
+#ifdef USE_VOIP
+		return FloatAsInt( CL_GetVoipPower( args[1] ) );
+#else
+		return 0;
+#endif
+
 	case UI_GET_VOIP_GAIN:
 #ifdef USE_VOIP
 		return FloatAsInt( CL_GetVoipGain( args[1] ) );

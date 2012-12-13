@@ -61,9 +61,10 @@ equ	trap_GetGlconfig					-102
 equ trap_MemoryRemaining				-103
 equ	trap_UpdateScreen					-104
 equ	trap_GetVoipTimes					-105
-equ	trap_GetVoipGainClient				-106
-equ	trap_GetVoipMuteClient				-107
-equ	trap_GetVoipMuteAll					-108
+equ	trap_GetVoipPowerClient				-106
+equ	trap_GetVoipGainClient				-107
+equ	trap_GetVoipMuteClient				-108
+equ	trap_GetVoipMuteAll					-109
 
 equ	trap_GetGameState					-151
 equ	trap_GetCurrentSnapshotNumber		-152

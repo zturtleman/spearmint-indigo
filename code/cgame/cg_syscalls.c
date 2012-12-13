@@ -421,6 +421,12 @@ void trap_GetVoipTimes( int *times ) {
 	syscall( CG_GET_VOIP_TIMES, times );
 }
 
+float trap_GetVoipPowerClient( int client ) {
+	floatint_t fi;
+	fi.i = syscall( CG_GET_VOIP_POWER, client );
+	return fi.f;
+}
+
 float trap_GetVoipGainClient( int client ) {
 	floatint_t fi;
 	fi.i = syscall( CG_GET_VOIP_GAIN, client );

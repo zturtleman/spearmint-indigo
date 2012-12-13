@@ -313,7 +313,7 @@ void CL_VoipNewGeneration(void)
 	clc.voipOutgoingGeneration++;
 	if (clc.voipOutgoingGeneration <= 0)
 		clc.voipOutgoingGeneration = 1;
-	clc.voipPower = 0.0f;
+	clc.voipPower[clc.clientNums[0]] = 0.0f;
 	clc.voipOutgoingSequence = 0;
 }
 
@@ -453,6 +453,8 @@ void CL_CaptureVoip(void)
 			dontCapture = qtrue;  // client has VoIP support disabled.
 		else if ( audioMult == 0.0f )
 			dontCapture = qtrue;  // basically silenced incoming audio.
+		else if ( clc.clientNums[0] == -1 )
+			dontCapture = qtrue;
 
 		cl_voipSend->modified = qfalse;
 
@@ -511,10 +513,14 @@ void CL_CaptureVoip(void)
 
 				// check the "power" of this packet...
 				for (i = 0; i < clc.speexFrameSize; i++) {
-					const float flsamp = (float) sampptr[i];
-					const float s = fabs(flsamp);
-					voipPower += s * s;
+					float flsamp = (float) sampptr[i];
+					float s;
+
 					sampptr[i] = (int16_t) ((flsamp) * audioMult);
+
+					flsamp = (float) sampptr[i];
+					s = fabs(flsamp);
+					voipPower += s * s;
 				}
 
 				// encode raw audio samples into Speex data...
@@ -534,18 +540,18 @@ void CL_CaptureVoip(void)
 				speexFrames++;
 			}
 
-			clc.voipPower = (voipPower / (32768.0f * 32768.0f *
+			clc.voipPower[clc.clientNums[0]] = (voipPower / (32768.0f * 32768.0f *
 			                 ((float) (clc.speexFrameSize * speexFrames)))) *
 			                 100.0f;
 
-			if ((useVad) && (clc.voipPower < cl_voipVADThreshold->value)) {
+			if ((useVad) && (clc.voipPower[clc.clientNums[0]] < cl_voipVADThreshold->value)) {
 				CL_VoipNewGeneration();  // no "talk" for at least 1/4 second.
 			} else {
 				clc.voipOutgoingDataSize = wpos;
 				clc.voipOutgoingDataFrames = speexFrames;
 
 				Com_DPrintf("VoIP: Send %d frames, %d bytes, %f power\n",
-				            speexFrames, wpos, clc.voipPower);
+				            speexFrames, wpos, clc.voipPower[clc.clientNums[0]]);
 
 				#if 0
 				static FILE *encio = NULL;
@@ -564,8 +570,10 @@ void CL_CaptureVoip(void)
 	if (finalFrame) {
 		S_StopCapture();
 		S_MasterGain(1.0f);
-		clc.voipPower = 0.0f;  // force this value so it doesn't linger.
+		clc.voipPower[clc.clientNums[0]] = 0.0f;  // force this value so it doesn't linger.
 	}
+
+	clc.voipLastPacketTime[clc.clientNums[0]] = cl.serverTime;
 }
 
 // Cgame and UI access functions for VoIP information
@@ -580,6 +588,22 @@ void CL_GetVoipTimes( int *times ) {
 	}
 
 	memcpy( times, clc.voipLastPacketTime, sizeof ( clc.voipLastPacketTime ) );
+}
+
+float CL_GetVoipPower( int clientNum ) {
+	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipPower ) ) {
+		return 0.0f;
+	}
+
+	// make sure server is running
+	if ( clc.state != CA_ACTIVE )
+		return 0.0f;
+
+	// clc.voipPower is always the power of the last voip snapshot, never cleared.
+	if ( !clc.voipLastPacketTime[clientNum] || clc.voipLastPacketTime[clientNum] < cl.serverTime - 250 )
+		return 0.0f;
+
+	return clc.voipPower[clientNum];
 }
 
 float CL_GetVoipGain( int clientNum ) {

@@ -720,6 +720,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 		CL_GetVoipTimes( VMA(1) );
 #endif
 		return 0;
+	case CG_GET_VOIP_POWER:
+#ifdef USE_VOIP
+		return FloatAsInt( CL_GetVoipPower( args[1] ) );
+#else
+		return 0;
+#endif
 	case CG_GET_VOIP_GAIN:
 #ifdef USE_VOIP
 		return FloatAsInt( CL_GetVoipGain( args[1] ) );
@@ -1105,6 +1111,7 @@ void CL_FirstSnapshot( void ) {
 			clc.voipIgnore[i] = qfalse;
 			clc.voipGain[i] = 1.0f;
 			clc.voipLastPacketTime[i] = 0;
+			clc.voipPower[i] = 0.0f;
 		}
 		clc.speexInitialized = qtrue;
 		clc.voipMuteAll = qfalse;

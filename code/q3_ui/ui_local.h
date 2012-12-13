@@ -666,6 +666,7 @@ void			trap_GetGlconfig( glconfig_t *glconfig );
 void			trap_UpdateScreen( void );
 int				trap_MemoryRemaining( void );
 void			trap_GetVoipTimes( int *times );
+float			trap_GetVoipPowerClient( int client );
 float			trap_GetVoipGainClient( int client );
 qboolean		trap_GetVoipMuteClient( int client );
 qboolean		trap_GetVoipMuteAll( void );
