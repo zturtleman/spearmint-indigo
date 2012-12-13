@@ -45,6 +45,7 @@ int blueTeamNameModificationCount = -1;
 
 void CG_Init( int serverMessageNum, int serverCommandSequence, int maxSplitView, int clientNum0, int clientNum1, int clientNum2, int clientNum3 );
 void CG_Shutdown( void );
+static char *CG_VoIPString( int localClientNum );
 
 
 /*
@@ -75,6 +76,8 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		return CG_CrosshairPlayer(arg0);
 	case CG_LAST_ATTACKER:
 		return CG_LastAttacker(arg0);
+    case CG_VOIP_STRING:
+      return (intptr_t)CG_VoIPString(arg0);
 	case CG_KEY_EVENT:
 		CG_KeyEvent(arg0, arg1);
 		return 0;
@@ -2162,3 +2165,55 @@ void CG_MouseEvent(int localClientNum, int x, int y) {
 }
 #endif
 
+/*
+================
+CG_VoIPString
+================
+*/
+static char *CG_VoIPString( int localClientNum ) {
+	// a generous overestimate of the space needed for 0,1,2...61,62,63
+	static char voipString[ MAX_CLIENTS * 4 ];
+	char voipSendTarget[ MAX_CVAR_VALUE_STRING ];
+
+	if ( localClientNum < 0 || localClientNum > CG_MaxSplitView() || cg.localClients[localClientNum].clientNum == -1 ) {
+		return NULL;
+	}
+
+	trap_Argv( 0, voipSendTarget, sizeof( voipSendTarget ) );
+
+	if( Q_stricmpn( voipSendTarget, "team", 4 ) == 0 )
+	{
+		int i, slen, nlen;
+		for( slen = i = 0; i < cgs.maxclients; i++ )
+		{
+			if( !cgs.clientinfo[ i ].infoValid || i == cg.localClients[ localClientNum ].clientNum )
+				continue;
+			if( cgs.clientinfo[ i ].team != cgs.clientinfo[ cg.localClients[ localClientNum ].clientNum ].team )
+				continue;
+
+			nlen = Com_sprintf( &voipString[ slen ], sizeof( voipString ) - slen,
+					"%s%d", ( slen > 0 ) ? "," : "", i );
+			if( slen + nlen + 1 >= sizeof( voipString ) )
+			{
+				CG_Printf( S_COLOR_YELLOW "WARNING: voipString overflowed\n" );
+				break;
+			}
+
+			slen += nlen;
+		}
+
+		// Notice that if the Com_sprintf was truncated, slen was not updated
+		// so this will remove any trailing commas or partially-completed numbers
+		voipString[ slen ] = '\0';
+	}
+	else if( Q_stricmpn( voipSendTarget, "crosshair", 9 ) == 0 )
+		Com_sprintf( voipString, sizeof( voipString ), "%d",
+				CG_CrosshairPlayer( localClientNum ) );
+	else if( Q_stricmpn( voipSendTarget, "attacker", 8 ) == 0 )
+		Com_sprintf( voipString, sizeof( voipString ), "%d",
+				CG_LastAttacker( localClientNum ) );
+	else
+		return NULL;
+
+	return voipString;
+}

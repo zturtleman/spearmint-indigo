@@ -290,6 +290,10 @@ typedef enum {
 
 	CG_WANTSBINDKEYS,
 //	qboolean CG_WantsBindKeys( void );
+
+	CG_VOIP_STRING
+//  char *(*CG_VoIPString)( void );
+//  returns a string of comma-delimited clientnums based on args
 } cgameExport_t;
 
 //----------------------------------------------

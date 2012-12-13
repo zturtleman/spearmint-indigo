@@ -329,6 +329,7 @@ so this is only called when the key is first pressed
 void CL_VoipParseTargets(void)
 {
 	const char *target = cl_voipSendTarget->string;
+	const char *vmStr;
 	char *end;
 	int val;
 
@@ -363,26 +364,31 @@ void CL_VoipParseTargets(void)
 			}
 			else
 			{
-				if(!Q_stricmpn(target, "attacker", 8))
-				{
-					val = VM_Call(cgvm, CG_LAST_ATTACKER, 0);
-					target += 8;
-				}
-				else if(!Q_stricmpn(target, "crosshair", 9))
-				{
-					val = VM_Call(cgvm, CG_CROSSHAIR_PLAYER, 0);
-					target += 9;
-				}
-				else
-				{
-					while(*target && *target != ',' && *target != ' ')
-						target++;
+				// ask cgame for clientNums based on this token
+				Cmd_TokenizeString( target );
+				vmStr = VM_ExplicitArgPtr( cgvm, VM_Call( cgvm, CG_VOIP_STRING, 0 ) );
 
-					continue;
+				while (vmStr)
+				{
+					while(*vmStr == ',' || *vmStr == ' ')
+						vmStr++;
+
+					if(!*vmStr || !isdigit(*vmStr))
+						break;
+
+					val = strtol(vmStr, &end, 10);
+					vmStr = end;
+
+					if(val < 0 || val >= MAX_CLIENTS)
+						continue;
+
+					clc.voipTargets[val / 8] |= 1 << (val % 8);
 				}
 
-				if(val < 0)
-					continue;
+				while(*target && *target != ',' && *target != ' ')
+					target++;
+
+				continue;
 			}
 		}
 
