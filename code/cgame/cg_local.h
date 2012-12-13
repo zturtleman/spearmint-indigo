@@ -1651,6 +1651,10 @@ void		trap_GetGlconfig( glconfig_t *glconfig );
 // force a screen update, only used during gamestate load
 void		trap_UpdateScreen( void );
 int			trap_MemoryRemaining( void );
+void		trap_GetVoipTimes( int *times );
+float		trap_GetVoipGainClient( int client );
+qboolean	trap_GetVoipMuteClient( int client );
+qboolean	trap_GetVoipMuteAll( void );
 
 
 // The glconfig_t will not change during the life of a cgame.

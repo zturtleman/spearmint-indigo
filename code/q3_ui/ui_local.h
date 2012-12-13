@@ -665,6 +665,10 @@ void			trap_GetClipboardData( char *buf, int bufsize );
 void			trap_GetGlconfig( glconfig_t *glconfig );
 void			trap_UpdateScreen( void );
 int				trap_MemoryRemaining( void );
+void			trap_GetVoipTimes( int *times );
+float			trap_GetVoipGainClient( int client );
+qboolean		trap_GetVoipMuteClient( int client );
+qboolean		trap_GetVoipMuteAll( void );
 
 void			trap_GetClientState( uiClientState_t *state );
 int				trap_GetConfigString( int index, char* buff, int buffsize );

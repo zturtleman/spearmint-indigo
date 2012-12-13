@@ -567,6 +567,52 @@ void CL_CaptureVoip(void)
 		clc.voipPower = 0.0f;  // force this value so it doesn't linger.
 	}
 }
+
+// Cgame and UI access functions for VoIP information
+void CL_GetVoipTimes( int *times ) {
+	if ( !times )
+		return;
+
+	// make sure server is running
+	if ( clc.state != CA_ACTIVE ) {
+		memset( times, 0, sizeof ( clc.voipLastPacketTime ) );
+		return;
+	}
+
+	memcpy( times, clc.voipLastPacketTime, sizeof ( clc.voipLastPacketTime ) );
+}
+
+float CL_GetVoipGain( int clientNum ) {
+	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipGain ) ) {
+		return 0.0f;
+	}
+
+	// make sure server is running
+	if ( clc.state != CA_ACTIVE )
+		return 0.0f;
+
+	return clc.voipGain[clientNum];
+}
+
+qboolean CL_GetVoipMuteClient( int clientNum ) {
+	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipIgnore ) ) {
+		return qfalse;
+	}
+
+	// make sure server is running
+	if ( clc.state != CA_ACTIVE )
+		return qfalse;
+
+	return clc.voipIgnore[clientNum];
+}
+
+qboolean CL_GetVoipMuteAll( void ) {
+	// make sure server is running
+	if ( clc.state != CA_ACTIVE )
+		return qfalse;
+
+	return clc.voipMuteAll;
+}
 #endif
 
 /*

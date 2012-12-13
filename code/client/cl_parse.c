@@ -902,6 +902,7 @@ void CL_ParseVoip ( msg_t *msg ) {
 		CL_PlayVoip(sender, written, (const byte *) decoded, flags);
 
 	clc.voipIncomingSequence[sender] = sequence + frames;
+	clc.voipLastPacketTime[sender] = cl.serverTime;
 }
 #endif
 

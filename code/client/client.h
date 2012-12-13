@@ -269,6 +269,7 @@ typedef struct {
 	int voipIncomingSequence[MAX_CLIENTS];
 	float voipGain[MAX_CLIENTS];
 	qboolean voipIgnore[MAX_CLIENTS];
+	int voipLastPacketTime[MAX_CLIENTS];
 	qboolean voipMuteAll;
 
 	// outgoing data...
@@ -532,6 +533,10 @@ extern int cl_connectedToCheatServer;
 
 #ifdef USE_VOIP
 void CL_Voip_f( void );
+void CL_GetVoipTimes( int *times );
+float CL_GetVoipGain( int clientNum );
+qboolean CL_GetVoipMuteClient( int clientNum );
+qboolean CL_GetVoipMuteAll( void );
 #endif
 
 void CL_SystemInfoChanged( void );

@@ -715,6 +715,15 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETGLCONFIG:
 		CL_GetGlconfig( VMA(1) );
 		return 0;
+	case CG_GET_VOIP_TIMES:
+		CL_GetVoipTimes( VMA(1) );
+		return 0;
+	case CG_GET_VOIP_GAIN:
+		return FloatAsInt( CL_GetVoipGain( args[1] ) );
+	case CG_GET_VOIP_MUTE_CLIENT:
+		return CL_GetVoipMuteClient( args[1] );
+	case CG_GET_VOIP_MUTE_ALL:
+		return CL_GetVoipMuteAll();
 	case CG_GETGAMESTATE:
 		CL_GetGameState( VMA(1) );
 		return 0;
@@ -1081,6 +1090,7 @@ void CL_FirstSnapshot( void ) {
 			clc.speexDecoder[i] = speex_decoder_init(&speex_nb_mode);
 			clc.voipIgnore[i] = qfalse;
 			clc.voipGain[i] = 1.0f;
+			clc.voipLastPacketTime[i] = 0;
 		}
 		clc.speexInitialized = qtrue;
 		clc.voipMuteAll = qfalse;
