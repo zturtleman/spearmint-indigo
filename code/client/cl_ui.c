@@ -969,17 +969,31 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 		return GetConfigString( args[1], VMA(2), args[3] );
 
 	case UI_GET_VOIP_TIMES:
+#ifdef USE_VOIP
 		CL_GetVoipTimes( VMA(1) );
+#endif
 		return 0;
 
 	case UI_GET_VOIP_GAIN:
+#ifdef USE_VOIP
 		return FloatAsInt( CL_GetVoipGain( args[1] ) );
+#else
+		return 0;
+#endif
 
 	case UI_GET_VOIP_MUTE_CLIENT:
+#ifdef USE_VOIP
 		return CL_GetVoipMuteClient( args[1] );
+#else
+		return 0;
+#endif
 
 	case UI_GET_VOIP_MUTE_ALL:
+#ifdef USE_VOIP
 		return CL_GetVoipMuteAll();
+#else
+		return 0;
+#endif
 
 	case UI_LAN_LOADCACHEDSERVERS:
 		LAN_LoadCachedServers();
