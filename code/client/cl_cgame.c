@@ -715,11 +715,12 @@ intptr_t CL_CgameSystemCalls( intptr_t *args ) {
 	case CG_GETGLCONFIG:
 		CL_GetGlconfig( VMA(1) );
 		return 0;
-	case CG_GET_VOIP_TIMES:
+	case CG_GET_VOIP_TIME:
 #ifdef USE_VOIP
-		CL_GetVoipTimes( VMA(1) );
-#endif
+		return CL_GetVoipTime( args[1] );
+#else
 		return 0;
+#endif
 	case CG_GET_VOIP_POWER:
 #ifdef USE_VOIP
 		return FloatAsInt( CL_GetVoipPower( args[1] ) );

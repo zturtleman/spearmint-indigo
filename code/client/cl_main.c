@@ -577,17 +577,17 @@ void CL_CaptureVoip(void)
 }
 
 // Cgame and UI access functions for VoIP information
-void CL_GetVoipTimes( int *times ) {
-	if ( !times )
-		return;
+int CL_GetVoipTime( int clientNum ) {
+	if ( clientNum < 0  || clientNum >= ARRAY_LEN( clc.voipPower ) ) {
+		return 0.0f;
+	}
 
 	// make sure server is running
 	if ( clc.state != CA_ACTIVE ) {
-		memset( times, 0, sizeof ( clc.voipLastPacketTime ) );
-		return;
+		return 0;
 	}
 
-	memcpy( times, clc.voipLastPacketTime, sizeof ( clc.voipLastPacketTime ) );
+	return clc.voipLastPacketTime[clientNum];
 }
 
 float CL_GetVoipPower( int clientNum ) {

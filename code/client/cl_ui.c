@@ -968,11 +968,12 @@ intptr_t CL_UISystemCalls( intptr_t *args ) {
 	case UI_GETCONFIGSTRING:
 		return GetConfigString( args[1], VMA(2), args[3] );
 
-	case UI_GET_VOIP_TIMES:
+	case UI_GET_VOIP_TIME:
 #ifdef USE_VOIP
-		CL_GetVoipTimes( VMA(1) );
-#endif
+		return CL_GetVoipTime( args[1] );
+#else
 		return 0;
+#endif
 
 	case UI_GET_VOIP_POWER:
 #ifdef USE_VOIP

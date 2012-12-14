@@ -533,7 +533,7 @@ extern int cl_connectedToCheatServer;
 
 #ifdef USE_VOIP
 void CL_Voip_f( void );
-void CL_GetVoipTimes( int *times );
+int CL_GetVoipTime( int clientNum );
 float CL_GetVoipPower( int clientNum );
 float CL_GetVoipGain( int clientNum );
 qboolean CL_GetVoipMuteClient( int clientNum );
