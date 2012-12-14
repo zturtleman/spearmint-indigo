@@ -1242,6 +1242,7 @@ extern	vmCvar_t		cg_oldPlasma;
 extern	vmCvar_t		cg_trueLightning;
 extern	vmCvar_t		cg_atmosphericEffects;
 extern	vmCvar_t		cg_teamDmLeadAnnouncements;
+extern	vmCvar_t		cg_voipShowMeter;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
