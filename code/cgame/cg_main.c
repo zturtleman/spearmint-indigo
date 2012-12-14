@@ -206,6 +206,7 @@ vmCvar_t	cg_trueLightning;
 vmCvar_t	cg_atmosphericEffects;
 vmCvar_t	cg_teamDmLeadAnnouncements;
 vmCvar_t	cg_voipShowMeter;
+vmCvar_t	cg_voipShowCrosshairMeter;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -360,7 +361,8 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_trueLightning, "cg_trueLightning", "0.0", CVAR_ARCHIVE},
 	{ &cg_atmosphericEffects, "cg_atmosphericEffects", "1", CVAR_ARCHIVE },
 	{ &cg_teamDmLeadAnnouncements, "cg_teamDmLeadAnnouncements", "1", CVAR_ARCHIVE },
-	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE }
+	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE },
+	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE }
 };
 
