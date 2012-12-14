@@ -553,6 +553,8 @@ void CL_CaptureVoip(void)
 				Com_DPrintf("VoIP: Send %d frames, %d bytes, %f power\n",
 				            speexFrames, wpos, clc.voipPower[clc.clientNums[0]]);
 
+				clc.voipLastPacketTime[clc.clientNums[0]] = cl.serverTime;
+
 				#if 0
 				static FILE *encio = NULL;
 				if (encio == NULL) encio = fopen("voip-outgoing-encoded.bin", "wb");
@@ -572,8 +574,6 @@ void CL_CaptureVoip(void)
 		S_MasterGain(1.0f);
 		clc.voipPower[clc.clientNums[0]] = 0.0f;  // force this value so it doesn't linger.
 	}
-
-	clc.voipLastPacketTime[clc.clientNums[0]] = cl.serverTime;
 }
 
 // Cgame and UI access functions for VoIP information
