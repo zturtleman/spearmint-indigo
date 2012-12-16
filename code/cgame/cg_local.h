@@ -457,6 +457,15 @@ typedef enum {
 
 //======================================================================
 
+typedef struct
+{
+  int time;
+  int length;
+} consoleLine_t;
+
+#define MAX_CONSOLE_TEXT  8192
+#define MAX_CONSOLE_LINES 32
+
 // all cg.stepTime, cg.duckTime, cg.landTime, etc are set to cg.time when the action
 // occurs, and they will have visible effects for #define STEP_TIME or whatever msec after
 
@@ -687,6 +696,11 @@ typedef struct {
 	refEntity_t		testModelEntity;
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
+
+	// console
+	char			consoleText[ MAX_CONSOLE_TEXT ];
+	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
+	int				numConsoleLines;
 
 	// Local client data, from events and such
 	cglc_t			*cur_lc;	// Current local client data we are working with
@@ -1244,6 +1258,7 @@ extern	vmCvar_t		cg_atmosphericEffects;
 extern	vmCvar_t		cg_teamDmLeadAnnouncements;
 extern	vmCvar_t		cg_voipShowMeter;
 extern	vmCvar_t		cg_voipShowCrosshairMeter;
+extern	vmCvar_t		cg_consoleLatency;
 #ifdef MISSIONPACK
 extern	vmCvar_t		cg_redTeamName;
 extern	vmCvar_t		cg_blueTeamName;
@@ -1287,6 +1302,9 @@ void CG_RankRunFrame( void );
 void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
+
+void CG_RemoveNotifyLine( void );
+void CG_AddNotifyText( void );
 
 
 //

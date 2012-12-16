@@ -87,6 +87,9 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 	case CG_EVENT_HANDLING:
 		CG_EventHandling(arg0);
 		return 0;
+    case CG_CONSOLE_TEXT:
+		CG_AddNotifyText();
+		return 0;
 	case CG_WANTSBINDKEYS:
 #ifdef MISSIONPACK_HUD
 		return Display_WantsBindKeys();
@@ -207,6 +210,7 @@ vmCvar_t	cg_atmosphericEffects;
 vmCvar_t	cg_teamDmLeadAnnouncements;
 vmCvar_t	cg_voipShowMeter;
 vmCvar_t	cg_voipShowCrosshairMeter;
+vmCvar_t	cg_consoleLatency;
 
 #ifdef MISSIONPACK
 vmCvar_t 	cg_redTeamName;
@@ -363,6 +367,7 @@ static cvarTable_t cvarTable[] = {
 	{ &cg_teamDmLeadAnnouncements, "cg_teamDmLeadAnnouncements", "1", CVAR_ARCHIVE },
 	{ &cg_voipShowMeter, "cg_voipShowMeter", "1", CVAR_ARCHIVE },
 	{ &cg_voipShowCrosshairMeter, "cg_voipShowCrosshairMeter", "1", CVAR_ARCHIVE },
+	{ &cg_consoleLatency, "cg_consoleLatency", "3000", CVAR_ARCHIVE },
 //	{ &cg_pmove_fixed, "cg_pmove_fixed", "0", CVAR_USERINFO | CVAR_ARCHIVE }
 };
 
@@ -494,6 +499,61 @@ int CG_LastAttacker( int localClientNum ) {
 
 	return cg.snap->pss[cg.snap->lcIndex[localClientNum]].persistant[PERS_ATTACKER];
 }
+
+/*
+=================
+CG_RemoveNotifyLine
+=================
+*/
+void CG_RemoveNotifyLine( void )
+{
+  int i, offset, totalLength;
+
+  if( cg.numConsoleLines == 0 )
+    return;
+
+  offset = cg.consoleLines[ 0 ].length;
+  totalLength = strlen( cg.consoleText ) - offset;
+
+  //slide up consoleText
+  for( i = 0; i <= totalLength; i++ )
+    cg.consoleText[ i ] = cg.consoleText[ i + offset ];
+
+  //pop up the first consoleLine
+  for( i = 0; i < cg.numConsoleLines; i++ )
+    cg.consoleLines[ i ] = cg.consoleLines[ i + 1 ];
+
+  cg.numConsoleLines--;
+}
+
+/*
+=================
+CG_AddNotifyText
+=================
+*/
+void CG_AddNotifyText( void ) {
+	char buffer[ BIG_INFO_STRING ];
+	int bufferLen;
+
+	trap_LiteralArgs( buffer, BIG_INFO_STRING );
+
+	if( !buffer[ 0 ] ) {
+		cg.consoleText[ 0 ] = '\0';
+		cg.numConsoleLines = 0;
+		return;
+	}
+
+	bufferLen = strlen( buffer );
+
+	if( cg.numConsoleLines == MAX_CONSOLE_LINES )
+		CG_RemoveNotifyLine( );
+
+	Q_strcat( cg.consoleText, MAX_CONSOLE_TEXT, buffer );
+	cg.consoleLines[ cg.numConsoleLines ].time = cg.time;
+	cg.consoleLines[ cg.numConsoleLines ].length = bufferLen;
+	cg.numConsoleLines++;
+}
+
 
 void QDECL CG_DPrintf( const char *msg, ... ) {
 	va_list		argptr;

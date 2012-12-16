@@ -1160,6 +1160,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.cur_ps = NULL;
 	cg.cur_localClientNum = -1;
 
+	// Remove expired console lines
+	if( cg.consoleLines[ 0 ].time + cg_consoleLatency.integer < cg.time && cg_consoleLatency.integer > 0 ) {
+		CG_RemoveNotifyLine( );
+	}
+
 	// Draw over all viewports
 	CG_DrawScreen2D( stereoView );
 
