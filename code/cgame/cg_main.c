@@ -505,25 +505,25 @@ int CG_LastAttacker( int localClientNum ) {
 CG_RemoveNotifyLine
 =================
 */
-void CG_RemoveNotifyLine( void )
+void CG_RemoveNotifyLine( cglc_t *localClient )
 {
   int i, offset, totalLength;
 
-  if( cg.numConsoleLines == 0 )
+  if( !localClient || localClient->numConsoleLines == 0 )
     return;
 
-  offset = cg.consoleLines[ 0 ].length;
-  totalLength = strlen( cg.consoleText ) - offset;
+  offset = localClient->consoleLines[ 0 ].length;
+  totalLength = strlen( localClient->consoleText ) - offset;
 
   //slide up consoleText
   for( i = 0; i <= totalLength; i++ )
-    cg.consoleText[ i ] = cg.consoleText[ i + offset ];
+    localClient->consoleText[ i ] = localClient->consoleText[ i + offset ];
 
   //pop up the first consoleLine
-  for( i = 0; i < cg.numConsoleLines; i++ )
-    cg.consoleLines[ i ] = cg.consoleLines[ i + 1 ];
+  for( i = 0; i < localClient->numConsoleLines; i++ )
+    localClient->consoleLines[ i ] = localClient->consoleLines[ i + 1 ];
 
-  cg.numConsoleLines--;
+  localClient->numConsoleLines--;
 }
 
 /*
@@ -532,28 +532,74 @@ CG_AddNotifyText
 =================
 */
 void CG_AddNotifyText( void ) {
-	char buffer[ BIG_INFO_STRING ];
+	char text[ BIG_INFO_STRING ];
+	char *buffer;
 	int bufferLen;
+	int lc;
+	cglc_t *localClient;
+	int localClientBits;
 
-	trap_LiteralArgs( buffer, BIG_INFO_STRING );
+	trap_LiteralArgs( text, sizeof ( text ) );
 
-	if( !buffer[ 0 ] ) {
-		cg.consoleText[ 0 ] = '\0';
-		cg.numConsoleLines = 0;
+	if( !text[ 0 ] ) {
+		for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
+			cg.localClients[lc].consoleText[ 0 ] = '\0';
+			cg.localClients[lc].numConsoleLines = 0;
+		}
 		return;
 	}
 
+	buffer = text;
 	bufferLen = strlen( buffer );
 
-	if( cg.numConsoleLines == MAX_CONSOLE_LINES )
-		CG_RemoveNotifyLine( );
+	// [player #] perfix for text that only shows up in notify area for one local client
+	if ( bufferLen > 4 && !Q_strncmp( buffer, "[player ", 8 ) && isdigit(buffer[8]) && buffer[9] == ']' ) {
+		localClientBits = 1 << ( atoi( &buffer[8] ) - 1 );
 
-	Q_strcat( cg.consoleText, MAX_CONSOLE_TEXT, buffer );
-	cg.consoleLines[ cg.numConsoleLines ].time = cg.time;
-	cg.consoleLines[ cg.numConsoleLines ].length = bufferLen;
-	cg.numConsoleLines++;
+		buffer += 10;
+		bufferLen = strlen( buffer );
+	} else {
+		localClientBits = ~0;
+	}
+
+	for ( lc = 0; lc < CG_MaxSplitView(); lc++ ) {
+		if ( !( localClientBits & ( 1 << lc ) ) ) {
+			continue;
+		}
+
+		localClient = &cg.localClients[lc];
+
+		if( localClient->numConsoleLines == MAX_CONSOLE_LINES )
+			CG_RemoveNotifyLine( localClient );
+
+		Q_strcat( localClient->consoleText, MAX_CONSOLE_TEXT, buffer );
+		localClient->consoleLines[ localClient->numConsoleLines ].time = cg.time;
+		localClient->consoleLines[ localClient->numConsoleLines ].length = bufferLen;
+		localClient->numConsoleLines++;
+	}
 }
 
+/*
+=================
+CG_NotifyPrintf
+
+Only printed in notify area for localClientNum (and client console)
+=================
+*/
+void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) {
+	va_list		argptr;
+	char		text[1024];
+	int			prefixLen;
+
+	Com_sprintf( text, sizeof(text), "[player %d]", localClientNum + 1 );
+	prefixLen = strlen(text);
+
+	va_start (argptr, msg);
+	Q_vsnprintf (text+prefixLen, sizeof(text)-prefixLen, msg, argptr);
+	va_end (argptr);
+
+	trap_Print( text );
+}
 
 void QDECL CG_DPrintf( const char *msg, ... ) {
 	va_list		argptr;

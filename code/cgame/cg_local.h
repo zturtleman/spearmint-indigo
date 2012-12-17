@@ -463,8 +463,8 @@ typedef struct
   int length;
 } consoleLine_t;
 
-#define MAX_CONSOLE_TEXT  8192
-#define MAX_CONSOLE_LINES 32
+#define MAX_CONSOLE_LINES 4
+#define MAX_CONSOLE_TEXT  ( 256 * MAX_CONSOLE_LINES )
 
 // all cg.stepTime, cg.duckTime, cg.landTime, etc are set to cg.time when the action
 // occurs, and they will have visible effects for #define STEP_TIME or whatever msec after
@@ -572,6 +572,11 @@ typedef struct {
 	qboolean	scoreBoardShowing;
 	int			scoreFadeTime;
 	char		killerName[MAX_NAME_LENGTH];
+
+	// console
+	char			consoleText[ MAX_CONSOLE_TEXT ];
+	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
+	int				numConsoleLines;
 
 } cglc_t;
  
@@ -696,11 +701,6 @@ typedef struct {
 	refEntity_t		testModelEntity;
 	char			testModelName[MAX_QPATH];
 	qboolean		testGun;
-
-	// console
-	char			consoleText[ MAX_CONSOLE_TEXT ];
-	consoleLine_t	consoleLines[ MAX_CONSOLE_LINES ];
-	int				numConsoleLines;
 
 	// Local client data, from events and such
 	cglc_t			*cur_lc;	// Current local client data we are working with
@@ -1285,6 +1285,8 @@ void QDECL CG_DPrintf( const char *msg, ... ) __attribute__ ((format (printf, 1,
 void QDECL CG_Printf( const char *msg, ... ) __attribute__ ((format (printf, 1, 2)));
 void QDECL CG_Error( const char *msg, ... ) __attribute__ ((noreturn, format (printf, 1, 2)));
 
+void QDECL CG_NotifyPrintf( int localClientNum, const char *msg, ... ) __attribute__ ((format (printf, 2, 3)));
+
 void CG_LocalClientAdded(int localClientNum, int clientNum);
 void CG_LocalClientRemoved(int localClientNum);
 
@@ -1303,7 +1305,7 @@ void CG_SetScoreSelection(void *menu);
 score_t *CG_GetSelectedScore( void );
 void CG_BuildSpectatorString( void );
 
-void CG_RemoveNotifyLine( void );
+void CG_RemoveNotifyLine( cglc_t *localClient );
 void CG_AddNotifyText( void );
 
 

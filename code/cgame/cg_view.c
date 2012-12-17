@@ -1045,6 +1045,11 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 
 		// update cg.predictedPlayerState
 		CG_PredictPlayerState();
+
+		// Remove expired console lines
+		if( cg.cur_lc->consoleLines[ 0 ].time + cg_consoleLatency.integer < cg.time && cg_consoleLatency.integer > 0 ) {
+			CG_RemoveNotifyLine( cg.cur_lc );
+		}
 	}
 
 	// If all local clients dropped out from playing still draw main local client.
@@ -1159,11 +1164,6 @@ void CG_DrawActiveFrame( int serverTime, stereoFrame_t stereoView, qboolean demo
 	cg.cur_lc = NULL;
 	cg.cur_ps = NULL;
 	cg.cur_localClientNum = -1;
-
-	// Remove expired console lines
-	if( cg.consoleLines[ 0 ].time + cg_consoleLatency.integer < cg.time && cg_consoleLatency.integer > 0 ) {
-		CG_RemoveNotifyLine( );
-	}
 
 	// Draw over all viewports
 	CG_DrawScreen2D( stereoView );
