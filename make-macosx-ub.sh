@@ -22,16 +22,16 @@ BASE_OBJ="
 	build/release-darwin-i386/$BASEDIR/cgamei386.dylib
 	build/release-darwin-x86_64/$BASEDIR/uix86_64.dylib
 	build/release-darwin-i386/$BASEDIR/uii386.dylib
-	build/release-darwin-x86_64/$BASEDIR/qagamex86_64.dylib
-	build/release-darwin-i386/$BASEDIR/qagamei386.dylib
+	build/release-darwin-x86_64/$BASEDIR/gamex86_64.dylib
+	build/release-darwin-i386/$BASEDIR/gamei386.dylib
 "
 MPACK_OBJ="
 	build/release-darwin-x86_64/$MPACKDIR/cgamex86_64.dylib
 	build/release-darwin-i386/$MPACKDIR/cgamei386.dylib
 	build/release-darwin-x86_64/$MPACKDIR/uix86_64.dylib
 	build/release-darwin-i386/$MPACKDIR/uii386.dylib
-	build/release-darwin-x86_64/$MPACKDIR/qagamex86_64.dylib
-	build/release-darwin-i386/$MPACKDIR/qagamei386.dylib
+	build/release-darwin-x86_64/$MPACKDIR/gamex86_64.dylib
+	build/release-darwin-i386/$MPACKDIR/gamei386.dylib
 "
 RENDER_OBJ="
 	build/release-darwin-x86_64/renderer_opengl1_smp_x86_64.dylib
