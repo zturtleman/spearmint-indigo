@@ -3203,10 +3203,8 @@ void CL_DrawLoadingScreen( void ) {
 		hShader = re.RegisterShaderNoMip("menuback");
 	}
 
-	// XXX
-	int in_anaglyphMode = Cvar_VariableIntegerValue("r_anaglyphMode");
 	// if running in stereo, we need to draw the frame twice
-	if ( cls.glconfig.stereoEnabled || in_anaglyphMode) {
+	if ( cls.glconfig.stereoEnabled || Cvar_VariableIntegerValue( "r_anaglyphMode" ) ) {
 		CL_DrawLoadingScreenFrame( STEREO_LEFT, hShader );
 		CL_DrawLoadingScreenFrame( STEREO_RIGHT, hShader );
 	} else {
