@@ -1023,9 +1023,13 @@ void CL_WritePacket( void ) {
 #ifdef USE_VOIP
 	if (clc.voipOutgoingDataSize > 0)
 	{
-		if((clc.voipFlags & VOIP_SPATIAL) || Com_IsVoipTarget(clc.voipTargets, sizeof(clc.voipTargets), -1))
+		// ZTM: TODO: Allow each local player to use voip, or at least allow using voip when player 1 isn't present.
+		const int voipLocalClientNum = 0;
+
+		if(clc.clientNums[voipLocalClientNum] != -1 && ((clc.voipFlags & VOIP_SPATIAL) || Com_IsVoipTarget(clc.voipTargets, sizeof(clc.voipTargets), -1)))
 		{
 			MSG_WriteByte (&buf, clc_voip);
+			MSG_WriteByte (&buf, voipLocalClientNum);
 			MSG_WriteByte (&buf, clc.voipOutgoingGeneration);
 			MSG_WriteLong (&buf, clc.voipOutgoingSequence);
 			MSG_WriteByte (&buf, clc.voipOutgoingDataFrames);
@@ -1047,7 +1051,7 @@ void CL_WritePacket( void ) {
 				MSG_Bitstream (&fakemsg);
 				MSG_WriteLong (&fakemsg, clc.reliableAcknowledge);
 				MSG_WriteByte (&fakemsg, svc_voip);
-				MSG_WriteShort (&fakemsg, clc.clientNums[0]);
+				MSG_WriteShort (&fakemsg, clc.clientNums[voipLocalClientNum]);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingGeneration);
 				MSG_WriteLong (&fakemsg, clc.voipOutgoingSequence);
 				MSG_WriteByte (&fakemsg, clc.voipOutgoingDataFrames);

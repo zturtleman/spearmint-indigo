@@ -1014,6 +1014,38 @@ static void CG_RemoveChatEscapeChar( char *text ) {
 
 /*
 =================
+CG_LocalClientBitsForTeam
+=================
+*/
+int CG_LocalClientBitsForTeam( team_t team ) {
+	clientInfo_t	*ci;
+	int				clientNum;
+	int				bits;
+	int				i;
+	
+	bits = 0;
+	
+	for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+		clientNum = cg.localClients[i].clientNum;
+		if ( clientNum == -1 ) {
+			continue;
+		}
+		
+		ci = &cgs.clientinfo[clientNum];
+		if ( !ci->infoValid ) {
+			continue;
+		}
+		
+		if ( ci->team == team ) {
+			bits |= ( 1 << i );
+		}
+	}
+
+	return bits;
+}
+
+/*
+=================
 CG_ServerCommand
 
 The string has been tokenized and can be retrieved with
@@ -1024,7 +1056,8 @@ static void CG_ServerCommand( void ) {
 	const char	*cmd;
 	char		text[MAX_SAY_TEXT];
 	int			start = 0;
-	int			lc = 0;
+	int			localPlayerBits = -1;
+	int			i;
 
 	cmd = CG_Argv(start);
 
@@ -1033,13 +1066,37 @@ static void CG_ServerCommand( void ) {
 		return;
 	}
 
-	// Commands for splitscreen clients begin "lc# "
-	if (cmd[0] == 'l' && cmd[1] =='c' && isdigit(cmd[2])) {
-		lc = atoi(&cmd[2]);
+	// Commands for team
+	if ( !Q_stricmp( cmd, "[RED]" ) ) {
+		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_RED );
 
-		if (lc > CG_MaxSplitView()) {
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+	else if ( !Q_stricmp( cmd, "[BLUE]" ) ) {
+		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_BLUE );
+
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+	else if ( !Q_stricmp( cmd, "[SPECTATOR]" ) ) {
+		localPlayerBits = CG_LocalClientBitsForTeam( TEAM_SPECTATOR );
+
+		// Get command
+		start++;
+		cmd = CG_Argv(start);
+	}
+	// Commands for specific player begin "lc# "
+	else if ( cmd[0] == 'l' && cmd[1] =='c' && isdigit(cmd[2]) ) {
+		int num = atoi( &cmd[2] );
+
+		if ( num > CG_MaxSplitView() ) {
 			return;
 		}
+
+		localPlayerBits = ( 1 << num );
 
 		// Get command
 		start++;
@@ -1047,12 +1104,16 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "cp" ) ) {
-		CG_CenterPrint( lc, CG_Argv(start+1), SCREEN_HEIGHT * 0.30, 0.5 );
+		for ( i = 0; i < CG_MaxSplitView(); i++ ) {
+			if ( localPlayerBits == -1 || ( localPlayerBits & ( 1 << i ) ) ) {
+				CG_CenterPrint( i, CG_Argv( start + 1 ), SCREEN_HEIGHT * 0.30, 0.5 );
+			}
+		}
 		return;
 	}
 
 	if ( !strcmp( cmd, "cs" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1061,7 +1122,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	// global print to all clients
-	if ( !strcmp( cmd, "gprint" ) ) {
+	if ( !strcmp( cmd, "print" ) && localPlayerBits == -1 ) {
 #ifdef MISSIONPACK
 		cmd = CG_Argv(start+1);			// yes, this is obviously a hack, but so is the way we hear about
 									// votes passing or failing
@@ -1077,7 +1138,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "print" ) ) {
-		CG_NotifyPrintf( lc, "%s", CG_Argv( start+1 ) );
+		CG_NotifyBitsPrintf( localPlayerBits, "%s", CG_Argv( start+1 ) );
 		return;
 	}
 
@@ -1099,11 +1160,10 @@ static void CG_ServerCommand( void ) {
 		Q_strncpyz( text, CG_Argv(start+1), MAX_SAY_TEXT );
 
 		CG_RemoveChatEscapeChar( text );
-		CG_NotifyPrintf( lc, "%s\n", text );
+		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
 		return;
 	}
 
-	// ZTM: FIXME: only send each tchat message once for each team (if a local client is on the team).
 	if ( !strcmp( cmd, "tchat" ) ) {
 		trap_S_StartLocalSound( cgs.media.talkSound, CHAN_LOCAL_SOUND );
 
@@ -1111,13 +1171,13 @@ static void CG_ServerCommand( void ) {
 
 		CG_RemoveChatEscapeChar( text );
 		CG_AddToTeamChat( text );
-		CG_NotifyPrintf( lc, "%s\n", text );
+		CG_NotifyBitsPrintf( localPlayerBits, "%s\n", text );
 		return;
 	}
 
 #ifdef MISSIONPACK
 	if ( !strcmp( cmd, "vchat" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1126,7 +1186,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "vtchat" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1135,7 +1195,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "vtell" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1155,7 +1215,7 @@ static void CG_ServerCommand( void ) {
 	}
 
 	if ( !strcmp( cmd, "map_restart" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1165,7 +1225,7 @@ static void CG_ServerCommand( void ) {
 
 	if ( Q_stricmp (cmd, "remapShader") == 0 )
 	{
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
@@ -1187,7 +1247,7 @@ static void CG_ServerCommand( void ) {
 
 	// loaddeferred can be both a servercmd and a consolecmd
 	if ( !strcmp( cmd, "loaddeferred" ) ) {
-		if (lc != 0) {
+		if ( localPlayerBits != -1 ) {
 			return;
 		}
 
