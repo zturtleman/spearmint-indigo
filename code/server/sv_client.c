@@ -1749,20 +1749,29 @@ On very fast clients, there may be multiple usercmd packed into
 each of the backup packets.
 ==================
 */
-static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta, client_t *encoder ) {
+static void SV_UserMove( client_t *encoder, msg_t *msg, qboolean delta ) {
 	int			i, key;
 	int			cmdCount;
+	int			lc, localClientBits;
 	usercmd_t	nullcmd;
 	usercmd_t	cmds[MAX_PACKET_USERCMDS];
 	usercmd_t	*cmd, *oldcmd;
+	client_t	*cl;
 
 	if ( delta ) {
-		cl->deltaMessage = cl->messageAcknowledge;
+		encoder->deltaMessage = encoder->messageAcknowledge;
 	} else {
-		cl->deltaMessage = -1;
+		encoder->deltaMessage = -1;
 	}
 
+	localClientBits = MSG_ReadByte( msg );
 	cmdCount = MSG_ReadByte( msg );
+
+	if ( localClientBits == 0 ) {
+		// save time for ping calculation
+		encoder->frames[ encoder->messageAcknowledge & PACKET_MASK ].messageAcked = svs.time;
+		return;
+	}
 
 	if ( cmdCount < 1 ) {
 		Com_Printf( "cmdCount < 1\n" );
@@ -1779,47 +1788,63 @@ static void SV_UserMove( client_t *cl, msg_t *msg, qboolean delta, client_t *enc
 	// also use the last acknowledged server command in the key
 	key ^= MSG_HashKey(encoder->reliableCommands[ encoder->reliableAcknowledge & (MAX_RELIABLE_COMMANDS-1) ], 32);
 
-	Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
-	oldcmd = &nullcmd;
-	for ( i = 0 ; i < cmdCount ; i++ ) {
-		cmd = &cmds[i];
-		MSG_ReadDeltaUsercmdKey( msg, key, oldcmd, cmd );
-		oldcmd = cmd;
-	}
-
-	// save time for ping calculation
-	cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = svs.time;
-
-	// if this is the first usercmd we have received
-	// this gamestate, put the client into the world
-	if ( cl->state == CS_PRIMED ) {
-		SV_ClientEnterWorld( cl, &cmds[0] );
-		// the moves can be processed normaly
-	}
-
-	if ( cl->state != CS_ACTIVE ) {
-		cl->deltaMessage = -1;
-		return;
-	}
-
-	// usually, the first couple commands will be duplicates
-	// of ones we have previously received, but the servertimes
-	// in the commands will cause them to be immediately discarded
-	for ( i =  0 ; i < cmdCount ; i++ ) {
-		// if this is a cmd from before a map_restart ignore it
-		if ( cmds[i].serverTime > cmds[cmdCount-1].serverTime ) {
+	for (lc = 0; lc < MAX_SPLITVIEW; ++lc) {
+		if (!(localClientBits & (1<<lc))) {
 			continue;
 		}
-		// extremely lagged or cmd from before a map_restart
-		//if ( cmds[i].serverTime > svs.time + 3000 ) {
-		//	continue;
-		//}
-		// don't execute if this is an old cmd which is already executed
-		// these old cmds are included when cl_packetdup > 0
-		if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
+
+		Com_Memset( &nullcmd, 0, sizeof(nullcmd) );
+		oldcmd = &nullcmd;
+		for ( i = 0 ; i < cmdCount ; i++ ) {
+			cmd = &cmds[i];
+			MSG_ReadDeltaUsercmdKey( msg, key, oldcmd, cmd );
+			oldcmd = cmd;
+		}
+
+		if (lc == 0) {
+			cl = encoder;
+		} else {
+			cl = encoder->localClients[lc-1];
+			if (!cl) {
+				Com_DPrintf( S_COLOR_YELLOW "WARNING: move cmd for non-existant local client %d from client %i\n", lc, (int) (encoder - svs.clients) );
+				continue;
+			}
+		}
+
+		// save time for ping calculation
+		cl->frames[ cl->messageAcknowledge & PACKET_MASK ].messageAcked = svs.time;
+
+		// if this is the first usercmd we have received
+		// this gamestate, put the client into the world
+		if ( cl->state == CS_PRIMED ) {
+			SV_ClientEnterWorld( cl, &cmds[0] );
+			// the moves can be processed normaly
+		}
+
+		if ( cl->state != CS_ACTIVE ) {
+			cl->deltaMessage = -1;
 			continue;
 		}
-		SV_ClientThink (cl, &cmds[ i ]);
+
+		// usually, the first couple commands will be duplicates
+		// of ones we have previously received, but the servertimes
+		// in the commands will cause them to be immediately discarded
+		for ( i =  0 ; i < cmdCount ; i++ ) {
+			// if this is a cmd from before a map_restart ignore it
+			if ( cmds[i].serverTime > cmds[cmdCount-1].serverTime ) {
+				continue;
+			}
+			// extremely lagged or cmd from before a map_restart
+			//if ( cmds[i].serverTime > svs.time + 3000 ) {
+			//	continue;
+			//}
+			// don't execute if this is an old cmd which is already executed
+			// these old cmds are included when cl_packetdup > 0
+			if ( cmds[i].serverTime <= cl->lastUsercmd.serverTime ) {
+				continue;
+			}
+			SV_ClientThink (cl, &cmds[ i ]);
+		}
 	}
 }
 
@@ -2047,40 +2072,13 @@ void SV_ExecuteClientMessage( client_t *cl, msg_t *msg ) {
 
 	// read the usercmd_t
 	if ( c == clc_move ) {
-		SV_UserMove( cl, msg, qtrue, cl );
+		SV_UserMove( cl, msg, qtrue );
 	} else if ( c == clc_moveNoDelta ) {
-		SV_UserMove( cl, msg, qfalse, cl );
+		SV_UserMove( cl, msg, qfalse );
 	} else if ( c != clc_EOF ) {
 		Com_Printf( "WARNING: bad command byte for client %i\n", (int) (cl - svs.clients) );
 	}
 //	if ( msg->readcount != msg->cursize ) {
 //		Com_Printf( "WARNING: Junk at end of packet for client %i\n", cl - svs.clients );
 //	}
-
-	// LocalClient move is included after normal move
-	if ( c != clc_EOF ) {
-		int i;
-
-		for (i = 0; i < MAX_SPLITVIEW-1; i++) {
-			c = MSG_ReadByte( msg );
-
-			if ( c == clc_EOF ) {
-				break;
-			}
-
-			if ( c == clc_moveLocal || c == clc_moveLocalNoDelta) {
-				int localClient = MSG_ReadByte( msg ); // localClient-1
-
-				if (localClient < 0 || localClient >= MAX_SPLITVIEW-1) {
-					Com_DPrintf( S_COLOR_YELLOW "WARNING: localClient byte out of range for client %i\n", (int) (cl - svs.clients) );
-					break;
-				} else if (!cl->localClients[localClient]) {
-					Com_DPrintf( S_COLOR_YELLOW "WARNING: localClient move for non-existant local client %d from client %i\n", localClient, (int) (cl - svs.clients) );
-					break;
-				} else {
-					SV_UserMove( cl->localClients[localClient], msg, (c == clc_moveLocal), cl );
-				}
-			}
-		}
-	}
 }

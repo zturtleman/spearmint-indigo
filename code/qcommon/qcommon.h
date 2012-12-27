@@ -317,8 +317,6 @@ enum clc_ops_e {
 
 // new commands, supported only by ioquake3 protocol but not legacy
 	clc_voip,   // not wrapped in USE_VOIP, so this value is reserved.
-	clc_moveLocal,			// [[usercmd_t] for an extra local client
-	clc_moveLocalNoDelta,	// [[usercmd_t] for an extra local client
 };
 
 /*
