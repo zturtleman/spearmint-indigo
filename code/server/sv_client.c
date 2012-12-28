@@ -1409,7 +1409,7 @@ void SV_UserinfoChanged( player_t *player ) {
 SV_UpdateUserinfo_f
 ==================
 */
-static void SV_UpdateUserinfo_f( client_t *client, int localPlayerNum )
+static void SV_UpdateUserinfo_f( client_t *client, int localPlayerNum ) {
 	player_t *player;
 
 	player = client->localPlayers[localPlayerNum];
